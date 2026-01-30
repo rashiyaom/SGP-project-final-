@@ -3,6 +3,7 @@
 import Link from 'next/link'
 import { Heart, Star } from 'lucide-react'
 import { useState } from 'react'
+import { AddToCartButton } from './add-to-cart-button'
 
 interface Product {
   id: string
@@ -105,16 +106,33 @@ function ProductCard({ product }: { product: Product }) {
             className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
           />
           
-          {/* Wishlist Button */}
-          <button 
-            onClick={(e) => {
-              e.preventDefault()
-              setIsWishlisted(!isWishlisted)
-            }}
-            className="absolute top-2 sm:top-3 right-2 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 bg-background rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
-          >
-            <Heart className={`w-3 h-3 sm:w-4 sm:h-4 ${isWishlisted ? 'fill-foreground text-foreground' : 'text-muted-foreground'}`} />
-          </button>
+          {/* Action Buttons Container */}
+          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-end justify-between p-2 sm:p-3 bg-gradient-to-t from-background/95 from-20% to-transparent">
+            {/* Wishlist Button */}
+            <button 
+              onClick={(e) => {
+                e.preventDefault()
+                setIsWishlisted(!isWishlisted)
+              }}
+              className="w-8 h-8 sm:w-10 sm:h-10 bg-background rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all hover:scale-110"
+            >
+              <Heart className={`w-4 h-4 sm:w-5 sm:h-5 ${isWishlisted ? 'fill-foreground text-foreground' : 'text-muted-foreground'}`} />
+            </button>
+
+            {/* Add to Cart Button - Mini variant */}
+            <div onClick={(e) => e.preventDefault()}>
+              <AddToCartButton
+                productId={product.id}
+                productName={product.name}
+                price={product.price}
+                image={product.image}
+                category={product.category}
+                originalPrice={product.originalPrice}
+                quantity={1}
+                variant="minimal"
+              />
+            </div>
+          </div>
 
           {/* Discount Badge */}
           {discount > 0 && (

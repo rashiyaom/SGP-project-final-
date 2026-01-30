@@ -5,8 +5,9 @@ import { Footer } from '@/components/footer'
 import { Product360View } from '@/components/product-360-view'
 import { ProductComparison } from '@/components/product-comparison'
 import { useState } from 'react'
-import { Heart, ShoppingCart, ArrowRight, Star, ChevronLeft, ChevronRight, RotateCcw, View } from 'lucide-react'
+import { Heart, ArrowRight, Star, ChevronLeft, ChevronRight, RotateCcw, View } from 'lucide-react'
 import Link from 'next/link'
+import { AddToCartButton } from '@/components/add-to-cart-button'
 
 // Product images based on category
 const productImages: Record<string, string[]> = {
@@ -265,11 +266,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     +
                   </button>
                 </div>
-                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background font-medium rounded hover:bg-foreground/90 transition-colors">
-                  ADD TO CART
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="ml-2">Rs. {(product.price * quantity).toLocaleString()}</span>
-                </button>
+                <AddToCartButton
+                  productId={product.id}
+                  productName={product.name}
+                  price={product.price}
+                  image={images[selectedImageIndex]}
+                  category={product.category}
+                  originalPrice={product.originalPrice}
+                  quantity={quantity}
+                />
               </div>
 
               {/* Description */}

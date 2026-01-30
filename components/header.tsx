@@ -1,16 +1,19 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu, X, Sun, Moon } from 'lucide-react'
+import { Menu, X, Sun, Moon, ShoppingCart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
+import { useCart } from '@/contexts/cart-context'
 
 export function Header() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
+  const { getTotalItems } = useCart()
+  const cartCount = getTotalItems()
 
   useEffect(() => {
     setMounted(true)
@@ -60,6 +63,18 @@ export function Header() {
 
           {/* Right - CTA */}
           <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+            {/* Cart Button */}
+            <Link href="/cart">
+              <button className="relative p-2 sm:p-2.5 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0 group">
+                <ShoppingCart className="w-4 h-4 text-foreground group-hover:scale-110 transition-transform" />
+                {cartCount > 0 && (
+                  <span className="absolute -top-1 -right-1 w-5 h-5 bg-foreground text-background text-xs font-bold rounded-full flex items-center justify-center">
+                    {cartCount > 9 ? '9+' : cartCount}
+                  </span>
+                )}
+              </button>
+            </Link>
+
             {/* Theme Toggle */}
             <button
               onClick={() => {
