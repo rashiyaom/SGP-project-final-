@@ -6,11 +6,13 @@ import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Heart, Share2, ChevronLeft, ChevronRight } from 'lucide-react'
 
-export default function InspirationDetailPage({
+export default async function InspirationDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const resolvedParams = await params
+  
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Header />

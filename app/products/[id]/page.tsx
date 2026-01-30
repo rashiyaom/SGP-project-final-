@@ -30,16 +30,39 @@ const relatedProducts = [
   { id: '4', name: 'Polished Quartz', price: 3200, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop' },
 ]
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
+export default async function ProductDetailPage({ params }: { params: Promise<{ id: string }> }) {
+  const resolvedParams = await params
+  
+  const productImages_local: Record<string, string[]> = {
+    '1': [
+      'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop',
+    ],
+    default: [
+      'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=800&auto=format&fit=crop',
+      'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=800&auto=format&fit=crop',
+    ],
+  }
+  
+  const images = productImages_local[resolvedParams.id] || productImages_local.default
+
+  return <ProductDetailClient images={images} productId={resolvedParams.id} />
+}
+
+'use client'
+
+function ProductDetailClient({ images, productId }: { images: string[], productId: string }) {
   const [quantity, setQuantity] = useState(2)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const [showVR, setShowVR] = useState(false)
   const [show360, setShow360] = useState(false)
 
-  const images = productImages[params.id] || productImages.default
-
   const product = {
-    id: params.id,
+    id: productId,
     name: 'Marble Elegance 60x60',
     price: 2500,
     originalPrice: 2980,
@@ -74,10 +97,10 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     <main className="min-h-screen bg-background flex flex-col">
       <Header />
 
-      <section className="flex-1 py-8">
-        <div className="max-w-7xl mx-auto px-6 sm:px-12">
-          {/* Breadcrumb */}
-          <nav className="flex items-center gap-2 mb-8 text-sm">
+      <section className="flex-1 py-6 sm:py-8 pb-28 sm:pb-8">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
+          {/* Breadcrumb - Hidden on mobile */}
+          <nav className="hidden sm:flex items-center gap-2 mb-8 text-sm">
             <Link href="/" className="text-muted-foreground hover:text-foreground transition-colors">
               HOME PAGE
             </Link>
@@ -89,7 +112,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
             <span className="text-foreground">{product.name.toUpperCase()}</span>
           </nav>
 
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6 sm:gap-12">
             {/* Left: Thumbnails */}
             <div className="hidden lg:flex flex-col gap-3 col-span-1">
               {images.map((img, index) => (
@@ -246,29 +269,29 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 {product.recommended}% OF BUYERS HAVE RECOMMENDED THIS
               </p>
 
-              {/* Quantity & Add to Cart */}
-              <div className="flex items-center gap-4 mb-8">
-                <div className="flex items-center border border-border rounded">
+              {/* Quantity & Add to Cart - Hidden on mobile, shown in sticky footer */}
+              <div className="hidden sm:flex items-center gap-4 mb-8">
+                <div className="flex items-center border border-border rounded-lg">
                   <button
                     onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                    className="px-3 py-2 text-foreground hover:bg-muted/50 transition-colors"
+                    className="px-4 py-3 text-foreground hover:bg-muted/50 transition-colors font-medium"
                   >
-                    -
+                    −
                   </button>
-                  <span className="px-4 py-2 text-foreground font-medium min-w-[3rem] text-center">
+                  <span className="px-6 py-3 text-foreground font-semibold min-w-[4rem] text-center">
                     {quantity}
                   </span>
                   <button
                     onClick={() => setQuantity(quantity + 1)}
-                    className="px-3 py-2 text-foreground hover:bg-muted/50 transition-colors"
+                    className="px-4 py-3 text-foreground hover:bg-muted/50 transition-colors font-medium"
                   >
                     +
                   </button>
                 </div>
-                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background font-medium rounded hover:bg-foreground/90 transition-colors">
+                <button className="flex-1 flex items-center justify-center gap-2.5 px-6 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors">
+                  <ShoppingCart className="w-5 h-5" />
                   ADD TO CART
-                  <ShoppingCart className="w-4 h-4" />
-                  <span className="ml-2">Rs. {(product.price * quantity).toLocaleString()}</span>
+                  <span className="ml-auto">Rs. {(product.price * quantity).toLocaleString()}</span>
                 </button>
               </div>
 
@@ -365,6 +388,37 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           </div>
         </div>
       </section>
+
+      {/* Mobile Sticky Add to Cart Footer */}
+      <div className="sm:hidden fixed bottom-0 left-0 right-0 bg-background border-t border-border/30 p-4 z-50">
+        <div className="flex items-center gap-3">
+          <div className="flex items-center border border-border rounded-lg">
+            <button
+              onClick={() => setQuantity(Math.max(1, quantity - 1))}
+              className="px-3 py-2 text-foreground hover:bg-muted/50 transition-colors font-medium"
+            >
+              −
+            </button>
+            <span className="px-4 py-2 text-foreground font-semibold min-w-[3rem] text-center">
+              {quantity}
+            </span>
+            <button
+              onClick={() => setQuantity(quantity + 1)}
+              className="px-3 py-2 text-foreground hover:bg-muted/50 transition-colors font-medium"
+            >
+              +
+            </button>
+          </div>
+          <button className="flex-1 flex items-center justify-center gap-1.5 px-4 py-3 bg-foreground text-background font-semibold rounded-lg hover:bg-foreground/90 transition-colors text-sm">
+            <ShoppingCart className="w-4 h-4" />
+            Add
+          </button>
+          <div className="text-center">
+            <p className="text-xs text-muted-foreground">Total</p>
+            <p className="text-sm font-bold text-foreground">Rs. {(product.price * quantity).toLocaleString()}</p>
+          </div>
+        </div>
+      </div>
 
       <Footer />
     </main>

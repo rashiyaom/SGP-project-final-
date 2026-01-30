@@ -5,13 +5,15 @@ import { Footer } from '@/components/footer'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 
-export default function CollectionDetailPage({
+export default async function CollectionDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const resolvedParams = await params
+  
   const collection = {
-    id: params.id,
+    id: resolvedParams.id,
     name: 'Luxury Collection',
     description: 'Opulent tiles and marble for the most refined spaces',
     productCount: 128,
