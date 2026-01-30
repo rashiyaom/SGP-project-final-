@@ -3,7 +3,7 @@
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { useState } from 'react'
-import { Calculator, Scale, Ruler, Palette, Check, Minus, ArrowRight } from 'lucide-react'
+import { Calculator, Scale, Ruler, Palette, Check, Minus, ArrowRight, LayoutGrid } from 'lucide-react'
 import Link from 'next/link'
 
 const tools = [
@@ -135,67 +135,92 @@ export default function ToolsPage() {
 
           {/* Calculator Tool */}
           {activeTool === 'calculator' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-muted/30 rounded-2xl p-6 sm:p-8">
-                <h2 className="text-lg font-medium text-foreground mb-6">Room Dimensions</h2>
-                
-                <div className="flex justify-end mb-4">
-                  <div className="flex bg-background rounded-lg p-0.5 border border-border">
-                    <button onClick={() => setUnit('cm')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${unit === 'cm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>cm</button>
-                    <button onClick={() => setUnit('m')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${unit === 'm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>m</button>
-                  </div>
-                </div>
-
-                <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 bg-muted/40 rounded-xl p-6 sm:p-8 border border-border/50">
+                <div className="space-y-6">
+                  {/* Room Dimensions */}
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-2">Length ({unit})</label>
-                    <input type="number" value={length} onChange={(e) => setLength(e.target.value)} placeholder={unit === 'cm' ? '300' : '3'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-lg font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
+                    <div className="flex items-center justify-between mb-4">
+                      <label className="text-sm font-semibold text-foreground">Room Dimensions</label>
+                      <div className="flex gap-2 bg-background rounded-lg p-1 border border-border">
+                        <button onClick={() => setUnit('cm')} className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${unit === 'cm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>cm</button>
+                        <button onClick={() => setUnit('m')} className={`px-3 py-1.5 text-xs font-medium rounded transition-colors ${unit === 'm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>m</button>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-2 font-medium">Length ({unit})</label>
+                        <input type="number" value={length} onChange={(e) => setLength(e.target.value)} placeholder={unit === 'cm' ? '300' : '3'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/20" />
+                      </div>
+                      <div>
+                        <label className="block text-xs text-muted-foreground mb-2 font-medium">Width ({unit})</label>
+                        <input type="number" value={width} onChange={(e) => setWidth(e.target.value)} placeholder={unit === 'cm' ? '400' : '4'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground placeholder:text-muted-foreground/50 focus:outline-none focus:ring-1 focus:ring-foreground/20" />
+                      </div>
+                    </div>
                   </div>
+
+                  {/* Tile Size Selection */}
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-2">Width ({unit})</label>
-                    <input type="number" value={width} onChange={(e) => setWidth(e.target.value)} placeholder={unit === 'cm' ? '400' : '4'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-lg font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
+                    <label className="block text-sm font-semibold text-foreground mb-4">Tile Size (cm)</label>
+                    <div className="grid grid-cols-5 gap-2">
+                      {tileSizeOptions.map((option) => (
+                        <button key={option.value} onClick={() => setTileSize(option.value)} className={`py-3 px-2 rounded-lg border text-sm font-medium transition-all ${tileSize === option.value ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-muted-foreground text-foreground'}`}>{option.label}</button>
+                      ))}
+                    </div>
                   </div>
-                </div>
 
-                <div className="mb-6">
-                  <label className="block text-xs text-muted-foreground mb-3">Tile Size</label>
-                  <div className="flex flex-wrap gap-2">
-                    {tileSizeOptions.map((option) => (
-                      <button key={option.value} onClick={() => setTileSize(option.value)} className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${tileSize === option.value ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-muted-foreground text-foreground'}`}>{option.label}</button>
-                    ))}
+                  {/* Wastage Slider */}
+                  <div>
+                    <div className="flex justify-between mb-3">
+                      <label className="text-sm font-semibold text-foreground">Wastage Allowance</label>
+                      <span className="text-sm font-bold text-foreground">{wastage}%</span>
+                    </div>
+                    <input type="range" min="5" max="20" value={wastage} onChange={(e) => setWastage(parseInt(e.target.value))} className="w-full h-2 bg-border rounded-full appearance-none cursor-pointer accent-foreground" />
+                    <div className="flex justify-between text-[11px] text-muted-foreground mt-2">
+                      <span>5% Simple</span>
+                      <span>20% Complex</span>
+                    </div>
                   </div>
-                </div>
-
-                <div>
-                  <div className="flex justify-between mb-3">
-                    <label className="text-xs text-muted-foreground">Wastage Allowance</label>
-                    <span className="text-sm font-medium text-foreground">{wastage}%</span>
-                  </div>
-                  <input type="range" min="5" max="20" value={wastage} onChange={(e) => setWastage(parseInt(e.target.value))} className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-foreground" />
                 </div>
               </div>
 
-              <div className="bg-foreground text-background rounded-2xl p-6 sm:p-8 flex flex-col">
-                <h2 className="text-lg font-medium mb-6">Results</h2>
+              <div className="bg-foreground text-background rounded-xl p-6 sm:p-8 flex flex-col">
+                <h3 className="text-sm font-semibold uppercase tracking-wide mb-5">Calculation Results</h3>
                 {calculations ? (
-                  <div className="flex-1 flex flex-col">
-                    <div className="text-center py-8 border-b border-background/20 mb-6">
-                      <p className="text-xs text-background/60 uppercase tracking-wider mb-2">Tiles Required</p>
-                      <p className="text-7xl font-bold">{calculations.tilesNeeded}</p>
+                  <div className="flex-1 flex flex-col gap-3">
+                    <div className="bg-background/10 rounded-lg p-4 text-center">
+                      <p className="text-xs text-background/60 uppercase tracking-wider mb-1.5 font-medium">Tiles Needed</p>
+                      <p className="text-5xl font-bold">{calculations.tilesNeeded}</p>
+                      <p className="text-xs text-background/50 mt-1">pieces</p>
                     </div>
-                    <div className="grid grid-cols-3 gap-4 text-center mb-8">
-                      <div><p className="text-2xl font-semibold">{calculations.roomArea}</p><p className="text-xs text-background/60">sq.m area</p></div>
-                      <div><p className="text-2xl font-semibold">{calculations.boxesNeeded}</p><p className="text-xs text-background/60">boxes</p></div>
-                      <div><p className="text-2xl font-semibold">+{calculations.wastageCount}</p><p className="text-xs text-background/60">wastage</p></div>
+                    <div className="grid grid-cols-2 gap-3 flex-1">
+                      <div className="bg-background/10 rounded-lg p-3.5 text-center">
+                        <p className="text-xs text-background/60 font-medium mb-1">Area</p>
+                        <p className="text-xl font-semibold">{calculations.roomArea}</p>
+                        <p className="text-[10px] text-background/50">m²</p>
+                      </div>
+                      <div className="bg-background/10 rounded-lg p-3.5 text-center">
+                        <p className="text-xs text-background/60 font-medium mb-1">Boxes</p>
+                        <p className="text-xl font-semibold">{calculations.boxesNeeded}</p>
+                      </div>
+                      <div className="bg-background/10 rounded-lg p-3.5 text-center">
+                        <p className="text-xs text-background/60 font-medium mb-1">Waste</p>
+                        <p className="text-xl font-semibold text-green-300">+{calculations.wastageCount}</p>
+                      </div>
+                      <div className="bg-background/10 rounded-lg p-3.5 text-center">
+                        <p className="text-xs text-background/60 font-medium mb-1">Coverage</p>
+                        <p className="text-xl font-semibold">{calculations.coverage}</p>
+                        <p className="text-[10px] text-background/50">m²</p>
+                      </div>
                     </div>
-                    <Link href="/products" className="flex items-center justify-center gap-2 w-full py-3 bg-background text-foreground rounded-lg font-medium text-sm mt-auto">Browse Tiles <ArrowRight className="w-4 h-4" /></Link>
+                    <Link href="/products" className="flex items-center justify-center gap-2 w-full py-3 bg-background text-foreground rounded-lg font-medium text-sm mt-auto hover:bg-background/90 transition-colors"><LayoutGrid className="w-4 h-4" /> Browse Tiles</Link>
                   </div>
                 ) : (
-                  <div className="flex-1 flex items-center justify-center text-center">
-                    <div>
-                      <Calculator className="w-12 h-12 text-background/30 mx-auto mb-4" />
-                      <p className="text-sm text-background/60">Enter dimensions to calculate</p>
+                  <div className="flex-1 flex flex-col items-center justify-center text-center">
+                    <div className="w-14 h-14 bg-background/10 rounded-lg flex items-center justify-center mb-4">
+                      <Calculator className="w-7 h-7 text-background/30" />
                     </div>
+                    <p className="text-sm text-background/60">Enter dimensions to calculate</p>
                   </div>
                 )}
               </div>
