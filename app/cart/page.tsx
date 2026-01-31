@@ -5,39 +5,12 @@ import { Footer } from '@/components/footer'
 import { Trash2, Plus, Minus, ArrowRight } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
-import { useState } from 'react'
-
-interface CartItem {
-  id: string
-  name: string
-  price: number
-  quantity: number
-  image: string
-}
+import { useCart } from '@/contexts/cart-context'
 
 export default function CartPage() {
-  const [cartItems, setCartItems] = useState<CartItem[]>([
-    { id: '1', name: 'Marble Elegance 60x60', price: 45, quantity: 2, image: '🪨' },
-    { id: '2', name: 'Ceramic White Pearl', price: 32, quantity: 1, image: '⚪' },
-  ])
+  const { items, updateQuantity, removeItem, getTotalPrice } = useCart()
 
-  const updateQuantity = (id: string, newQuantity: number) => {
-    if (newQuantity <= 0) {
-      removeItem(id)
-      return
-    }
-    setCartItems(
-      cartItems.map((item) =>
-        item.id === id ? { ...item, quantity: newQuantity } : item,
-      ),
-    )
-  }
-
-  const removeItem = (id: string) => {
-    setCartItems(cartItems.filter((item) => item.id !== id))
-  }
-
-  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const subtotal = getTotalPrice()
   const tax = subtotal * 0.1
   const shipping = subtotal > 100 ? 0 : 15
   const total = subtotal + tax + shipping
@@ -50,7 +23,7 @@ export default function CartPage() {
   <div className="max-w-7xl mx-auto px-6 sm:px-12">
           <h1 className="font-serif text-4xl text-foreground mb-8">Shopping Cart</h1>
 
-          {cartItems.length === 0 ? (
+          {items.length === 0 ? (
             <div className="text-center py-16">
               <p className="text-2xl text-muted-foreground mb-4">Your cart is empty</p>
               <Link href="/products">
@@ -63,14 +36,18 @@ export default function CartPage() {
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
               {/* Cart Items */}
               <div className="lg:col-span-2 space-y-4">
-                {cartItems.map((item) => (
+                {items.map((item) => (
                   <div
                     key={item.id}
                     className="bg-card border border-border rounded-lg p-6 flex gap-6 items-start"
                   >
                     {/* Image */}
-                    <div className="w-24 h-24 bg-gradient-to-br from-muted to-muted/50 rounded-lg flex items-center justify-center text-5xl flex-shrink-0">
-                      {item.image}
+                    <div className="w-24 h-24 bg-muted/50 rounded-lg overflow-hidden flex-shrink-0">
+                      <img 
+                        src={item.image || "/placeholder.svg"} 
+                        alt={item.name}
+                        className="w-full h-full object-cover"
+                      />
                     </div>
 
                     {/* Info */}
@@ -80,9 +57,14 @@ export default function CartPage() {
                           {item.name}
                         </h3>
                       </Link>
-                      <p className="text-muted-foreground mb-4">
-                        ${item.price} per sqft
+                      <p className="text-muted-foreground mb-1">
+                        Rs. {item.price.toLocaleString()} per unit
                       </p>
+                      {item.category && (
+                        <p className="text-xs text-muted-foreground mb-4">
+                          {item.category}
+                        </p>
+                      )}
 
                       {/* Quantity Control */}
                       <div className="flex items-center gap-4">
@@ -120,7 +102,7 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <p className="text-2xl font-bold text-foreground">
-                        ${(item.price * item.quantity).toFixed(2)}
+                        Rs. {(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -137,21 +119,21 @@ export default function CartPage() {
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Subtotal</span>
-                      <span>${subtotal.toFixed(2)}</span>
+                      <span>Rs. {subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Tax (10%)</span>
-                      <span>${tax.toFixed(2)}</span>
+                      <span>Rs. {tax.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Shipping</span>
                       <span className={shipping === 0 ? 'text-green-600 font-semibold' : ''}>
-                        {shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}
+                        {shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}
                       </span>
                     </div>
                     {shipping === 0 && (
                       <p className="text-xs text-green-600 font-semibold">
-                        Free shipping on orders over $100
+                        Free shipping on orders over Rs. 100
                       </p>
                     )}
                   </div>
@@ -160,7 +142,7 @@ export default function CartPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-foreground">Total</span>
                       <span className="text-2xl font-bold text-primary">
-                        ${total.toFixed(2)}
+                        Rs. {total.toLocaleString()}
                       </span>
                     </div>
                   </div>

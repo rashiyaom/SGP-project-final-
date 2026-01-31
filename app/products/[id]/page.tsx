@@ -4,9 +4,12 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Product360View } from '@/components/product-360-view'
 import { ProductComparison } from '@/components/product-comparison'
+import { Toast } from '@/components/toast'
 import { useState } from 'react'
 import { Heart, ShoppingCart, ArrowRight, Star, ChevronLeft, ChevronRight, RotateCcw, View } from 'lucide-react'
 import Link from 'next/link'
+import { useCart } from '@/contexts/cart-context'
+import { useParams } from 'next/navigation'
 
 // Product images based on category
 const productImages: Record<string, string[]> = {
@@ -30,20 +33,59 @@ const relatedProducts = [
   { id: '4', name: 'Polished Quartz', price: 3200, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop' },
 ]
 
-export default function ProductDetailPage({ params }: { params: { id: string } }) {
-  const [quantity, setQuantity] = useState(2)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [showVR, setShowVR] = useState(false)
-  const [show360, setShow360] = useState(false)
-
-  const images = productImages[params.id] || productImages.default
-
-  const product = {
-    id: params.id,
+// Product database
+const productDatabase: Record<string, any> = {
+  '1': {
     name: 'Marble Elegance 60x60',
     price: 2500,
     originalPrice: 2980,
     category: 'MARBLE TILES',
+    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop',
+  },
+  '2': {
+    name: 'Ceramic White Pearl',
+    price: 1200,
+    originalPrice: 1500,
+    category: 'CERAMIC TILES',
+    image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop',
+  },
+  '3': {
+    name: 'Cream Travertine',
+    price: 2200,
+    originalPrice: 2600,
+    category: 'MARBLE TILES',
+    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop',
+  },
+  '4': {
+    name: 'Polished Quartz',
+    price: 3200,
+    originalPrice: 3800,
+    category: 'QUARTZ TILES',
+    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800&auto=format&fit=crop',
+  },
+}
+
+export default function ProductDetailPage() {
+  const params = useParams()
+  const productId = params.id as string
+  const { addItem } = useCart()
+  
+  const [quantity, setQuantity] = useState(2)
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
+  const [showVR, setShowVR] = useState(false)
+  const [show360, setShow360] = useState(false)
+  const [addedToCart, setAddedToCart] = useState(false)
+  const [showToast, setShowToast] = useState(false)
+
+  const images = productImages[productId] || productImages.default
+  const productData = productDatabase[productId] || productDatabase['1']
+
+  const product = {
+    id: productId,
+    name: productData.name,
+    price: productData.price,
+    originalPrice: productData.originalPrice,
+    category: productData.category,
     rating: 4.2,
     reviews: 34,
     inStock: true,
@@ -70,9 +112,31 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
     setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)
   }
 
+  const handleAddToCart = () => {
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      quantity: quantity,
+      image: images[0],
+      category: product.category,
+    })
+    setAddedToCart(true)
+    setShowToast(true)
+    setTimeout(() => setAddedToCart(false), 2000)
+  }
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
       <Header />
+      
+      {showToast && (
+        <Toast
+          message={`${quantity} item(s) added to cart!`}
+          type="success"
+          onClose={() => setShowToast(false)}
+        />
+      )}
 
       <section className="flex-1 py-8">
         <div className="max-w-7xl mx-auto px-6 sm:px-12">
@@ -265,8 +329,15 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                     +
                   </button>
                 </div>
-                <button className="flex-1 flex items-center justify-center gap-2 px-6 py-3 bg-foreground text-background font-medium rounded hover:bg-foreground/90 transition-colors">
-                  ADD TO CART
+                <button 
+                  onClick={handleAddToCart}
+                  className={`flex-1 flex items-center justify-center gap-2 px-6 py-3 font-medium rounded transition-colors ${
+                    addedToCart 
+                      ? 'bg-green-600 text-white' 
+                      : 'bg-foreground text-background hover:bg-foreground/90'
+                  }`}
+                >
+                  {addedToCart ? 'ADDED!' : 'ADD TO CART'}
                   <ShoppingCart className="w-4 h-4" />
                   <span className="ml-2">Rs. {(product.price * quantity).toLocaleString()}</span>
                 </button>

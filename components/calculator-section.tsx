@@ -52,10 +52,10 @@ export function CalculatorSection() {
   }, [length, width, tileSize, wastagePercent, unit])
 
   return (
-    <section className="py-16 sm:py-24 lg:py-32 bg-muted/20">
+    <section className="relative py-8 sm:py-12 lg:py-16 bg-muted/20 z-10">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
         {/* Section Header */}
-        <AnimatedSection animation="fade-up" className="mb-10 sm:mb-14">
+        <AnimatedSection animation="fade-up" className="mb-6 sm:mb-8">
           <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4 sm:gap-6">
             <div>
               <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">Planning Tools</p>
@@ -73,79 +73,79 @@ export function CalculatorSection() {
           </div>
         </AnimatedSection>
 
-        <div className="grid grid-cols-1 lg:grid-cols-5 gap-6 lg:gap-8">
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-4 lg:gap-6">
           {/* Calculator Form */}
           <AnimatedSection animation="slide-right" className="lg:col-span-3">
-            <div className="bg-background rounded-2xl border border-border p-5 sm:p-8">
+            <div className="bg-background rounded-xl border border-border p-4 sm:p-6">
               {/* Room Dimensions */}
-              <div className="mb-8">
-                <div className="flex items-center justify-between mb-4">
+              <div className="mb-6">
+                <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <Ruler className="w-4 h-4 text-foreground" />
+                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                      <Ruler className="w-3.5 h-3.5 text-foreground" />
                     </div>
-                    <span className="text-sm font-medium text-foreground">Room Dimensions</span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground">Room Dimensions</span>
                   </div>
-                  <div className="flex bg-muted rounded-full p-1">
+                  <div className="flex bg-muted rounded-full p-0.5">
                     <button 
                       onClick={() => setUnit('m')} 
-                      className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${unit === 'm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      className={`px-3 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${unit === 'm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                      Meters
+                      m
                     </button>
                     <button 
                       onClick={() => setUnit('cm')} 
-                      className={`px-4 py-1.5 text-xs font-medium rounded-full transition-all ${unit === 'cm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
+                      className={`px-3 py-1 text-[10px] sm:text-xs font-medium rounded-full transition-all ${unit === 'cm' ? 'bg-background text-foreground shadow-sm' : 'text-muted-foreground hover:text-foreground'}`}
                     >
-                      CM
+                      cm
                     </button>
                   </div>
                 </div>
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-2 font-medium">Length ({unit})</label>
+                    <label className="block text-[10px] sm:text-xs text-muted-foreground mb-1.5 font-medium">Length ({unit})</label>
                     <input 
                       type="number" 
                       value={length} 
                       onChange={(e) => setLength(e.target.value)} 
                       placeholder={unit === 'cm' ? '300' : '3'} 
-                      className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground text-lg font-semibold placeholder:text-muted-foreground/40 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-foreground/10 focus:border-foreground transition-all" 
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-base sm:text-lg font-semibold placeholder:text-muted-foreground/40 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground transition-all" 
                     />
                   </div>
                   <div>
-                    <label className="block text-xs text-muted-foreground mb-2 font-medium">Width ({unit})</label>
+                    <label className="block text-[10px] sm:text-xs text-muted-foreground mb-1.5 font-medium">Width ({unit})</label>
                     <input 
                       type="number" 
                       value={width} 
                       onChange={(e) => setWidth(e.target.value)} 
                       placeholder={unit === 'cm' ? '400' : '4'} 
-                      className="w-full px-4 py-3 border border-border rounded-xl bg-background text-foreground text-lg font-semibold placeholder:text-muted-foreground/40 placeholder:font-normal focus:outline-none focus:ring-2 focus:ring-foreground/10 focus:border-foreground transition-all" 
+                      className="w-full px-3 py-2 border border-border rounded-lg bg-background text-foreground text-base sm:text-lg font-semibold placeholder:text-muted-foreground/40 placeholder:font-normal focus:outline-none focus:ring-1 focus:ring-foreground/10 focus:border-foreground transition-all" 
                     />
                   </div>
                 </div>
               </div>
 
               {/* Tile Size Selection */}
-              <div className="mb-8">
-                <div className="flex items-center gap-2.5 mb-4">
-                  <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                    <Grid3X3 className="w-4 h-4 text-foreground" />
+              <div className="mb-6">
+                <div className="flex items-center gap-2 mb-3">
+                  <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                    <Grid3X3 className="w-3.5 h-3.5 text-foreground" />
                   </div>
-                  <span className="text-sm font-medium text-foreground">Tile Size</span>
+                  <span className="text-xs sm:text-sm font-medium text-foreground">Tile Size</span>
                 </div>
-                <div className="grid grid-cols-5 gap-2">
+                <div className="grid grid-cols-5 gap-1.5 sm:gap-2">
                   {tileSizeOptions.map((option) => (
                     <button 
                       key={option.value} 
                       onClick={() => setTileSize(option.value)} 
-                      className={`flex flex-col items-center justify-center py-3 px-2 rounded-xl border-2 transition-all ${
+                      className={`flex flex-col items-center justify-center py-2 px-1 rounded-lg border-2 transition-all ${
                         tileSize === option.value 
                           ? 'border-foreground bg-foreground text-background' 
                           : 'border-border bg-background text-foreground hover:border-muted-foreground'
                       }`}
                     >
-                      <span className="text-sm font-semibold">{option.value.split('x')[0]}</span>
-                      <span className="text-[10px] opacity-70">x{option.value.split('x')[1]}</span>
+                      <span className="text-xs sm:text-sm font-semibold">{option.value.split('x')[0]}</span>
+                      <span className="text-[9px] sm:text-[10px] opacity-70">×{option.value.split('x')[1]}</span>
                     </button>
                   ))}
                 </div>
@@ -153,14 +153,14 @@ export function CalculatorSection() {
 
               {/* Wastage Slider */}
               <div>
-                <div className="flex items-center justify-between mb-4">
-                  <div className="flex items-center gap-2.5">
-                    <div className="w-8 h-8 rounded-lg bg-muted flex items-center justify-center">
-                      <Percent className="w-4 h-4 text-foreground" />
+                <div className="flex items-center justify-between mb-3">
+                  <div className="flex items-center gap-2">
+                    <div className="w-7 h-7 rounded-lg bg-muted flex items-center justify-center">
+                      <Percent className="w-3.5 h-3.5 text-foreground" />
                     </div>
-                    <span className="text-sm font-medium text-foreground">Wastage Allowance</span>
+                    <span className="text-xs sm:text-sm font-medium text-foreground">Wastage</span>
                   </div>
-                  <span className="text-lg font-bold text-foreground tabular-nums">{wastagePercent}%</span>
+                  <span className="text-base sm:text-lg font-bold text-foreground tabular-nums">{wastagePercent}%</span>
                 </div>
                 <div className="relative">
                   <input 
@@ -169,11 +169,11 @@ export function CalculatorSection() {
                     max="20" 
                     value={wastagePercent} 
                     onChange={(e) => setWastagePercent(parseInt(e.target.value))} 
-                    className="w-full h-2 bg-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-5 [&::-webkit-slider-thumb]:h-5 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer" 
+                    className="w-full h-1.5 bg-border rounded-full appearance-none cursor-pointer [&::-webkit-slider-thumb]:appearance-none [&::-webkit-slider-thumb]:w-4 [&::-webkit-slider-thumb]:h-4 [&::-webkit-slider-thumb]:rounded-full [&::-webkit-slider-thumb]:bg-foreground [&::-webkit-slider-thumb]:shadow-md [&::-webkit-slider-thumb]:cursor-pointer" 
                   />
-                  <div className="flex justify-between text-[10px] text-muted-foreground mt-2">
-                    <span>5% (Simple Layout)</span>
-                    <span>20% (Complex Pattern)</span>
+                  <div className="flex justify-between text-[9px] sm:text-[10px] text-muted-foreground mt-1.5">
+                    <span>5%</span>
+                    <span>20%</span>
                   </div>
                 </div>
               </div>
@@ -182,59 +182,59 @@ export function CalculatorSection() {
 
           {/* Results Panel */}
           <AnimatedSection animation="slide-left" delay={200} className="lg:col-span-2">
-            <div className="bg-foreground text-background rounded-2xl p-5 sm:p-8 h-full flex flex-col min-h-[400px]">
-              <div className="flex items-center gap-2.5 mb-6">
-                <div className="w-8 h-8 rounded-lg bg-background/10 flex items-center justify-center">
-                  <Calculator className="w-4 h-4 text-background" />
+            <div className="bg-foreground text-background rounded-xl p-4 sm:p-6 h-full flex flex-col min-h-[350px]">
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-7 h-7 rounded-lg bg-background/10 flex items-center justify-center">
+                  <Calculator className="w-3.5 h-3.5 text-background" />
                 </div>
-                <span className="text-sm font-medium">Calculation Results</span>
+                <span className="text-xs sm:text-sm font-medium">Results</span>
               </div>
 
               {calculations ? (
                 <div className="flex-1 flex flex-col">
                   {/* Main Result */}
-                  <div className="text-center py-8 mb-6 bg-background/5 rounded-2xl">
-                    <p className="text-xs text-background/50 uppercase tracking-wider mb-1">Tiles Required</p>
-                    <p className="text-7xl font-bold tracking-tight">{calculations.tilesNeeded}</p>
-                    <p className="text-sm text-background/50 mt-1">pieces total</p>
+                  <div className="text-center py-6 mb-4 bg-background/5 rounded-xl">
+                    <p className="text-[10px] text-background/50 uppercase tracking-wider mb-0.5">Tiles Required</p>
+                    <p className="text-5xl sm:text-6xl font-bold tracking-tight">{calculations.tilesNeeded}</p>
+                    <p className="text-xs text-background/50 mt-0.5">pieces</p>
                   </div>
 
                   {/* Details Grid */}
-                  <div className="grid grid-cols-2 gap-3 mb-6 flex-1">
-                    <div className="bg-background/5 rounded-xl p-4 text-center">
-                      <p className="text-2xl font-bold">{calculations.roomArea}</p>
-                      <p className="text-[10px] text-background/50 uppercase tracking-wider mt-1">sq.m area</p>
+                  <div className="grid grid-cols-2 gap-2 mb-4 flex-1">
+                    <div className="bg-background/5 rounded-lg p-3 text-center">
+                      <p className="text-lg sm:text-xl font-bold">{calculations.roomArea}</p>
+                      <p className="text-[9px] text-background/50 uppercase tracking-wider mt-0.5">sq.m</p>
                     </div>
-                    <div className="bg-background/5 rounded-xl p-4 text-center">
-                      <p className="text-2xl font-bold">{calculations.boxesNeeded}</p>
-                      <p className="text-[10px] text-background/50 uppercase tracking-wider mt-1">boxes</p>
+                    <div className="bg-background/5 rounded-lg p-3 text-center">
+                      <p className="text-lg sm:text-xl font-bold">{calculations.boxesNeeded}</p>
+                      <p className="text-[9px] text-background/50 uppercase tracking-wider mt-0.5">boxes</p>
                     </div>
-                    <div className="bg-background/5 rounded-xl p-4 text-center">
-                      <p className="text-2xl font-bold text-emerald-400">+{calculations.wastageCount}</p>
-                      <p className="text-[10px] text-background/50 uppercase tracking-wider mt-1">wastage</p>
+                    <div className="bg-background/5 rounded-lg p-3 text-center">
+                      <p className="text-lg sm:text-xl font-bold text-emerald-400">+{calculations.wastageCount}</p>
+                      <p className="text-[9px] text-background/50 uppercase tracking-wider mt-0.5">extra</p>
                     </div>
-                    <div className="bg-background/5 rounded-xl p-4 text-center">
-                      <p className="text-2xl font-bold">{calculations.coverage}</p>
-                      <p className="text-[10px] text-background/50 uppercase tracking-wider mt-1">coverage</p>
+                    <div className="bg-background/5 rounded-lg p-3 text-center">
+                      <p className="text-lg sm:text-xl font-bold">{calculations.coverage}</p>
+                      <p className="text-[9px] text-background/50 uppercase tracking-wider mt-0.5">coverage</p>
                     </div>
                   </div>
 
                   {/* Action */}
                   <Link
                     href="/products"
-                    className="flex items-center justify-center gap-2 w-full py-3.5 bg-background text-foreground rounded-xl font-medium text-sm hover:bg-background/90 transition-colors mt-auto"
+                    className="flex items-center justify-center gap-2 w-full py-2.5 bg-background text-foreground rounded-lg font-medium text-xs sm:text-sm hover:bg-background/90 transition-colors mt-auto"
                   >
-                    <LayoutGrid className="w-4 h-4" />
-                    Browse Matching Tiles
+                    Browse Tiles
+                    <ArrowRight className="w-3.5 h-3.5" />
                   </Link>
                 </div>
               ) : (
-                <div className="flex-1 flex flex-col items-center justify-center text-center py-8">
-                  <div className="w-20 h-20 bg-background/10 rounded-2xl flex items-center justify-center mb-5">
-                    <Calculator className="w-10 h-10 text-background/30" />
+                <div className="flex-1 flex flex-col items-center justify-center text-center py-6">
+                  <div className="w-16 h-16 bg-background/10 rounded-xl flex items-center justify-center mb-3">
+                    <Calculator className="w-8 h-8 text-background/30" />
                   </div>
-                  <p className="text-background/50 text-sm max-w-[180px] leading-relaxed">
-                    Enter your room dimensions to calculate tiles needed
+                  <p className="text-background/50 text-xs max-w-[160px] leading-relaxed">
+                    Enter dimensions to calculate
                   </p>
                 </div>
               )}

@@ -135,47 +135,47 @@ export default function ToolsPage() {
 
           {/* Calculator Tool */}
           {activeTool === 'calculator' && (
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
-              <div className="bg-muted/30 rounded-2xl p-6 sm:p-8">
-                <h2 className="text-lg font-medium text-foreground mb-6">Room Dimensions</h2>
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <div className="bg-card border border-border rounded-xl p-5 sm:p-6">
+                <h2 className="text-base sm:text-lg font-semibold text-foreground mb-5">Room Dimensions</h2>
                 
-                <div className="flex justify-end mb-4">
-                  <div className="flex bg-background rounded-lg p-0.5 border border-border">
+                <div className="flex justify-end mb-3">
+                  <div className="flex bg-muted rounded-lg p-0.5 border border-border">
                     <button onClick={() => setUnit('cm')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${unit === 'cm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>cm</button>
                     <button onClick={() => setUnit('m')} className={`px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${unit === 'm' ? 'bg-foreground text-background' : 'text-muted-foreground'}`}>m</button>
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4 mb-6">
+                <div className="grid grid-cols-2 gap-4 mb-5">
                   <div>
                     <label className="block text-xs text-muted-foreground mb-2">Length ({unit})</label>
-                    <input type="number" value={length} onChange={(e) => setLength(e.target.value)} placeholder={unit === 'cm' ? '300' : '3'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-lg font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
+                    <input type="number" value={length} onChange={(e) => setLength(e.target.value)} placeholder={unit === 'cm' ? '300' : '3'} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-base font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
                   </div>
                   <div>
                     <label className="block text-xs text-muted-foreground mb-2">Width ({unit})</label>
-                    <input type="number" value={width} onChange={(e) => setWidth(e.target.value)} placeholder={unit === 'cm' ? '400' : '4'} className="w-full px-4 py-3 border border-border rounded-lg bg-background text-foreground text-lg font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
+                    <input type="number" value={width} onChange={(e) => setWidth(e.target.value)} placeholder={unit === 'cm' ? '400' : '4'} className="w-full px-3 py-2.5 border border-border rounded-lg bg-background text-foreground text-base font-medium placeholder:text-muted-foreground/50 focus:outline-none focus:border-foreground" />
                   </div>
                 </div>
 
-                <div className="mb-6">
+                <div className="mb-5">
                   <label className="block text-xs text-muted-foreground mb-3">Tile Size</label>
                   <div className="flex flex-wrap gap-2">
                     {tileSizeOptions.map((option) => (
-                      <button key={option.value} onClick={() => setTileSize(option.value)} className={`px-4 py-2 rounded-lg border text-sm font-medium transition-all ${tileSize === option.value ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-muted-foreground text-foreground'}`}>{option.label}</button>
+                      <button key={option.value} onClick={() => setTileSize(option.value)} className={`px-3 py-2 rounded-lg border text-sm font-medium transition-all ${tileSize === option.value ? 'border-foreground bg-foreground text-background' : 'border-border hover:border-muted-foreground text-foreground'}`}>{option.label}</button>
                     ))}
                   </div>
                 </div>
 
                 <div>
-                  <div className="flex justify-between mb-3">
+                  <div className="flex justify-between mb-2">
                     <label className="text-xs text-muted-foreground">Wastage Allowance</label>
-                    <span className="text-sm font-medium text-foreground">{wastage}%</span>
+                    <span className="text-sm font-semibold text-foreground">{wastage}%</span>
                   </div>
                   <input type="range" min="5" max="20" value={wastage} onChange={(e) => setWastage(parseInt(e.target.value))} className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-foreground" />
                 </div>
               </div>
 
-              <div className="bg-foreground text-background rounded-2xl p-6 sm:p-8 flex flex-col">
+              <div className="bg-foreground text-background rounded-xl p-5 sm:p-6 flex flex-col">
                 <h2 className="text-lg font-medium mb-6">Results</h2>
                 {calculations ? (
                   <div className="flex-1 flex flex-col">

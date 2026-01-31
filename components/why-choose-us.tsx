@@ -11,9 +11,9 @@ const features = [
 
 export function WhyChooseUs() {
   return (
-    <section className="py-12 sm:py-24 lg:py-32 bg-background border-t border-border">
+    <section className="relative py-8 sm:py-12 lg:py-16 bg-background border-t border-border z-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 sm:gap-12 lg:gap-16">
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 sm:gap-8 lg:gap-12">
           {/* Left - Heading */}
           <AnimatedSection animation="fade-up">
             <p className="text-xs text-muted-foreground uppercase tracking-wider mb-2 sm:mb-3">Why Us</p>
