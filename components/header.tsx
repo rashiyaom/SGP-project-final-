@@ -24,7 +24,7 @@ export function Header() {
     { label: 'Shop', href: '/products' },
     { label: 'Collections', href: '/collections' },
     { label: 'Gallery', href: '/inspiration' },
-    { label: 'Calculator', href: '/tools' },
+    { label: 'Calculator', href: '/calculator' },
     { label: 'Contact', href: '/contact' },
   ]
 
