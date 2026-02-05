@@ -20,7 +20,7 @@ const inspirationProjects: Inspiration[] = [
     id: '1',
     title: 'Modern Bathroom',
     category: 'Bathroom',
-    icon: '🚿',
+    icon: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=1200&auto=format&fit=crop',
     description: 'Sleek white marble tiles create a spa-like atmosphere',
     featured: true,
   },
@@ -28,7 +28,7 @@ const inspirationProjects: Inspiration[] = [
     id: '2',
     title: 'Kitchen Elegance',
     category: 'Kitchen',
-    icon: '🍳',
+    icon: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=1200&auto=format&fit=crop',
     description: 'Premium granite counters with coordinating backsplash',
     featured: false,
   },
@@ -36,7 +36,7 @@ const inspirationProjects: Inspiration[] = [
     id: '3',
     title: 'Living Room Luxury',
     category: 'Living Room',
-    icon: '🛋️',
+    icon: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop',
     description: 'Large format tiles create continuity in modern living spaces',
     featured: true,
   },
@@ -44,7 +44,7 @@ const inspirationProjects: Inspiration[] = [
     id: '4',
     title: 'Bedroom Serenity',
     category: 'Bedroom',
-    icon: '🛏️',
+    icon: 'https://images.unsplash.com/photo-1616594039964-ae9021a400a0?q=80&w=1200&auto=format&fit=crop',
     description: 'Warm terracotta tiles bring natural comfort to bedrooms',
     featured: false,
   },
@@ -52,7 +52,7 @@ const inspirationProjects: Inspiration[] = [
     id: '5',
     title: 'Entryway Statement',
     category: 'Entryway',
-    icon: '🚪',
+    icon: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop',
     description: 'Bold geometric patterns make a striking first impression',
     featured: true,
   },
@@ -60,7 +60,7 @@ const inspirationProjects: Inspiration[] = [
     id: '6',
     title: 'Outdoor Oasis',
     category: 'Outdoor',
-    icon: '🌿',
+    icon: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1200&auto=format&fit=crop',
     description: 'Weather-resistant tiles perfect for patios and pools',
     featured: false,
   },
@@ -68,7 +68,7 @@ const inspirationProjects: Inspiration[] = [
     id: '7',
     title: 'Commercial Space',
     category: 'Commercial',
-    icon: '🏢',
+    icon: 'https://images.unsplash.com/photo-1497366216548-37526070297c?q=80&w=1200&auto=format&fit=crop',
     description: 'Durable tiles for high-traffic commercial environments',
     featured: false,
   },
@@ -76,7 +76,7 @@ const inspirationProjects: Inspiration[] = [
     id: '8',
     title: 'Accent Walls',
     category: 'Accent',
-    icon: '🎨',
+    icon: 'https://images.unsplash.com/photo-1615873968403-89e068629265?q=80&w=1200&auto=format&fit=crop',
     description: 'Feature walls with unique tile patterns and textures',
     featured: true,
   },
@@ -116,8 +116,12 @@ export default function InspirationPage() {
                     <div className="group cursor-pointer">
                       <div className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all">
                         {/* Featured Image */}
-                        <div className="relative h-80 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-9xl overflow-hidden group-hover:scale-105 transition-transform">
-                          {inspiration.icon}
+                        <div className="relative h-80 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                          <img
+                            src={inspiration.icon}
+                            alt={inspiration.title}
+                            className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                          />
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/30 transition-colors"></div>
                         </div>
 
@@ -160,8 +164,12 @@ export default function InspirationPage() {
                   <div className="group cursor-pointer h-full">
                     <div className="bg-card border border-border rounded-xl overflow-hidden hover:shadow-lg transition-all h-full flex flex-col">
                       {/* Image */}
-                      <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 flex items-center justify-center text-6xl overflow-hidden group-hover:scale-105 transition-transform">
-                        {inspiration.icon}
+                      <div className="relative h-48 bg-gradient-to-br from-muted to-muted/50 overflow-hidden">
+                        <img
+                          src={inspiration.icon}
+                          alt={inspiration.title}
+                          className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                        />
                         <div className="absolute inset-0 bg-black/0 group-hover:bg-black/20 transition-colors"></div>
                       </div>
 

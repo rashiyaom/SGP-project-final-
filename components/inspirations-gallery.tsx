@@ -9,31 +9,31 @@ const inspirations = [
 		id: '1',
 		title: 'Modern Bathroom',
 		category: 'Bathroom',
-		image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=800&auto=format&fit=crop',
+		image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=1200&auto=format&fit=crop',
 	},
 	{
 		id: '2',
 		title: 'Kitchen Elegance',
 		category: 'Kitchen',
-		image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=800&auto=format&fit=crop',
+		image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=1200&auto=format&fit=crop',
 	},
 	{
 		id: '3',
-		title: 'Living Room',
+		title: 'Living Room Luxury',
 		category: 'Living',
-		image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=800&auto=format&fit=crop',
+		image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=1200&auto=format&fit=crop',
 	},
 	{
 		id: '4',
-		title: 'Outdoor Space',
+		title: 'Outdoor Oasis',
 		category: 'Outdoor',
-		image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=800&auto=format&fit=crop',
+		image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=1200&auto=format&fit=crop',
 	},
 	{
 		id: '5',
 		title: 'Minimalist Entry',
 		category: 'Entryway',
-		image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop',
+		image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=1200&auto=format&fit=crop',
 	},
 ]
 

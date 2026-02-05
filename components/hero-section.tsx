@@ -53,16 +53,14 @@ export function HeroSection() {
           {heroImages.map((image, index) => (
             <div
               key={image.url}
-              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${
-                index === currentImageIndex ? 'opacity-100' : 'opacity-0'
-              }`}
+              className={`absolute inset-0 transition-opacity duration-1000 ease-in-out ${index === currentImageIndex ? 'opacity-100' : 'opacity-0'
+                }`}
             >
-              <img 
+              <img
                 src={image.url || "/placeholder.svg"}
                 alt={image.alt}
-                className={`w-full h-full object-cover transition-transform duration-[6000ms] ease-out ${
-                  index === currentImageIndex && !isTransitioning ? 'scale-105' : 'scale-100'
-                }`}
+                className={`w-full h-full object-cover transition-transform duration-[6000ms] ease-out ${index === currentImageIndex && !isTransitioning ? 'scale-105' : 'scale-100'
+                  }`}
               />
             </div>
           ))}
@@ -81,9 +79,8 @@ export function HeroSection() {
                   setIsTransitioning(false)
                 }, 300)
               }}
-              className={`h-0.5 sm:h-1 rounded-full transition-all duration-500 ${
-                index === currentImageIndex ? 'w-6 sm:w-8 bg-foreground' : 'w-1.5 sm:w-2 bg-foreground/40 hover:bg-foreground/60'
-              }`}
+              className={`h-0.5 sm:h-1 rounded-full transition-all duration-500 ${index === currentImageIndex ? 'w-6 sm:w-8 bg-foreground' : 'w-1.5 sm:w-2 bg-foreground/40 hover:bg-foreground/60'
+                }`}
               aria-label={`Go to slide ${index + 1}`}
             />
           ))}
@@ -156,11 +153,11 @@ export function HeroSection() {
                 <p className="text-xs text-foreground uppercase tracking-wider font-medium">Premium Tiles</p>
               </div>
               <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 max-w-md">
-                Our signature collection has the basics covered. Compact yet generous, efficient yet flexible, 
+                Our signature collection has the basics covered. Compact yet generous, efficient yet flexible,
                 it maximizes its space for your comfort. Each piece is crafted for lasting beauty.
               </p>
-              <Link 
-                href="/products" 
+              <Link
+                href="/products"
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 border border-foreground text-foreground text-xs sm:text-sm font-medium rounded-full hover:bg-foreground hover:text-background transition-colors"
               >
                 Shop collection
@@ -170,7 +167,7 @@ export function HeroSection() {
             {/* Right - Image */}
             <AnimatedSection animation="slide-left" delay={200} className="order-1 lg:order-2">
               <div className="aspect-[4/3] rounded-lg overflow-hidden">
-                <img 
+                <img
                   src="https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=2070&auto=format&fit=crop"
                   alt="Premium ceramic tiles showroom"
                   className="w-full h-full object-cover hover:scale-105 transition-transform duration-700"
@@ -214,8 +211,8 @@ export function HeroSection() {
             <h3 className="font-serif text-2xl sm:text-4xl lg:text-5xl lg:text-6xl text-foreground">
               Quality <span className="italic">x</span> Design
             </h3>
-            <Link 
-              href="/products" 
+            <Link
+              href="/products"
               className="inline-flex items-center gap-3 text-foreground group"
             >
               <ArrowUpRight className="w-4 sm:w-5 h-4 sm:h-5 group-hover:translate-x-1 group-hover:-translate-y-1 transition-transform" />

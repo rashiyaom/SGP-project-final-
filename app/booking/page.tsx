@@ -21,7 +21,7 @@ export default function BookingPage() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    console.log('Booking submitted:', formData)
+    // Handle booking submission
   }
 
   return (

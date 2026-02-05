@@ -13,31 +13,31 @@ interface Product {
 }
 
 const featuredProducts: Product[] = [
-  { 
-    id: '1', 
-    name: 'Marble Elegance 60x60', 
-    price: 2500, 
+  {
+    id: '1',
+    name: 'Marble Elegance 60x60',
+    price: 2500,
     category: 'Marble',
     image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop'
   },
-  { 
-    id: '2', 
-    name: 'Ceramic White Pearl', 
-    price: 1200, 
+  {
+    id: '2',
+    name: 'Ceramic White Pearl',
+    price: 1200,
     category: 'Ceramic',
     image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop'
   },
-  { 
-    id: '3', 
-    name: 'Designer Faucet Chrome', 
-    price: 3200, 
+  {
+    id: '3',
+    name: 'Designer Faucet Chrome',
+    price: 3200,
     category: 'Sanitary',
     image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop'
   },
-  { 
-    id: '4', 
-    name: 'Minimal Design Tile', 
-    price: 1000, 
+  {
+    id: '4',
+    name: 'Minimal Design Tile',
+    price: 1000,
     category: 'Ceramic',
     image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=800&auto=format&fit=crop'
   },
@@ -56,8 +56,8 @@ export function FeaturedProducts() {
                 Featured <span className="italic">Products</span>
               </h2>
             </div>
-            <Link 
-              href="/products" 
+            <Link
+              href="/products"
               className="inline-flex items-center gap-2 text-xs sm:text-sm text-foreground hover:text-foreground/70 transition-colors group whitespace-nowrap"
             >
               View all
@@ -74,8 +74,8 @@ export function FeaturedProducts() {
                 <div className="group cursor-pointer">
                   {/* Image */}
                   <div className="aspect-square bg-muted/50 rounded-lg mb-2 sm:mb-4 overflow-hidden">
-                    <img 
-                      src={product.image || "/placeholder.svg"} 
+                    <img
+                      src={product.image || "/placeholder.svg"}
                       alt={product.name}
                       className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
                     />
