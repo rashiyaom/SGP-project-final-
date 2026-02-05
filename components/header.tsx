@@ -1,19 +1,21 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu, X, Sun, Moon, ShoppingCart } from 'lucide-react'
+import { Menu, X, Sun, Moon, ShoppingCart, Heart } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useCart } from '@/contexts/cart-context'
+import { useDreams } from '@/contexts/dreams-context'
 
-export function Header() {
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+export function Header() {  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { getTotalItems } = useCart()
+  const { getTotalDreams } = useDreams()
   const cartItemCount = getTotalItems()
+  const dreamCount = getTotalDreams()
 
   useEffect(() => {
     setMounted(true)
@@ -60,10 +62,21 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-          </nav>
+          </nav>          {/* Right - CTA */}
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">            {/* Dreams Button */}
+            <Link
+              href="/dreams"
+              className="relative p-2 sm:p-2.5 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0"
+              title="View saved dreams"
+            >
+              <Heart className="w-4 h-4 text-foreground" />
+              {dreamCount > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-foreground text-background text-xs font-bold rounded-full flex items-center justify-center">
+                  {dreamCount}
+                </span>
+              )}
+            </Link>
 
-          {/* Right - CTA */}
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
             {/* Cart Button */}
             <Link
               href="/cart"

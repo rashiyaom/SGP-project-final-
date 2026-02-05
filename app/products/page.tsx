@@ -4,7 +4,7 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilters } from '@/components/product-filters'
-import { useState, useEffect, Suspense } from 'react'
+import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { X, SlidersHorizontal } from 'lucide-react'
 
@@ -14,11 +14,11 @@ function ProductsContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const collectionParam = searchParams.get('collection') as CollectionType
-  
-  const [sortBy, setSortBy] = useState('default')
+    const [sortBy, setSortBy] = useState('default')
   const [selectedCollection, setSelectedCollection] = useState<CollectionType>(collectionParam || null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
+  const [selectedFilters, setSelectedFilters] = useState<Record<string, string[]>>({})
 
   useEffect(() => {
     setSelectedCollection(collectionParam || null)
@@ -29,8 +29,7 @@ function ProductsContent() {
       ceramic: 'Ceramic Tiles',
       marble: 'Marble',
       sanitary: 'Bathroom & Sanitary',
-      accessories: 'Accessories',
-    }
+      accessories: 'Accessories',    }
     return id ? names[id] : 'All Products'
   }
 
@@ -42,6 +41,19 @@ function ProductsContent() {
       router.push('/products')
     }
   }
+
+  const handleFiltersChange = useCallback((filters: Record<string, string[]>) => {
+    setSelectedFilters(filters)
+    
+    // Convert filters to active filter tags
+    const activeFilterTags: string[] = []
+    Object.values(filters).forEach(values => {
+      values.forEach(value => {
+        activeFilterTags.push(value.charAt(0).toUpperCase() + value.slice(1))
+      })
+    })
+    setActiveFilters(activeFilterTags)
+  }, [])
 
   const removeFilter = (filter: string) => {
     setActiveFilters(activeFilters.filter((f) => f !== filter))
@@ -58,11 +70,10 @@ function ProductsContent() {
       <section className="flex-1">
         <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-12 py-4 sm:py-6 lg:py-8">
           {/* Main Content */}
-          <div className="flex gap-4 sm:gap-6 lg:gap-12 flex-col lg:flex-row">
-            {/* Filters Sidebar - Hidden on mobile */}
+          <div className="flex gap-4 sm:gap-6 lg:gap-12 flex-col lg:flex-row">            {/* Filters Sidebar - Hidden on mobile */}
             <div className="hidden lg:block w-56 xl:w-64 flex-shrink-0">
               <h2 className="font-serif text-xl lg:text-2xl text-foreground mb-6 lg:mb-8">Filter Options</h2>
-              <ProductFilters collection={selectedCollection} onCollectionChange={handleCollectionChange} />
+              <ProductFilters collection={selectedCollection} onCollectionChange={handleCollectionChange} onFiltersChange={handleFiltersChange} />
             </div>
 
             {/* Products */}
@@ -96,12 +107,10 @@ function ProductsContent() {
                     <option value="rating">Top Rated</option>
                   </select>
                 </div>
-              </div>
-
-              {/* Mobile Filters Drawer */}
+              </div>              {/* Mobile Filters Drawer */}
               {showMobileFilters && (
                 <div className="lg:hidden mb-4 sm:mb-6 p-3 sm:p-4 border border-border rounded-lg bg-muted/30 max-h-[60vh] overflow-y-auto">
-                  <ProductFilters collection={selectedCollection} onCollectionChange={handleCollectionChange} />
+                  <ProductFilters collection={selectedCollection} onCollectionChange={handleCollectionChange} onFiltersChange={handleFiltersChange} />
                 </div>
               )}
 
@@ -135,10 +144,8 @@ function ProductsContent() {
                     {getCollectionName(selectedCollection)}
                   </h1>
                 </div>
-              )}
-
-              {/* Products Grid */}
-              <ProductGrid sortBy={sortBy} collection={selectedCollection} />
+              )}              {/* Products Grid */}
+              <ProductGrid sortBy={sortBy} collection={selectedCollection} filters={selectedFilters} />
 
               {/* Pagination - Mobile optimized */}
               <div className="flex items-center justify-center gap-1 sm:gap-2 mt-8 sm:mt-12">

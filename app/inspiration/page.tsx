@@ -2,9 +2,12 @@
 
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
+import { Toast } from '@/components/toast'
 import { Star, Share2 } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
+import { useState } from 'react'
+import { useDreams } from '@/contexts/dreams-context'
 
 interface Inspiration {
   id: string
@@ -83,12 +86,70 @@ const inspirationProjects: Inspiration[] = [
 ]
 
 export default function InspirationPage() {
+  const { isDreamSaved, addDream, removeDream } = useDreams()
+  const [showToast, setShowToast] = useState(false)
+  const [toastMessage, setToastMessage] = useState('')
+
+  const handleSaveDream = (e: React.MouseEvent, inspiration: Inspiration) => {
+    e.preventDefault()
+    
+    if (isDreamSaved(inspiration.id)) {
+      removeDream(inspiration.id)
+      setToastMessage('Removed from your dreams')
+    } else {
+      addDream({
+        id: inspiration.id,
+        title: inspiration.title,
+        category: inspiration.category,
+        description: inspiration.description,
+        image: inspiration.icon,
+        style: 'Beautiful Design',
+        colorPalette: 'Premium Colors',
+        tileSize: '60x60 cm',
+      })
+      setToastMessage('Added to your dreams!')
+    }
+    setShowToast(true)
+    setTimeout(() => setShowToast(false), 2000)
+  }
+
+  const handleShare = (e: React.MouseEvent, inspiration: Inspiration) => {
+    e.preventDefault()
+    const shareUrl = `${typeof window !== 'undefined' ? window.location.origin : ''}/inspiration/${inspiration.id}`
+    const shareText = `Check out this beautiful ${inspiration.title} design on Luxe Tiles!`
+
+    if (navigator.share) {
+      navigator.share({
+        title: inspiration.title,
+        text: shareText,
+        url: shareUrl,
+      }).catch(() => {
+        copyToClipboard(shareUrl)
+      })
+    } else {
+      copyToClipboard(shareUrl)
+    }
+  }
+  const copyToClipboard = (text: string) => {
+    navigator.clipboard.writeText(text).then(() => {
+      setToastMessage('Link copied to clipboard!')
+      setShowToast(true)
+      setTimeout(() => setShowToast(false), 2000)
+    })
+  }
+
   return (
     <main className="min-h-screen bg-background flex flex-col">
-      <Header />
+      <Header />      {showToast && (
+        <Toast
+          message={toastMessage}
+          type="success"
+          onClose={() => setShowToast(false)}
+        />
+      )}
 
-<section className="flex-1 py-8">
-  <div className="max-w-7xl mx-auto px-6 sm:px-12">
+      <section className="flex-1 py-8">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12">
           {/* Page Header */}
           <div className="text-center mb-12">
             <h1 className="font-serif text-5xl text-foreground mb-4">
@@ -183,25 +244,25 @@ export default function InspirationPage() {
                         </h3>
                         <p className="text-muted-foreground text-sm flex-1 mb-4 line-clamp-2">
                           {inspiration.description}
-                        </p>
-
-                        {/* Actions */}
+                        </p>                        {/* Actions */}
                         <div className="flex gap-2">
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 border-border bg-transparent"
+                          <button
+                            onClick={(e) => handleSaveDream(e, inspiration)}
+                            className={`flex-1 flex items-center justify-center gap-2 px-3 py-2 rounded text-sm font-medium transition-colors ${
+                              isDreamSaved(inspiration.id)
+                                ? 'bg-accent text-foreground hover:bg-accent/90'
+                                : 'border border-border bg-transparent text-foreground hover:bg-muted'
+                            }`}
                           >
-                            <Star className="w-4 h-4 mr-2" />
+                            <Star className={`w-4 h-4 ${isDreamSaved(inspiration.id) ? 'fill-current' : ''}`} />
                             Save
-                          </Button>
-                          <Button
-                            size="sm"
-                            variant="outline"
-                            className="flex-1 border-border bg-transparent"
+                          </button>
+                          <button
+                            onClick={(e) => handleShare(e, inspiration)}
+                            className="flex-1 flex items-center justify-center gap-2 px-3 py-2 border border-border rounded text-sm font-medium bg-transparent text-foreground hover:bg-muted transition-colors"
                           >
                             <Share2 className="w-4 h-4" />
-                          </Button>
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -223,8 +284,7 @@ export default function InspirationPage() {
             <Link href="/mood-board">
               <Button className="bg-primary hover:bg-primary/90 text-primary-foreground h-12 px-8 text-lg font-semibold">
                 Start Creating
-              </Button>
-            </Link>
+              </Button>            </Link>
           </div>
         </div>
       </section>

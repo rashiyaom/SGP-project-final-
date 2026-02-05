@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState } from "react"
+import React, { useState, useEffect } from "react"
 import Link from 'next/link'
 
 type CollectionType = 'ceramic' | 'marble' | 'sanitary' | 'accessories' | null
@@ -14,6 +14,7 @@ interface FilterOption {
 interface ProductFiltersProps {
   collection?: CollectionType
   onCollectionChange?: (collection: CollectionType) => void
+  onFiltersChange?: (filters: Record<string, string[]>) => void
 }
 
 const collections = [
@@ -23,7 +24,7 @@ const collections = [
   { id: 'accessories', label: 'Accessories' },
 ]
 
-export function ProductFilters({ collection, onCollectionChange }: ProductFiltersProps) {
+export function ProductFilters({ collection, onCollectionChange, onFiltersChange }: ProductFiltersProps) {
 
   // ===== CERAMIC TILES FILTERS =====
   const [ceramicTypes, setCeramicTypes] = useState<FilterOption[]>([
@@ -152,7 +153,6 @@ export function ProductFilters({ collection, onCollectionChange }: ProductFilter
     { id: 'sanitary', label: 'Sanitary Ware', checked: false },
     { id: 'accessories', label: 'Accessories', checked: false },
   ])
-
   const toggleFilter = (
     setter: React.Dispatch<React.SetStateAction<FilterOption[]>>,
     id: string,
@@ -160,9 +160,50 @@ export function ProductFilters({ collection, onCollectionChange }: ProductFilter
     setter((prev) =>
       prev.map((item) =>
         item.id === id ? { ...item, checked: !item.checked } : item,
-      ),
+      )
     )
   }
+
+  // Effect to notify parent when filters change
+  useEffect(() => {
+    if (onFiltersChange) {
+      const allFilters: Record<string, string[]> = {
+        ceramicTypes: ceramicTypes.filter(t => t.checked).map(t => t.id),
+        ceramicFinishes: ceramicFinishes.filter(f => f.checked).map(f => f.id),
+        ceramicSizes: ceramicSizes.filter(s => s.checked).map(s => s.id),
+        ceramicUsages: ceramicUsages.filter(u => u.checked).map(u => u.id),
+        marbleTypes: marbleTypes.filter(t => t.checked).map(t => t.id),
+        marbleFinishes: marbleFinishes.filter(f => f.checked).map(f => f.id),
+        marbleSizes: marbleSizes.filter(s => s.checked).map(s => s.id),
+        marbleOrigins: marbleOrigins.filter(o => o.checked).map(o => o.id),
+        sanitaryTypes: sanitaryTypes.filter(t => t.checked).map(t => t.id),
+        sanitaryMaterials: sanitaryMaterials.filter(m => m.checked).map(m => m.id),
+        sanitaryStyles: sanitaryStyles.filter(s => s.checked).map(s => s.id),
+        accessoriesTypes: accessoriesTypes.filter(t => t.checked).map(t => t.id),
+        accessoriesMaterials: accessoriesMaterials.filter(m => m.checked).map(m => m.id),
+        accessoriesColors: accessoriesColors.filter(c => c.checked).map(c => c.id),
+        accessoriesFinishes: accessoriesFinishes.filter(f => f.checked).map(f => f.id),
+        allCategories: allCategories.filter(c => c.checked).map(c => c.id),
+      }
+      onFiltersChange(allFilters)
+    }  }, [
+    ceramicTypes,
+    ceramicFinishes,
+    ceramicSizes,
+    ceramicUsages,
+    marbleTypes,
+    marbleFinishes,
+    marbleSizes,
+    marbleOrigins,
+    sanitaryTypes,
+    sanitaryMaterials,
+    sanitaryStyles,
+    accessoriesTypes,
+    accessoriesMaterials,
+    accessoriesColors,
+    accessoriesFinishes,
+    allCategories,
+  ])
 
   const FilterSection = ({
     title,

@@ -52,9 +52,11 @@ const allProducts: Product[] = [
 export function ProductGrid({
   sortBy,
   collection,
+  filters = {},
 }: {
   sortBy: string
   collection?: 'ceramic' | 'marble' | 'sanitary' | 'accessories' | null
+  filters?: Record<string, string[]>
 }) {
   let displayProducts = [...allProducts]
 
@@ -67,6 +69,20 @@ export function ProductGrid({
     displayProducts = displayProducts.filter(p => p.category === 'Bathroom & Sanitary Ware')
   } else if (collection === 'accessories') {
     displayProducts = displayProducts.filter(p => p.category === 'Accessories')
+  }
+
+  // Apply additional filters based on category filter selections (for "all products" view)
+  const selectedCategories = filters.allCategories || []
+  if (selectedCategories.length > 0 && !collection) {
+    const categoryMap: Record<string, string> = {
+      'ceramic': 'Ceramic Tiles',
+      'marble': 'Marble',
+      'sanitary': 'Bathroom & Sanitary Ware',
+      'accessories': 'Accessories',
+    }
+    displayProducts = displayProducts.filter(p => 
+      selectedCategories.some(cat => categoryMap[cat] === p.category)
+    )
   }
 
   // Apply sorting

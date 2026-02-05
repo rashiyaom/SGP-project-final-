@@ -4,6 +4,7 @@ import { Geist, Geist_Mono, Playfair_Display } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
 import { CartProvider } from '@/contexts/cart-context'
+import { DreamsProvider } from '@/contexts/dreams-context'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"], variable: '--font-sans' });
@@ -50,8 +51,7 @@ export default function RootLayout({
   children: React.ReactNode
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body className={`font-sans antialiased ${_geist.variable} ${_geistMono.variable} ${_playfair.variable}`}>
+    <html lang="en" suppressHydrationWarning>      <body className={`font-sans antialiased ${_geist.variable} ${_geistMono.variable} ${_playfair.variable}`}>
         <ThemeProvider
           attribute="class"
           defaultTheme="system"
@@ -59,7 +59,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <CartProvider>
-            {children}
+            <DreamsProvider>
+              {children}
+            </DreamsProvider>
           </CartProvider>
         </ThemeProvider>
         <Analytics />

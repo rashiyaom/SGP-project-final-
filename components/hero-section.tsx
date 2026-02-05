@@ -151,13 +151,12 @@ export function HeroSection() {
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-2 h-2 bg-foreground rounded-full"></div>
                 <p className="text-xs text-foreground uppercase tracking-wider font-medium">Premium Tiles</p>
-              </div>
-              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 max-w-md">
+              </div>              <p className="text-sm sm:text-base text-muted-foreground leading-relaxed mb-6 max-w-md">
                 Our signature collection has the basics covered. Compact yet generous, efficient yet flexible,
                 it maximizes its space for your comfort. Each piece is crafted for lasting beauty.
               </p>
               <Link
-                href="/products"
+                href="/collections"
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 border border-foreground text-foreground text-xs sm:text-sm font-medium rounded-full hover:bg-foreground hover:text-background transition-colors"
               >
                 Shop collection
