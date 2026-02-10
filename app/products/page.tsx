@@ -4,17 +4,17 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilters } from '@/components/product-filters'
-import { useState, useEffect, useCallback, Suspense } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { X, SlidersHorizontal } from 'lucide-react'
 
 type CollectionType = 'ceramic' | 'marble' | 'sanitary' | 'accessories' | null
 
-function ProductsContent() {
+export default function ProductsPage() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const collectionParam = searchParams.get('collection') as CollectionType
-    const [sortBy, setSortBy] = useState('default')
+  const [sortBy, setSortBy] = useState('default')
   const [selectedCollection, setSelectedCollection] = useState<CollectionType>(collectionParam || null)
   const [showMobileFilters, setShowMobileFilters] = useState(false)
   const [activeFilters, setActiveFilters] = useState<string[]>([])
@@ -178,5 +178,3 @@ function ProductsContent() {
     </main>
   )
 }
-
-export default ProductsContent
