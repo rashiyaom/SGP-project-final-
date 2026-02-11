@@ -4,9 +4,13 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import { Calendar, Clock, User, Mail, Phone } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 
 export default function BookingPage() {
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -16,6 +20,14 @@ export default function BookingPage() {
     appointmentType: 'consultation',
     message: '',
   })
+
+  // Protect booking page - require authentication
+  useEffect(() => {
+    if (!isAuthenticated) {
+      sessionStorage.setItem('redirectAfterLogin', '/booking')
+      router.push('/auth/login')
+    }
+  }, [isAuthenticated, router])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()

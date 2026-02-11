@@ -9,7 +9,8 @@ import { useState } from 'react'
 import { Heart, ShoppingCart, ArrowRight, Star, ChevronLeft, ChevronRight, RotateCcw, View } from 'lucide-react'
 import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
-import { useParams } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
+import { useParams, useRouter } from 'next/navigation'
 
 // Product images based on category
 const productImages: Record<string, string[]> = {
@@ -67,8 +68,10 @@ const productDatabase: Record<string, any> = {
 
 export default function ProductDetailPage() {
   const params = useParams()
+  const router = useRouter()
   const productId = params.id as string
   const { addItem } = useCart()
+  const { isAuthenticated, requireAuth } = useAuth()
   
   const [quantity, setQuantity] = useState(2)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -113,17 +116,19 @@ export default function ProductDetailPage() {
   }
 
   const handleAddToCart = () => {
-    addItem({
-      id: product.id,
-      name: product.name,
-      price: product.price,
-      quantity: quantity,
-      image: images[0],
-      category: product.category,
+    requireAuth(() => {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: quantity,
+        image: images[0],
+        category: product.category,
+      })
+      setAddedToCart(true)
+      setShowToast(true)
+      setTimeout(() => setAddedToCart(false), 2000)
     })
-    setAddedToCart(true)
-    setShowToast(true)
-    setTimeout(() => setAddedToCart(false), 2000)
   }
 
   return (

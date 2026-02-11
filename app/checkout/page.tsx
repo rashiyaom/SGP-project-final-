@@ -5,12 +5,24 @@ import { Footer } from '@/components/footer'
 import { Button } from '@/components/ui/button'
 import Link from 'next/link'
 import { Check, CreditCard, Truck } from 'lucide-react'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
+import { useRouter } from 'next/navigation'
+import { useAuth } from '@/contexts/auth-context'
 
 export default function CheckoutPage() {
+  const router = useRouter()
+  const { isAuthenticated } = useAuth()
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>(
     'shipping',
   )
+
+  // Protect checkout page - require authentication
+  useEffect(() => {
+    if (!isAuthenticated) {
+      sessionStorage.setItem('redirectAfterLogin', '/checkout')
+      router.push('/auth/login')
+    }
+  }, [isAuthenticated, router])
 
   return (
     <main className="min-h-screen bg-background flex flex-col">

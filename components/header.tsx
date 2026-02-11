@@ -1,19 +1,22 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu, X, Sun, Moon, ShoppingCart, Heart } from 'lucide-react'
+import { Menu, X, Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
+import { useAuth } from '@/contexts/auth-context'
 
 export function Header() {  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [showUserMenu, setShowUserMenu] = useState(false)
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { getTotalItems } = useCart()
   const { getTotalDreams } = useDreams()
+  const { user, isAuthenticated, logout } = useAuth()
   const cartItemCount = getTotalItems()
   const dreamCount = getTotalDreams()
 
@@ -108,6 +111,54 @@ export function Header() {  const [mobileMenuOpen, setMobileMenuOpen] = useState
                 <div className="w-4 h-4" />
               )}
             </button>
+
+            {/* User Profile / Login Button */}
+            {isAuthenticated && user ? (
+              <div className="relative">
+                <button
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0"
+                  aria-label="User menu"
+                >
+                  <div className="w-6 h-6 bg-gradient-to-br from-[#d4af37] to-[#8b7635] rounded-full flex items-center justify-center flex-shrink-0">
+                    <span className="text-white font-bold text-xs uppercase">
+                      {user.name.charAt(0)}
+                    </span>
+                  </div>
+                  <span className="hidden sm:block text-sm font-medium text-foreground max-w-[100px] truncate">
+                    {user.name}
+                  </span>
+                </button>
+
+                {/* User Dropdown Menu */}
+                {showUserMenu && (
+                  <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-2xl shadow-xl overflow-hidden z-50">
+                    <div className="p-3 border-b border-border">
+                      <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                      <p className="text-xs text-muted-foreground truncate">{user.email}</p>
+                    </div>
+                    <button
+                      onClick={() => {
+                        logout()
+                        setShowUserMenu(false)
+                      }}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      Logout
+                    </button>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <Link
+                href="/auth/login"
+                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] text-white text-sm font-semibold rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0"
+              >
+                <User className="w-4 h-4" />
+                <span className="hidden sm:inline">Login</span>
+              </Link>
+            )}
 
             {/* Mobile Menu Button */}
             <button
