@@ -3,47 +3,20 @@
 import Link from 'next/link'
 import { ArrowRight } from 'lucide-react'
 import { AnimatedSection } from './animated-section'
-
-interface Product {
-  id: string
-  name: string
-  price: number
-  category: string
-  image: string
-}
-
-const featuredProducts: Product[] = [
-  {
-    id: '1',
-    name: 'Marble Elegance 60x60',
-    price: 2500,
-    category: 'Marble',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: '2',
-    name: 'Ceramic White Pearl',
-    price: 1200,
-    category: 'Ceramic',
-    image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: '3',
-    name: 'Designer Faucet Chrome',
-    price: 3200,
-    category: 'Sanitary',
-    image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=800&auto=format&fit=crop'
-  },
-  {
-    id: '4',
-    name: 'Minimal Design Tile',
-    price: 1000,
-    category: 'Ceramic',
-    image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=800&auto=format&fit=crop'
-  },
-]
+import { useAdmin } from '@/contexts/admin-context'
 
 export function FeaturedProducts() {
+  const { products } = useAdmin()
+  // Show first 4 products as featured (one from each category ideally)
+  const categoryOrder = ['Marble', 'Ceramic Tiles', 'Bathroom & Sanitary Ware', 'Accessories']
+  const featuredProducts = categoryOrder
+    .map(cat => products.find(p => p.category === cat))
+    .filter((p): p is NonNullable<typeof p> => Boolean(p))
+    .slice(0, 4)
+
+  // Fallback: if not enough, just use first 4
+  const displayProducts = featuredProducts.length >= 4 ? featuredProducts : products.slice(0, 4)
+
   return (
     <section className="py-12 sm:py-24 lg:py-32 bg-background border-t border-border">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-12">
@@ -68,7 +41,7 @@ export function FeaturedProducts() {
 
         {/* Products Grid */}
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-6 lg:gap-8">
-          {featuredProducts.map((product, index) => (
+          {displayProducts.map((product, index) => (
             <AnimatedSection key={product.id} animation="fade-up" delay={index * 100}>
               <Link href={`/products/${product.id}`}>
                 <div className="group cursor-pointer">

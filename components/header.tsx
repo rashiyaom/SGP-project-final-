@@ -1,7 +1,7 @@
 'use client'
 
 import Link from 'next/link'
-import { Menu, X, Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
+import { Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
@@ -9,7 +9,7 @@ import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
 import { useAuth } from '@/contexts/auth-context'
 
-export function Header() {  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
+export function Header() {
   const [mounted, setMounted] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const pathname = usePathname()
@@ -160,35 +160,8 @@ export function Header() {  const [mobileMenuOpen, setMobileMenuOpen] = useState
               </Link>
             )}
 
-            {/* Mobile Menu Button */}
-            <button
-              className="lg:hidden p-1.5 sm:p-2 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full flex-shrink-0"
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
-            </button>
           </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <nav className="lg:hidden mt-3 bg-background border border-border rounded-2xl p-3 space-y-1">
-            {navItems.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                onClick={() => setMobileMenuOpen(false)}
-                className={`block px-3 sm:px-4 py-2 sm:py-3 rounded-lg text-sm transition-colors ${
-                  isActive(item.href)
-                    ? 'bg-foreground text-background'
-                    : 'text-foreground hover:bg-muted'
-                }`}
-              >
-                {item.label}
-              </Link>
-            ))}
-          </nav>
-        )}
       </header>
       {/* Spacer to prevent content from going under fixed header */}
       <div className="h-14 sm:h-20" />

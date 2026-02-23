@@ -6,6 +6,8 @@ import { ThemeProvider } from '@/components/theme-provider'
 import { AuthProvider } from '@/contexts/auth-context'
 import { CartProvider } from '@/contexts/cart-context'
 import { DreamsProvider } from '@/contexts/dreams-context'
+import { AdminProvider } from '@/contexts/admin-context'
+import { MobileBottomNav } from '@/components/mobile-bottom-nav'
 import './globals.css'
 
 const _geist = Geist({ subsets: ["latin"], variable: '--font-sans' });
@@ -61,11 +63,14 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <AuthProvider>
-            <CartProvider>
-              <DreamsProvider>
-                {children}
-              </DreamsProvider>
-            </CartProvider>
+            <AdminProvider>
+              <CartProvider>
+                <DreamsProvider>
+                  {children}
+                  <MobileBottomNav />
+                </DreamsProvider>
+              </CartProvider>
+            </AdminProvider>
           </AuthProvider>
         </ThemeProvider>
         <Analytics />
