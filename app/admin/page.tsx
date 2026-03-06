@@ -21,8 +21,21 @@ import {
   LayoutDashboard,
   Lock,
   ArrowLeft,
+  Layers,
+  Gem,
+  Bath,
+  Wrench,
+  TrendingUp,
+  AlertCircle,
+  Tag,
+  Grid3X3,
+  BarChart3,
+  ArrowUpRight,
+  MessageSquare,
+  Mail,
+  Phone,
 } from 'lucide-react'
-import { useAdmin, type Product, type GalleryItem, type CustomFilter } from '@/contexts/admin-context'
+import { useAdmin, type Product, type GalleryItem, type CustomFilter, type ContactMessage } from '@/contexts/admin-context'
 import Link from 'next/link'
 
 // ===== ADMIN LOGIN =====
@@ -105,10 +118,10 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => boolean }) {
 
 // ===== CATEGORY HELPERS =====
 const categories = [
-  { id: 'Ceramic Tiles', label: 'Ceramic Tiles', color: 'from-blue-500 to-cyan-500' },
-  { id: 'Marble', label: 'Marble', color: 'from-amber-500 to-orange-500' },
-  { id: 'Bathroom & Sanitary Ware', label: 'Bathroom & Sanitary', color: 'from-emerald-500 to-teal-500' },
-  { id: 'Accessories', label: 'Accessories', color: 'from-purple-500 to-pink-500' },
+  { id: 'Ceramic Tiles', label: 'Ceramic Tiles', shortLabel: 'Ceramic', color: 'from-blue-500 to-cyan-500', icon: Layers, bgLight: 'bg-blue-500/10', textColor: 'text-blue-600 dark:text-blue-400', borderColor: 'border-blue-500/20' },
+  { id: 'Marble', label: 'Marble', shortLabel: 'Marble', color: 'from-amber-500 to-orange-500', icon: Gem, bgLight: 'bg-amber-500/10', textColor: 'text-amber-600 dark:text-amber-400', borderColor: 'border-amber-500/20' },
+  { id: 'Bathroom & Sanitary Ware', label: 'Bathroom & Sanitary', shortLabel: 'Sanitary', color: 'from-emerald-500 to-teal-500', icon: Bath, bgLight: 'bg-emerald-500/10', textColor: 'text-emerald-600 dark:text-emerald-400', borderColor: 'border-emerald-500/20' },
+  { id: 'Accessories', label: 'Accessories', shortLabel: 'Accessories', color: 'from-purple-500 to-pink-500', icon: Wrench, bgLight: 'bg-purple-500/10', textColor: 'text-purple-600 dark:text-purple-400', borderColor: 'border-purple-500/20' },
 ] as const
 
 type CategoryId = typeof categories[number]['id']
@@ -712,13 +725,32 @@ function DeleteConfirm({
 }
 
 // ===== SIDEBAR TABS =====
-type Tab = 'products' | 'gallery' | 'filters'
+type Tab = 'dashboard' | 'ceramic' | 'marble' | 'sanitary' | 'accessories' | 'gallery' | 'filters' | 'messages'
 
-const tabs: { id: Tab; label: string; icon: React.ElementType }[] = [
-  { id: 'products', label: 'Products', icon: ShoppingBag },
-  { id: 'gallery', label: 'Gallery', icon: ImageIcon },
-  { id: 'filters', label: 'Filters', icon: Filter },
+const tabs: { id: Tab; label: string; shortLabel: string; icon: React.ElementType }[] = [
+  { id: 'dashboard', label: 'Dashboard', shortLabel: 'Home', icon: LayoutDashboard },
+  { id: 'ceramic', label: 'Ceramic Tiles', shortLabel: 'Ceramic', icon: Layers },
+  { id: 'marble', label: 'Marble', shortLabel: 'Marble', icon: Gem },
+  { id: 'sanitary', label: 'Bathroom & Sanitary', shortLabel: 'Sanitary', icon: Bath },
+  { id: 'accessories', label: 'Accessories', shortLabel: 'Accessories', icon: Wrench },
+  { id: 'gallery', label: 'Gallery', shortLabel: 'Gallery', icon: ImageIcon },
+  { id: 'filters', label: 'Filters', shortLabel: 'Filters', icon: Filter },
+  { id: 'messages', label: 'Messages', shortLabel: 'Msgs', icon: MessageSquare },
 ]
+
+const tabToCategoryMap: Record<string, string> = {
+  ceramic: 'Ceramic Tiles',
+  marble: 'Marble',
+  sanitary: 'Bathroom & Sanitary Ware',
+  accessories: 'Accessories',
+}
+
+const categoryToTabMap: Record<string, Tab> = {
+  'Ceramic Tiles': 'ceramic',
+  'Marble': 'marble',
+  'Bathroom & Sanitary Ware': 'sanitary',
+  'Accessories': 'accessories',
+}
 
 // ===== MAIN ADMIN DASHBOARD =====
 export default function AdminPage() {
@@ -735,15 +767,17 @@ export default function AdminPage() {
     addCustomFilter,
     updateCustomFilter,
     deleteCustomFilter,
+    contactMessages,
+    markMessageRead,
+    deleteContactMessage,
     isAdmin,
     adminLogin,
     adminLogout,
   } = useAdmin()
 
   const router = useRouter()
-  const [activeTab, setActiveTab] = useState<Tab>('products')
+  const [activeTab, setActiveTab] = useState<Tab>('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedCategory, setSelectedCategory] = useState<string>('all')
 
   // Modals
   const [showProductForm, setShowProductForm] = useState(false)
@@ -758,28 +792,26 @@ export default function AdminPage() {
     return <AdminLogin onLogin={adminLogin} />
   }
 
-  // ===== FILTERED DATA =====
-  const filteredProducts = products.filter(p => {
-    const matchesSearch = p.name.toLowerCase().includes(searchQuery.toLowerCase())
-    const matchesCategory = selectedCategory === 'all' || p.category === selectedCategory
-    return matchesSearch && matchesCategory
-  })
+  // ===== HELPERS =====
+  const isCategoryTab = ['ceramic', 'marble', 'sanitary', 'accessories'].includes(activeTab)
+  const currentCategoryName = tabToCategoryMap[activeTab] || ''
+  const currentCategoryMeta = categories.find(c => c.id === currentCategoryName)
 
+  const getCategoryProducts = (catName: string) =>
+    products.filter(p => p.category === catName)
+
+  const getCategoryFilters = (catName: string) =>
+    customFilters.filter(f => f.category === catName || f.category === 'all')
+
+  // Current tab's products (for category views)
+  const currentProducts = isCategoryTab
+    ? getCategoryProducts(currentCategoryName).filter(p => p.name.toLowerCase().includes(searchQuery.toLowerCase()))
+    : []
+
+  // Gallery filtered
   const filteredGallery = gallery.filter(g =>
     g.title.toLowerCase().includes(searchQuery.toLowerCase())
   )
-
-  const filteredFilters = customFilters.filter(f =>
-    f.label.toLowerCase().includes(searchQuery.toLowerCase())
-  )
-
-  // ===== STATS =====
-  const stats = [
-    { label: 'Total Products', value: products.length, icon: Package, color: 'from-blue-500 to-cyan-500' },
-    { label: 'Gallery Items', value: gallery.length, icon: ImageIcon, color: 'from-amber-500 to-orange-500' },
-    { label: 'Filter Groups', value: customFilters.length, icon: Filter, color: 'from-emerald-500 to-teal-500' },
-    { label: 'Out of Stock', value: products.filter(p => !p.inStock).length, icon: Eye, color: 'from-red-500 to-pink-500' },
-  ]
 
   return (
     <div className="min-h-screen bg-background">
@@ -843,6 +875,7 @@ export default function AdminPage() {
               if (deleteTarget.type === 'product') deleteProduct(deleteTarget.id)
               else if (deleteTarget.type === 'gallery') deleteGalleryItem(deleteTarget.id)
               else if (deleteTarget.type === 'filter') deleteCustomFilter(deleteTarget.id)
+              else if (deleteTarget.type === 'message') deleteContactMessage(deleteTarget.id)
             }}
             onClose={() => setDeleteTarget(null)}
           />
@@ -851,7 +884,7 @@ export default function AdminPage() {
 
       {/* Top Header */}
       <header className="sticky top-0 z-50 bg-background/80 backdrop-blur-xl border-b border-border">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className="w-9 h-9 bg-foreground rounded-xl flex items-center justify-center">
               <LayoutDashboard className="w-5 h-5 text-background" />
@@ -884,332 +917,573 @@ export default function AdminPage() {
         </div>
       </header>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
-        {/* Stats Cards */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 mb-8">
-          {stats.map((stat) => (
-            <motion.div
-              key={stat.label}
-              initial={{ opacity: 0, y: 10 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-card border border-border rounded-2xl p-4 sm:p-5"
-            >
-              <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center mb-3`}>
-                <stat.icon className="w-5 h-5 text-white" />
-              </div>
-              <p className="text-2xl font-bold text-foreground">{stat.value}</p>
-              <p className="text-xs text-muted-foreground mt-0.5">{stat.label}</p>
-            </motion.div>
-          ))}
-        </div>
-
-        {/* Tab Navigation */}
-        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
-          <div className="flex items-center gap-1 bg-muted/50 border border-border rounded-xl p-1">
-            {tabs.map(tab => (
-              <button
-                key={tab.id}
-                onClick={() => {
-                  setActiveTab(tab.id)
-                  setSearchQuery('')
-                  setSelectedCategory('all')
-                }}
-                className={`relative flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-medium transition-all ${
-                  activeTab === tab.id
-                    ? 'bg-foreground text-background shadow-sm'
-                    : 'text-muted-foreground hover:text-foreground'
-                }`}
-              >
-                <tab.icon className="w-4 h-4" />
-                <span className="hidden sm:inline">{tab.label}</span>
-              </button>
-            ))}
-          </div>
-
-          {/* Search + Add Button */}
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={`Search ${activeTab}...`}
-                className="w-full h-10 pl-10 pr-4 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
-              />
-            </div>
-            <button
-              onClick={() => {
-                if (activeTab === 'products') { setEditingProduct(undefined); setShowProductForm(true) }
-                else if (activeTab === 'gallery') { setEditingGallery(undefined); setShowGalleryForm(true) }
-                else if (activeTab === 'filters') { setEditingFilter(undefined); setShowFilterForm(true) }
-              }}
-              className="h-10 px-4 bg-foreground text-background rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
-            >
-              <Plus className="w-4 h-4" />
-              <span className="hidden sm:inline">Add {activeTab === 'products' ? 'Product' : activeTab === 'gallery' ? 'Item' : 'Filter'}</span>
-            </button>
-          </div>
-        </div>
-
-        {/* Category Filter (Products & Filters Tab) */}
-        {(activeTab === 'products' || activeTab === 'filters') && (
-          <div className="flex items-center gap-2 mb-6 overflow-x-auto pb-1">
-            <button
-              onClick={() => setSelectedCategory('all')}
-              className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border transition-all ${
-                selectedCategory === 'all'
-                  ? 'bg-foreground text-background border-foreground'
-                  : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
-              }`}
-            >
-              All ({products.length})
-            </button>
-            {categories.map(cat => {
-              const count = products.filter(p => p.category === cat.id).length
+      {/* Navigation Tabs - scrollable on mobile */}
+      <div className="border-b border-border bg-background/50 backdrop-blur-sm">
+        <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center gap-0.5 overflow-x-auto py-2 scrollbar-hide -mx-4 px-4 sm:mx-0 sm:px-0">
+            {tabs.map(tab => {
+              const isActive = activeTab === tab.id
+              const isCatTab = ['ceramic', 'marble', 'sanitary', 'accessories'].includes(tab.id)
+              const catMeta = isCatTab ? categories.find(c => c.id === tabToCategoryMap[tab.id]) : null
+              const count = isCatTab ? getCategoryProducts(tabToCategoryMap[tab.id]).length : 0
               return (
                 <button
-                  key={cat.id}
-                  onClick={() => setSelectedCategory(cat.id)}
-                  className={`px-4 py-2 rounded-full text-sm font-medium whitespace-nowrap border transition-all ${
-                    selectedCategory === cat.id
-                      ? 'bg-foreground text-background border-foreground'
-                      : 'border-border text-muted-foreground hover:text-foreground hover:border-foreground/30'
+                  key={tab.id}
+                  onClick={() => {
+                    setActiveTab(tab.id)
+                    setSearchQuery('')
+                  }}
+                  className={`relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
+                    isActive
+                      ? 'bg-foreground text-background shadow-sm'
+                      : 'text-muted-foreground hover:text-foreground hover:bg-muted/50'
                   }`}
                 >
-                  {cat.label} ({count})
+                  <tab.icon className="w-4 h-4" />
+                  <span className="hidden lg:inline">{tab.label}</span>
+                  <span className="lg:hidden">{tab.shortLabel}</span>
+                  {isCatTab && count > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-background/20 text-background' : 'bg-muted text-muted-foreground'
+                    }`}>
+                      {count}
+                    </span>
+                  )}
+                  {tab.id === 'messages' && contactMessages.filter(m => !m.read).length > 0 && (
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded-full ${
+                      isActive ? 'bg-red-400 text-white' : 'bg-red-500 text-white'
+                    }`}>
+                      {contactMessages.filter(m => !m.read).length}
+                    </span>
+                  )}
                 </button>
               )
             })}
           </div>
+        </div>
+      </div>
+
+      <div className="max-w-[1440px] mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+        {/* ============================================== */}
+        {/* ===== DASHBOARD TAB - Overview of everything ===== */}
+        {/* ============================================== */}
+        {activeTab === 'dashboard' && (
+          <div className="space-y-8">
+            {/* Overall Stats */}
+            <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center mb-3">
+                  <Package className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{products.length}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Total Products</p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.05 }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-amber-500 to-orange-500 flex items-center justify-center mb-3">
+                  <ImageIcon className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{gallery.length}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Gallery Items</p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.1 }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center mb-3">
+                  <Filter className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{customFilters.length}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Filter Groups</p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.12 }}
+                onClick={() => { setActiveTab('messages'); setSearchQuery('') }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5 cursor-pointer hover:shadow-md transition-shadow">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center mb-3">
+                  <MessageSquare className="w-5 h-5 text-white" />
+                </div>
+                <div className="flex items-center gap-2">
+                  <p className="text-2xl font-bold text-foreground">{contactMessages.length}</p>
+                  {contactMessages.filter(m => !m.read).length > 0 && (
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded-full bg-red-500 text-white">
+                      {contactMessages.filter(m => !m.read).length} new
+                    </span>
+                  )}
+                </div>
+                <p className="text-xs text-muted-foreground mt-0.5">Messages</p>
+              </motion.div>
+              <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0.15 }}
+                className="bg-card border border-border rounded-2xl p-4 sm:p-5">
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-red-500 to-pink-500 flex items-center justify-center mb-3">
+                  <AlertCircle className="w-5 h-5 text-white" />
+                </div>
+                <p className="text-2xl font-bold text-foreground">{products.filter(p => !p.inStock).length}</p>
+                <p className="text-xs text-muted-foreground mt-0.5">Out of Stock</p>
+              </motion.div>
+            </div>
+
+            {/* Category Cards — click to go to category */}
+            <div>
+              <h2 className="font-serif text-lg text-foreground mb-4">Product Categories</h2>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                {categories.map((cat, i) => {
+                  const catProducts = getCategoryProducts(cat.id)
+                  const inStock = catProducts.filter(p => p.inStock).length
+                  const outOfStock = catProducts.filter(p => !p.inStock).length
+                  const avgPrice = catProducts.length > 0
+                    ? Math.round(catProducts.reduce((s, p) => s + p.price, 0) / catProducts.length)
+                    : 0
+                  const catFilters = getCategoryFilters(cat.id)
+
+                  return (
+                    <motion.button
+                      key={cat.id}
+                      initial={{ opacity: 0, y: 15 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ delay: 0.1 + i * 0.05 }}
+                      onClick={() => {
+                        setActiveTab(categoryToTabMap[cat.id])
+                        setSearchQuery('')
+                      }}
+                      className="bg-card border border-border rounded-2xl p-5 text-left hover:shadow-lg hover:border-foreground/20 transition-all group"
+                    >
+                      <div className="flex items-center justify-between mb-4">
+                        <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center`}>
+                          <cat.icon className="w-6 h-6 text-white" />
+                        </div>
+                        <ArrowUpRight className="w-5 h-5 text-muted-foreground group-hover:text-foreground transition-colors" />
+                      </div>
+                      <h3 className="font-semibold text-foreground mb-1">{cat.label}</h3>
+                      <p className="text-xs text-muted-foreground mb-4">{catProducts.length} products · {catFilters.length} filters</p>
+                      <div className="grid grid-cols-3 gap-2 text-center">
+                        <div className="bg-muted/50 rounded-lg py-2">
+                          <p className="text-sm font-bold text-foreground">{inStock}</p>
+                          <p className="text-[10px] text-muted-foreground">In Stock</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-2">
+                          <p className="text-sm font-bold text-foreground">{outOfStock}</p>
+                          <p className="text-[10px] text-muted-foreground">Out</p>
+                        </div>
+                        <div className="bg-muted/50 rounded-lg py-2">
+                          <p className="text-sm font-bold text-foreground">₹{avgPrice > 999 ? `${(avgPrice / 1000).toFixed(1)}k` : avgPrice}</p>
+                          <p className="text-[10px] text-muted-foreground">Avg</p>
+                        </div>
+                      </div>
+                    </motion.button>
+                  )
+                })}
+              </div>
+            </div>
+
+            {/* Recently added products */}
+            <div>
+              <h2 className="font-serif text-lg text-foreground mb-4">Recent Products</h2>
+              <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+                {products.slice(-6).reverse().map(product => {
+                  const catMeta = categories.find(c => c.id === product.category)
+                  return (
+                    <div key={product.id} className="bg-card border border-border rounded-xl overflow-hidden group">
+                      <div className="relative aspect-square bg-muted/30 overflow-hidden">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      </div>
+                      <div className="p-2.5">
+                        <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{catMeta?.shortLabel}</p>
+                        <h4 className="text-xs font-medium text-foreground line-clamp-1 mt-0.5">{product.name}</h4>
+                        <p className="text-xs font-bold text-foreground mt-1">₹{product.price.toLocaleString()}</p>
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          </div>
         )}
 
-        {/* ===== PRODUCTS TAB ===== */}
-        {activeTab === 'products' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-            <AnimatePresence mode="popLayout">
-              {filteredProducts.map((product) => (
-                <motion.div
-                  key={product.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
+        {/* ============================================== */}
+        {/* ===== CATEGORY VIEWS (Ceramic / Marble / Sanitary / Accessories) ===== */}
+        {/* ============================================== */}
+        {isCategoryTab && currentCategoryMeta && (
+          <div className="space-y-6">
+            {/* Category Header */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div className="flex items-center gap-4">
+                <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${currentCategoryMeta.color} flex items-center justify-center`}>
+                  <currentCategoryMeta.icon className="w-7 h-7 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-serif text-2xl text-foreground">{currentCategoryMeta.label}</h2>
+                  <p className="text-sm text-muted-foreground">
+                    {getCategoryProducts(currentCategoryName).length} products · {getCategoryFilters(currentCategoryName).filter(f => f.category === currentCategoryName).length} filters
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search products..."
+                    className="w-full h-10 pl-10 pr-4 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                  />
+                </div>
+                <button
+                  onClick={() => {
+                    setEditingProduct(undefined)
+                    setShowProductForm(true)
+                  }}
+                  className={`h-10 px-4 bg-gradient-to-r ${currentCategoryMeta.color} text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap shadow-sm`}
                 >
-                  {/* Image */}
-                  <div className="relative aspect-square bg-muted/30 overflow-hidden">
-                    <img
-                      src={product.image}
-                      alt={product.name}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {/* Stock Badge */}
-                    <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                      product.inStock
-                        ? 'bg-emerald-500/90 text-white'
-                        : 'bg-red-500/90 text-white'
-                    }`}>
-                      {product.inStock ? 'In Stock' : 'Out of Stock'}
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Product</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Category Stats Row */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              {(() => {
+                const catProds = getCategoryProducts(currentCategoryName)
+                const inStock = catProds.filter(p => p.inStock).length
+                const outOfStock = catProds.filter(p => !p.inStock).length
+                const avgRating = catProds.length > 0
+                  ? (catProds.reduce((s, p) => s + p.rating, 0) / catProds.length).toFixed(1)
+                  : '0'
+                const totalValue = catProds.reduce((s, p) => s + p.price, 0)
+                return [
+                  { label: 'Total Products', value: catProds.length, icon: Package },
+                  { label: 'In Stock', value: inStock, icon: Check },
+                  { label: 'Out of Stock', value: outOfStock, icon: AlertCircle },
+                  { label: 'Avg Rating', value: avgRating, icon: Star },
+                ].map(stat => (
+                  <div key={stat.label} className={`${currentCategoryMeta.bgLight} border ${currentCategoryMeta.borderColor} rounded-xl p-3.5`}>
+                    <div className="flex items-center gap-2 mb-1.5">
+                      <stat.icon className={`w-4 h-4 ${currentCategoryMeta.textColor}`} />
+                      <p className="text-xs text-muted-foreground">{stat.label}</p>
                     </div>
-                    {/* Actions Overlay */}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={() => {
-                          setEditingProduct(product)
-                          setShowProductForm(true)
-                        }}
-                        className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      >
-                        <Pencil className="w-4 h-4 text-gray-800" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget({ type: 'product', id: product.id, title: product.name })}
-                        className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      >
-                        <Trash2 className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
+                    <p className="text-xl font-bold text-foreground">{stat.value}</p>
                   </div>
-                  {/* Content */}
-                  <div className="p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{product.category}</p>
-                    <h3 className="font-medium text-foreground text-sm mb-2 line-clamp-1">{product.name}</h3>
-                    {/* Filter tags */}
-                    {product.filters && Object.values(product.filters).flat().length > 0 && (
-                      <div className="flex flex-wrap gap-1 mb-2">
-                        {Object.values(product.filters).flat().slice(0, 3).map((tag, i) => (
-                          <span key={i} className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">{tag}</span>
-                        ))}
-                        {Object.values(product.filters).flat().length > 3 && (
-                          <span className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">
-                            +{Object.values(product.filters).flat().length - 3}
-                          </span>
-                        )}
+                ))
+              })()}
+            </div>
+
+            {/* Category Filters Quick View */}
+            {(() => {
+              const catFilters = customFilters.filter(f => f.category === currentCategoryName)
+              if (catFilters.length === 0) return null
+              return (
+                <div className={`${currentCategoryMeta.bgLight} border ${currentCategoryMeta.borderColor} rounded-2xl p-4`}>
+                  <div className="flex items-center justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Tag className={`w-4 h-4 ${currentCategoryMeta.textColor}`} />
+                      <h3 className="font-medium text-foreground text-sm">Active Filters</h3>
+                    </div>
+                    <button
+                      onClick={() => setActiveTab('filters')}
+                      className="text-xs text-muted-foreground hover:text-foreground transition-colors flex items-center gap-1"
+                    >
+                      Manage <ArrowUpRight className="w-3 h-3" />
+                    </button>
+                  </div>
+                  <div className="flex flex-wrap gap-3">
+                    {catFilters.map(filter => (
+                      <div key={filter.id} className="bg-background/60 rounded-xl px-3 py-2 border border-border/50">
+                        <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wider mb-1">{filter.label}</p>
+                        <div className="flex flex-wrap gap-1">
+                          {filter.options.map(opt => (
+                            <span key={opt.id} className="px-2 py-0.5 bg-muted/70 rounded text-[10px] text-foreground">{opt.label}</span>
+                          ))}
+                        </div>
                       </div>
-                    )}
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-baseline gap-1.5">
-                        <span className="font-bold text-foreground">₹{product.price.toLocaleString()}</span>
+                    ))}
+                  </div>
+                </div>
+              )
+            })()}
+
+            {/* Products Grid */}
+            <div>
+              <div className="flex items-center justify-between mb-4">
+                <h3 className="font-medium text-foreground text-sm">
+                  {searchQuery ? `Search results (${currentProducts.length})` : `All ${currentCategoryMeta.shortLabel} Products`}
+                </h3>
+                <p className="text-xs text-muted-foreground">{currentProducts.length} items</p>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                <AnimatePresence mode="popLayout">
+                  {currentProducts.map((product) => (
+                    <motion.div
+                      key={product.id}
+                      layout
+                      initial={{ opacity: 0, scale: 0.95 }}
+                      animate={{ opacity: 1, scale: 1 }}
+                      exit={{ opacity: 0, scale: 0.95 }}
+                      className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
+                    >
+                      <div className="relative aspect-square bg-muted/30 overflow-hidden">
+                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                          product.inStock ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'
+                        }`}>
+                          {product.inStock ? 'In Stock' : 'Out of Stock'}
+                        </div>
                         {product.originalPrice && (
-                          <span className="text-xs text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
+                          <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                          </div>
                         )}
+                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                          <button
+                            onClick={() => { setEditingProduct(product); setShowProductForm(true) }}
+                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                          >
+                            <Pencil className="w-4 h-4 text-gray-800" />
+                          </button>
+                          <button
+                            onClick={() => setDeleteTarget({ type: 'product', id: product.id, title: product.name })}
+                            className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                          >
+                            <Trash2 className="w-4 h-4 text-white" />
+                          </button>
+                        </div>
                       </div>
-                      <div className="flex items-center gap-0.5">
-                        <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                        <span className="text-xs font-medium text-foreground">{product.rating}</span>
+                      <div className="p-4">
+                        <h3 className="font-medium text-foreground text-sm mb-1.5 line-clamp-1">{product.name}</h3>
+                        {product.filters && Object.values(product.filters).flat().length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-2">
+                            {Object.values(product.filters).flat().slice(0, 3).map((tag, i) => (
+                              <span key={i} className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">{tag}</span>
+                            ))}
+                            {Object.values(product.filters).flat().length > 3 && (
+                              <span className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">
+                                +{Object.values(product.filters).flat().length - 3}
+                              </span>
+                            )}
+                          </div>
+                        )}
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-baseline gap-1.5">
+                            <span className="font-bold text-foreground">₹{product.price.toLocaleString()}</span>
+                            {product.originalPrice && (
+                              <span className="text-xs text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
+                            )}
+                          </div>
+                          <div className="flex items-center gap-0.5">
+                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                            <span className="text-xs font-medium text-foreground">{product.rating}</span>
+                          </div>
+                        </div>
                       </div>
-                    </div>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
+                    </motion.div>
+                  ))}
+                </AnimatePresence>
 
-            {filteredProducts.length === 0 && (
-              <div className="col-span-full py-20 text-center">
-                <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No products found</p>
+                {currentProducts.length === 0 && (
+                  <div className="col-span-full py-20 text-center">
+                    <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                    <p className="text-muted-foreground mb-2">No products found</p>
+                    <button
+                      onClick={() => { setEditingProduct(undefined); setShowProductForm(true) }}
+                      className="text-sm text-foreground underline underline-offset-4 hover:no-underline"
+                    >
+                      Add your first {currentCategoryMeta.shortLabel} product
+                    </button>
+                  </div>
+                )}
               </div>
-            )}
+            </div>
           </div>
         )}
 
+        {/* ============================================== */}
         {/* ===== GALLERY TAB ===== */}
+        {/* ============================================== */}
         {activeTab === 'gallery' && (
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-            <AnimatePresence mode="popLayout">
-              {filteredGallery.map((item) => (
-                <motion.div
-                  key={item.id}
-                  layout
-                  initial={{ opacity: 0, scale: 0.95 }}
-                  animate={{ opacity: 1, scale: 1 }}
-                  exit={{ opacity: 0, scale: 0.95 }}
-                  className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
-                >
-                  <div className="relative h-52 bg-muted/30 overflow-hidden">
-                    <img
-                      src={item.image}
-                      alt={item.title}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500"
-                    />
-                    {item.featured && (
-                      <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8962e] text-white text-[10px] font-bold uppercase tracking-wider">
-                        ★ Featured
-                      </div>
-                    )}
-                    <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                      <button
-                        onClick={() => {
-                          setEditingGallery(item)
-                          setShowGalleryForm(true)
-                        }}
-                        className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      >
-                        <Pencil className="w-4 h-4 text-gray-800" />
-                      </button>
-                      <button
-                        onClick={() => setDeleteTarget({ type: 'gallery', id: item.id, title: item.title })}
-                        className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                      >
-                        <Trash2 className="w-4 h-4 text-white" />
-                      </button>
-                    </div>
-                  </div>
-                  <div className="p-4">
-                    <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.category}</p>
-                    <h3 className="font-medium text-foreground text-sm mb-1">{item.title}</h3>
-                    <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
-                  </div>
-                </motion.div>
-              ))}
-            </AnimatePresence>
-
-            {filteredGallery.length === 0 && (
-              <div className="col-span-full py-20 text-center">
-                <ImageIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground">No gallery items found</p>
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl text-foreground">Gallery</h2>
+                <p className="text-sm text-muted-foreground">{gallery.length} inspiration images</p>
               </div>
-            )}
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search gallery..."
+                    className="w-full h-10 pl-10 pr-4 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                  />
+                </div>
+                <button
+                  onClick={() => { setEditingGallery(undefined); setShowGalleryForm(true) }}
+                  className="h-10 px-4 bg-foreground text-background rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Item</span>
+                </button>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+              <AnimatePresence mode="popLayout">
+                {filteredGallery.map((item) => (
+                  <motion.div
+                    key={item.id}
+                    layout
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    exit={{ opacity: 0, scale: 0.95 }}
+                    className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
+                  >
+                    <div className="relative h-52 bg-muted/30 overflow-hidden">
+                      <img src={item.image} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                      {item.featured && (
+                        <div className="absolute top-3 left-3 px-2.5 py-1 rounded-full bg-gradient-to-r from-[#d4af37] to-[#b8962e] text-white text-[10px] font-bold uppercase tracking-wider">
+                          ★ Featured
+                        </div>
+                      )}
+                      <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                        <button
+                          onClick={() => { setEditingGallery(item); setShowGalleryForm(true) }}
+                          className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                        >
+                          <Pencil className="w-4 h-4 text-gray-800" />
+                        </button>
+                        <button
+                          onClick={() => setDeleteTarget({ type: 'gallery', id: item.id, title: item.title })}
+                          className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                        >
+                          <Trash2 className="w-4 h-4 text-white" />
+                        </button>
+                      </div>
+                    </div>
+                    <div className="p-4">
+                      <p className="text-[10px] uppercase tracking-wider text-muted-foreground mb-1">{item.category}</p>
+                      <h3 className="font-medium text-foreground text-sm mb-1">{item.title}</h3>
+                      <p className="text-xs text-muted-foreground line-clamp-2">{item.description}</p>
+                    </div>
+                  </motion.div>
+                ))}
+              </AnimatePresence>
+
+              {filteredGallery.length === 0 && (
+                <div className="col-span-full py-20 text-center">
+                  <ImageIcon className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground">No gallery items found</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
 
+        {/* ============================================== */}
         {/* ===== FILTERS TAB ===== */}
+        {/* ============================================== */}
         {activeTab === 'filters' && (
           <div className="space-y-6">
-            <div className="bg-card border border-border rounded-2xl p-5 mb-2">
-              <h3 className="font-medium text-foreground text-sm mb-1">Manage Filters</h3>
-              <p className="text-xs text-muted-foreground">Create and edit filter groups by category. These appear on the website filter sidebar and inside the product form for auto-classification.</p>
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl text-foreground">Filters</h2>
+                <p className="text-sm text-muted-foreground">{customFilters.length} filter groups across all categories</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <div className="relative flex-1 sm:w-64">
+                  <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                  <input
+                    type="text"
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    placeholder="Search filters..."
+                    className="w-full h-10 pl-10 pr-4 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                  />
+                </div>
+                <button
+                  onClick={() => { setEditingFilter(undefined); setShowFilterForm(true) }}
+                  className="h-10 px-4 bg-foreground text-background rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap"
+                >
+                  <Plus className="w-4 h-4" />
+                  <span className="hidden sm:inline">Add Filter</span>
+                </button>
+              </div>
             </div>
 
             {/* Category-wise filter groups */}
-            {categories
-              .filter(cat => selectedCategory === 'all' || selectedCategory === cat.id)
-              .map(cat => {
-              const catFilters = customFilters.filter(f => f.category === cat.id)
-              if (catFilters.length === 0 && searchQuery) return null
+            {categories.map(cat => {
+              const catFilters = customFilters
+                .filter(f => f.category === cat.id)
+                .filter(f => f.label.toLowerCase().includes(searchQuery.toLowerCase()))
               return (
                 <div key={cat.id} className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className={`w-8 h-8 rounded-lg bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0`}>
-                      <Filter className="w-4 h-4 text-white" />
+                    <div className={`w-9 h-9 rounded-xl bg-gradient-to-br ${cat.color} flex items-center justify-center flex-shrink-0`}>
+                      <cat.icon className="w-4.5 h-4.5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-sm">{cat.label}</h3>
-                      <p className="text-[11px] text-muted-foreground">{catFilters.length} filter group{catFilters.length !== 1 ? 's' : ''}</p>
+                      <p className="text-[11px] text-muted-foreground">
+                        {catFilters.length} filter group{catFilters.length !== 1 ? 's' : ''}
+                      </p>
                     </div>
+                    <button
+                      onClick={() => {
+                        setEditingFilter(undefined)
+                        setShowFilterForm(true)
+                      }}
+                      className={`text-xs ${cat.textColor} hover:underline transition-colors flex items-center gap-1`}
+                    >
+                      <Plus className="w-3 h-3" /> Add
+                    </button>
                   </div>
 
-                  <AnimatePresence mode="popLayout">
-                    {catFilters
-                      .filter(f => f.label.toLowerCase().includes(searchQuery.toLowerCase()))
-                      .map((filter) => (
-                      <motion.div
-                        key={filter.id}
-                        layout
-                        initial={{ opacity: 0, y: 10 }}
-                        animate={{ opacity: 1, y: 0 }}
-                        exit={{ opacity: 0, y: -10 }}
-                        className="bg-card border border-border rounded-2xl p-4 ml-11 flex flex-col sm:flex-row sm:items-center gap-3"
-                      >
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 mb-1.5">
-                            <h4 className="font-medium text-foreground text-sm">{filter.label}</h4>
-                            <span className="px-2 py-0.5 rounded-full bg-muted text-[10px] font-medium text-muted-foreground uppercase tracking-wider">
-                              {filter.filterGroup}
-                            </span>
-                          </div>
-                          <div className="flex flex-wrap gap-1.5">
-                            {filter.options.map(opt => (
-                              <span key={opt.id} className="px-2.5 py-1 bg-muted/70 rounded-lg text-xs text-foreground">
-                                {opt.label}
+                  {catFilters.length > 0 ? (
+                    <AnimatePresence mode="popLayout">
+                      {catFilters.map((filter) => (
+                        <motion.div
+                          key={filter.id}
+                          layout
+                          initial={{ opacity: 0, y: 10 }}
+                          animate={{ opacity: 1, y: 0 }}
+                          exit={{ opacity: 0, y: -10 }}
+                          className={`${cat.bgLight} border ${cat.borderColor} rounded-2xl p-4 ml-12 flex flex-col sm:flex-row sm:items-center gap-3`}
+                        >
+                          <div className="flex-1 min-w-0">
+                            <div className="flex items-center gap-2 mb-1.5">
+                              <h4 className="font-medium text-foreground text-sm">{filter.label}</h4>
+                              <span className="px-2 py-0.5 rounded-full bg-background/60 text-[10px] font-medium text-muted-foreground uppercase tracking-wider border border-border/50">
+                                {filter.filterGroup}
                               </span>
-                            ))}
+                            </div>
+                            <div className="flex flex-wrap gap-1.5">
+                              {filter.options.map(opt => (
+                                <span key={opt.id} className="px-2.5 py-1 bg-background/60 rounded-lg text-xs text-foreground border border-border/30">
+                                  {opt.label}
+                                </span>
+                              ))}
+                            </div>
                           </div>
-                        </div>
-                        <div className="flex items-center gap-2 flex-shrink-0">
-                          <button
-                            onClick={() => {
-                              setEditingFilter(filter)
-                              setShowFilterForm(true)
-                            }}
-                            className="p-2 border border-border rounded-lg hover:bg-muted transition-colors"
-                          >
-                            <Pencil className="w-4 h-4 text-foreground" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget({ type: 'filter', id: filter.id, title: filter.label })}
-                            className="p-2 border border-red-500/20 rounded-lg hover:bg-red-500/10 transition-colors"
-                          >
-                            <Trash2 className="w-4 h-4 text-red-500" />
-                          </button>
-                        </div>
-                      </motion.div>
-                    ))}
-                  </AnimatePresence>
-
-                  {catFilters.length === 0 && (
-                    <p className="ml-11 text-xs text-muted-foreground py-2">No filters for this category yet</p>
+                          <div className="flex items-center gap-2 flex-shrink-0">
+                            <button
+                              onClick={() => { setEditingFilter(filter); setShowFilterForm(true) }}
+                              className="p-2 border border-border rounded-lg hover:bg-background/60 transition-colors"
+                            >
+                              <Pencil className="w-4 h-4 text-foreground" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget({ type: 'filter', id: filter.id, title: filter.label })}
+                              className="p-2 border border-red-500/20 rounded-lg hover:bg-red-500/10 transition-colors"
+                            >
+                              <Trash2 className="w-4 h-4 text-red-500" />
+                            </button>
+                          </div>
+                        </motion.div>
+                      ))}
+                    </AnimatePresence>
+                  ) : (
+                    <p className="ml-12 text-xs text-muted-foreground py-2">No filters for this category yet</p>
                   )}
                 </div>
               )
@@ -1217,13 +1491,15 @@ export default function AdminPage() {
 
             {/* Global / All-category filters */}
             {(() => {
-              const globalFilters = customFilters.filter(f => f.category === 'all')
+              const globalFilters = customFilters
+                .filter(f => f.category === 'all')
+                .filter(f => f.label.toLowerCase().includes(searchQuery.toLowerCase()))
               if (globalFilters.length === 0) return null
               return (
                 <div className="space-y-3">
                   <div className="flex items-center gap-3">
-                    <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center flex-shrink-0">
-                      <Filter className="w-4 h-4 text-white" />
+                    <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-gray-500 to-gray-600 flex items-center justify-center flex-shrink-0">
+                      <Grid3X3 className="w-4.5 h-4.5 text-white" />
                     </div>
                     <div className="flex-1 min-w-0">
                       <h3 className="font-semibold text-foreground text-sm">All Categories (Global)</h3>
@@ -1232,16 +1508,14 @@ export default function AdminPage() {
                   </div>
 
                   <AnimatePresence mode="popLayout">
-                    {globalFilters
-                      .filter(f => f.label.toLowerCase().includes(searchQuery.toLowerCase()))
-                      .map((filter) => (
+                    {globalFilters.map((filter) => (
                       <motion.div
                         key={filter.id}
                         layout
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: -10 }}
-                        className="bg-card border border-border rounded-2xl p-4 ml-11 flex flex-col sm:flex-row sm:items-center gap-3"
+                        className="bg-muted/30 border border-border rounded-2xl p-4 ml-12 flex flex-col sm:flex-row sm:items-center gap-3"
                       >
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 mb-1.5">
@@ -1252,7 +1526,7 @@ export default function AdminPage() {
                           </div>
                           <div className="flex flex-wrap gap-1.5">
                             {filter.options.map(opt => (
-                              <span key={opt.id} className="px-2.5 py-1 bg-muted/70 rounded-lg text-xs text-foreground">
+                              <span key={opt.id} className="px-2.5 py-1 bg-background/60 rounded-lg text-xs text-foreground border border-border/30">
                                 {opt.label}
                               </span>
                             ))}
@@ -1260,10 +1534,7 @@ export default function AdminPage() {
                         </div>
                         <div className="flex items-center gap-2 flex-shrink-0">
                           <button
-                            onClick={() => {
-                              setEditingFilter(filter)
-                              setShowFilterForm(true)
-                            }}
+                            onClick={() => { setEditingFilter(filter); setShowFilterForm(true) }}
                             className="p-2 border border-border rounded-lg hover:bg-muted transition-colors"
                           >
                             <Pencil className="w-4 h-4 text-foreground" />
@@ -1281,17 +1552,179 @@ export default function AdminPage() {
                 </div>
               )
             })()}
+          </div>
+        )}
 
-            {customFilters.length === 0 && (
-              <div className="py-20 text-center">
-                <Filter className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                <p className="text-muted-foreground mb-2">No filters yet</p>
-                <p className="text-xs text-muted-foreground">Add filters to help users find products easily</p>
+        {/* ============================================== */}
+        {/* ===== MESSAGES TAB ===== */}
+        {/* ============================================== */}
+        {activeTab === 'messages' && (
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div>
+                <h2 className="font-serif text-2xl text-foreground">Customer Messages</h2>
+                <p className="text-sm text-muted-foreground">
+                  {contactMessages.length} total · {contactMessages.filter(m => !m.read).length} unread
+                </p>
               </div>
-            )}
+              <div className="relative flex-1 sm:w-64 sm:flex-initial">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder="Search messages..."
+                  className="w-full h-10 pl-10 pr-4 bg-muted/50 border border-border rounded-xl text-sm text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20"
+                />
+              </div>
+            </div>
+
+            {/* Messages list */}
+            <div className="space-y-3">
+              <AnimatePresence mode="popLayout">
+                {contactMessages
+                  .filter(msg =>
+                    msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    msg.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                    msg.email.toLowerCase().includes(searchQuery.toLowerCase())
+                  )
+                  .map((msg) => {
+                    const date = new Date(msg.date)
+                    const timeAgo = getTimeAgo(date)
+                    return (
+                      <motion.div
+                        key={msg.id}
+                        layout
+                        initial={{ opacity: 0, y: 10 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -10 }}
+                        className={`border rounded-2xl p-5 transition-all ${
+                          msg.read
+                            ? 'bg-card border-border'
+                            : 'bg-violet-500/[0.03] border-violet-500/20 dark:bg-violet-500/[0.06]'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex items-center gap-3 min-w-0">
+                            {/* Avatar */}
+                            <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 font-bold text-sm ${
+                              msg.read
+                                ? 'bg-muted text-muted-foreground'
+                                : 'bg-violet-500/10 text-violet-600 dark:text-violet-400'
+                            }`}>
+                              {msg.name.charAt(0).toUpperCase()}
+                            </div>
+                            <div className="min-w-0">
+                              <div className="flex items-center gap-2">
+                                <h4 className="font-medium text-foreground text-sm truncate">{msg.name}</h4>
+                                {!msg.read && (
+                                  <span className="px-1.5 py-0.5 bg-violet-500 text-white text-[9px] font-bold rounded-full uppercase tracking-wider flex-shrink-0">
+                                    New
+                                  </span>
+                                )}
+                              </div>
+                              <div className="flex items-center gap-3 mt-0.5">
+                                {msg.email && (
+                                  <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                                    <Mail className="w-3 h-3 flex-shrink-0" />
+                                    {msg.email}
+                                  </span>
+                                )}
+                                {msg.phone && (
+                                  <span className="text-[11px] text-muted-foreground truncate flex items-center gap-1">
+                                    <Phone className="w-3 h-3 flex-shrink-0" />
+                                    {msg.phone}
+                                  </span>
+                                )}
+                              </div>
+                            </div>
+                          </div>
+                          <span className="text-[11px] text-muted-foreground whitespace-nowrap flex-shrink-0">{timeAgo}</span>
+                        </div>
+
+                        {/* Message content */}
+                        <div className="ml-[52px]">
+                          <p className="text-sm text-foreground/80 leading-relaxed whitespace-pre-wrap">{msg.message}</p>
+
+                          {/* Actions */}
+                          <div className="flex items-center gap-2 mt-4">
+                            {!msg.read && (
+                              <button
+                                onClick={() => markMessageRead(msg.id)}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 border border-border rounded-lg text-xs font-medium text-foreground hover:bg-foreground/10 transition-colors"
+                              >
+                                <Check className="w-3.5 h-3.5" />
+                                Mark Read
+                              </button>
+                            )}
+                            {msg.email && (
+                              <a
+                                href={`mailto:${msg.email}?subject=Re: Your inquiry at Omkar Ceramic&body=Hi ${msg.name},%0D%0A%0D%0AThank you for reaching out to us.%0D%0A%0D%0A`}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 border border-border rounded-lg text-xs font-medium text-foreground hover:bg-foreground/10 transition-colors"
+                              >
+                                <Mail className="w-3.5 h-3.5" />
+                                Reply
+                              </a>
+                            )}
+                            {msg.phone && (
+                              <a
+                                href={`tel:${msg.phone}`}
+                                className="flex items-center gap-1.5 px-3 py-1.5 bg-foreground/5 border border-border rounded-lg text-xs font-medium text-foreground hover:bg-foreground/10 transition-colors"
+                              >
+                                <Phone className="w-3.5 h-3.5" />
+                                Call
+                              </a>
+                            )}
+                            <button
+                              onClick={() => setDeleteTarget({ type: 'message', id: msg.id, title: `Message from ${msg.name}` })}
+                              className="flex items-center gap-1.5 px-3 py-1.5 border border-red-500/20 rounded-lg text-xs font-medium text-red-500 hover:bg-red-500/10 transition-colors ml-auto"
+                            >
+                              <Trash2 className="w-3.5 h-3.5" />
+                            </button>
+                          </div>
+                        </div>
+                      </motion.div>
+                    )
+                  })}
+              </AnimatePresence>
+
+              {contactMessages.length === 0 && (
+                <div className="py-20 text-center">
+                  <MessageSquare className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground mb-2">No messages yet</p>
+                  <p className="text-xs text-muted-foreground">Messages from the contact form will appear here</p>
+                </div>
+              )}
+
+              {contactMessages.length > 0 && contactMessages.filter(msg =>
+                msg.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                msg.message.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                msg.email.toLowerCase().includes(searchQuery.toLowerCase())
+              ).length === 0 && (
+                <div className="py-20 text-center">
+                  <Search className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                  <p className="text-muted-foreground">No messages match your search</p>
+                </div>
+              )}
+            </div>
           </div>
         )}
       </div>
     </div>
   )
+}
+
+// Helper: relative time
+function getTimeAgo(date: Date): string {
+  const now = new Date()
+  const diffMs = now.getTime() - date.getTime()
+  const diffMin = Math.floor(diffMs / 60000)
+  const diffHr = Math.floor(diffMs / 3600000)
+  const diffDay = Math.floor(diffMs / 86400000)
+
+  if (diffMin < 1) return 'Just now'
+  if (diffMin < 60) return `${diffMin}m ago`
+  if (diffHr < 24) return `${diffHr}h ago`
+  if (diffDay < 7) return `${diffDay}d ago`
+  return date.toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })
 }

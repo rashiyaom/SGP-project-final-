@@ -99,7 +99,7 @@ export function Header() {
                 setTheme(theme === 'dark' ? 'light' : 'dark')
               }}
               className="p-2 sm:p-2.5 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0"
-              aria-label={`Switch to ${theme === 'dark' ? 'light' : 'dark'} mode`}
+              aria-label={mounted ? `Switch to ${theme === 'dark' ? 'light' : 'dark'} mode` : 'Toggle theme'}
             >
               {mounted ? (
                 theme === 'dark' ? (
@@ -137,6 +137,22 @@ export function Header() {
                       <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <User className="w-4 h-4" />
+                      My Profile
+                    </Link>
+                    <Link
+                      href="/profile"
+                      onClick={() => setShowUserMenu(false)}
+                      className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors"
+                    >
+                      <Heart className="w-4 h-4" />
+                      Wishlist
+                    </Link>
                     <button
                       onClick={() => {
                         logout()

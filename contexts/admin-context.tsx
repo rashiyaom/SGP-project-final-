@@ -33,6 +33,16 @@ export interface CustomFilter {
   options: { id: string; label: string }[]
 }
 
+export interface ContactMessage {
+  id: string
+  name: string
+  email: string
+  phone: string
+  message: string
+  date: string
+  read: boolean
+}
+
 interface AdminContextType {
   // Products
   products: Product[]
@@ -53,6 +63,12 @@ interface AdminContextType {
   updateCustomFilter: (id: string, filter: Partial<CustomFilter>) => void
   deleteCustomFilter: (id: string) => void
   getFiltersForCategory: (category: Product['category']) => CustomFilter[]
+
+  // Contact Messages
+  contactMessages: ContactMessage[]
+  addContactMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => void
+  markMessageRead: (id: string) => void
+  deleteContactMessage: (id: string) => void
 
   // Admin Auth
   isAdmin: boolean
@@ -167,6 +183,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>(defaultProducts)
   const [gallery, setGallery] = useState<GalleryItem[]>(defaultGallery)
   const [customFilters, setCustomFilters] = useState<CustomFilter[]>(defaultFilters)
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
 
@@ -188,6 +205,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
         }
       }
       if (savedAdmin === 'true') setIsAdmin(true)
+      const savedMessages = localStorage.getItem('admin_contactMessages')
+      if (savedMessages) setContactMessages(JSON.parse(savedMessages))
     } catch (e) {
       console.error('Error loading admin data:', e)
     }
@@ -209,6 +228,11 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     if (!isLoaded) return
     localStorage.setItem('admin_customFilters', JSON.stringify(customFilters))
   }, [customFilters, isLoaded])
+
+  useEffect(() => {
+    if (!isLoaded) return
+    localStorage.setItem('admin_contactMessages', JSON.stringify(contactMessages))
+  }, [contactMessages, isLoaded])
 
   // ===== PRODUCT CRUD =====
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
@@ -262,6 +286,25 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     return customFilters.filter(f => f.category === category || f.category === 'all')
   }, [customFilters])
 
+  // ===== CONTACT MESSAGES CRUD =====
+  const addContactMessage = useCallback((msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => {
+    const newMsg: ContactMessage = {
+      ...msg,
+      id: generateId(),
+      date: new Date().toISOString(),
+      read: false,
+    }
+    setContactMessages(prev => [newMsg, ...prev])
+  }, [])
+
+  const markMessageRead = useCallback((id: string) => {
+    setContactMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
+  }, [])
+
+  const deleteContactMessage = useCallback((id: string) => {
+    setContactMessages(prev => prev.filter(m => m.id !== id))
+  }, [])
+
   // ===== ADMIN AUTH =====
   const adminLogin = useCallback((password: string) => {
     if (password === ADMIN_PASSWORD) {
@@ -293,6 +336,10 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       updateCustomFilter,
       deleteCustomFilter,
       getFiltersForCategory,
+      contactMessages,
+      addContactMessage,
+      markMessageRead,
+      deleteContactMessage,
       isAdmin,
       adminLogin,
       adminLogout,

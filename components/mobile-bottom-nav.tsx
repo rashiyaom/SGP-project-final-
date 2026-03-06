@@ -8,12 +8,9 @@ import {
   ShoppingBag,
   Layers,
   Image,
-  Calculator,
-  Phone,
   Heart,
-  ShoppingCart,
+  MessageSquare,
 } from 'lucide-react'
-import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
 
 const navItems = [
@@ -22,22 +19,18 @@ const navItems = [
   { label: 'Collections', href: '/collections', icon: Layers },
   { label: 'Gallery', href: '/inspiration', icon: Image },
   { label: 'Dreams', href: '/dreams', icon: Heart },
-  { label: 'Cart', href: '/cart', icon: ShoppingCart },
+  { label: 'Contact', href: '/contact', icon: MessageSquare },
 ]
 
 export function MobileBottomNav() {
   const pathname = usePathname()
-  const { getTotalItems } = useCart()
   const { getTotalDreams } = useDreams()
-  const cartItemCount = getTotalItems()
   const dreamCount = getTotalDreams()
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
     return pathname.startsWith(href)
   }
-
-  const activeIndex = navItems.findIndex((item) => isActive(item.href))
 
   // Hide on admin pages and auth pages
   if (pathname.startsWith('/admin') || pathname.startsWith('/auth')) {
@@ -46,24 +39,22 @@ export function MobileBottomNav() {
 
   return (
     <>
-      {/* Spacer so page content doesn't hide behind the nav */}
-      <div className="h-20 lg:hidden" />
+      {/* Spacer */}
+      <div className="h-[72px] lg:hidden" />
 
-      {/* Bottom Nav - only visible on mobile/tablet */}
+      {/* Bottom Nav */}
       <nav className="fixed bottom-0 left-0 right-0 z-50 lg:hidden">
-        {/* Frosted glass background */}
-        <div className="mx-2 mb-2 rounded-2xl border border-border/60 bg-background/70 backdrop-blur-xl shadow-[0_-4px_30px_rgba(0,0,0,0.08)] dark:shadow-[0_-4px_30px_rgba(0,0,0,0.3)]">
-          {/* Subtle top shine line */}
-          <div className="absolute top-0 left-4 right-4 h-px bg-gradient-to-r from-transparent via-foreground/10 to-transparent" />
+        {/* Soft fade-up gradient so content fades behind the bar */}
+        <div className="absolute inset-x-0 -top-6 h-6 bg-gradient-to-t from-background/80 to-transparent pointer-events-none" />
 
-          <div className="relative flex items-center justify-around px-1 py-1.5">
-            {navItems.map((item, index) => {
+        <div className="mx-3 mb-3 rounded-[22px] border border-border/40 bg-background/75 backdrop-blur-2xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]">
+
+          <div className="relative flex items-center justify-around px-1 h-[58px]">
+            {navItems.map((item) => {
               const active = isActive(item.href)
               const Icon = item.icon
               const badge =
-                item.href === '/cart'
-                  ? cartItemCount
-                  : item.href === '/dreams'
+                item.href === '/dreams'
                   ? dreamCount
                   : 0
 
@@ -71,63 +62,42 @@ export function MobileBottomNav() {
                 <Link
                   key={item.href}
                   href={item.href}
-                  className="relative flex flex-col items-center justify-center w-full py-1 group"
+                  className="relative flex flex-col items-center justify-center flex-1 h-full group"
                 >
-                  {/* Active pill background with layout animation */}
-                  <AnimatePresence>
-                    {active && (
-                      <motion.div
-                        layoutId="bottomNavActiveIndicator"
-                        className="absolute inset-0 mx-1 rounded-xl bg-foreground/[0.07] dark:bg-foreground/[0.12]"
-                        initial={{ opacity: 0, scale: 0.9 }}
-                        animate={{ opacity: 1, scale: 1 }}
-                        exit={{ opacity: 0, scale: 0.9 }}
-                        transition={{
-                          type: 'spring',
-                          stiffness: 380,
-                          damping: 30,
-                          mass: 0.8,
-                        }}
-                      />
-                    )}
-                  </AnimatePresence>
-
-                  {/* Icon container */}
-                  <div className="relative">
+                  {/* Active indicator — tiny pill under icon, slides between items */}
+                  {active && (
                     <motion.div
-                      animate={{
-                        y: active ? -2 : 0,
-                        scale: active ? 1.15 : 1,
-                      }}
+                      layoutId="navPill"
+                      className="absolute bottom-1.5 w-4 h-[3px] rounded-full bg-foreground/80 dark:bg-foreground/70"
                       transition={{
                         type: 'spring',
-                        stiffness: 400,
-                        damping: 22,
+                        stiffness: 500,
+                        damping: 35,
+                        mass: 0.5,
                       }}
-                    >
-                      <Icon
-                        className={`w-[18px] h-[18px] transition-colors duration-200 ${
-                          active
-                            ? 'text-foreground'
-                            : 'text-muted-foreground group-hover:text-foreground/70'
-                        }`}
-                        strokeWidth={active ? 2.4 : 1.8}
-                      />
-                    </motion.div>
+                    />
+                  )}
+
+                  {/* Icon */}
+                  <div className="relative">
+                    <Icon
+                      className={`w-[19px] h-[19px] transition-all duration-300 ease-out ${
+                        active
+                          ? 'text-foreground'
+                          : 'text-muted-foreground/60 group-active:text-foreground/70'
+                      }`}
+                      strokeWidth={active ? 2.2 : 1.6}
+                    />
 
                     {/* Badge */}
                     <AnimatePresence>
                       {badge > 0 && (
                         <motion.span
-                          initial={{ scale: 0, opacity: 0 }}
-                          animate={{ scale: 1, opacity: 1 }}
-                          exit={{ scale: 0, opacity: 0 }}
-                          transition={{
-                            type: 'spring',
-                            stiffness: 500,
-                            damping: 25,
-                          }}
-                          className="absolute -top-1.5 -right-2.5 min-w-[16px] h-4 px-1 bg-gradient-to-br from-[#d4af37] to-[#b8962e] text-white text-[9px] font-bold rounded-full flex items-center justify-center shadow-sm"
+                          initial={{ scale: 0 }}
+                          animate={{ scale: 1 }}
+                          exit={{ scale: 0 }}
+                          transition={{ type: 'spring', stiffness: 500, damping: 28 }}
+                          className="absolute -top-1.5 -right-2 min-w-[14px] h-[14px] px-[3px] bg-foreground text-background text-[8px] font-bold rounded-full flex items-center justify-center"
                         >
                           {badge > 9 ? '9+' : badge}
                         </motion.span>
@@ -136,20 +106,15 @@ export function MobileBottomNav() {
                   </div>
 
                   {/* Label */}
-                  <motion.span
-                    animate={{
-                      opacity: active ? 1 : 0.5,
-                      y: active ? 0 : 1,
-                    }}
-                    transition={{ duration: 0.2 }}
-                    className={`text-[9px] mt-0.5 font-medium leading-tight ${
-                      active ? 'text-foreground' : 'text-muted-foreground'
+                  <span
+                    className={`text-[9px] mt-1 font-medium leading-none transition-all duration-300 ${
+                      active
+                        ? 'text-foreground opacity-100'
+                        : 'text-muted-foreground/50 opacity-80'
                     }`}
                   >
                     {item.label}
-                  </motion.span>
-
-
+                  </span>
                 </Link>
               )
             })}
