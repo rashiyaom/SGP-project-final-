@@ -2,8 +2,8 @@
 
 import Link from 'next/link'
 import { Heart, Star } from 'lucide-react'
-import { useState } from 'react'
 import { useAdmin } from '@/contexts/admin-context'
+import { useDreams } from '@/contexts/dreams-context'
 
 interface Product {
   id: string
@@ -87,10 +87,33 @@ export function ProductGrid({
 }
 
 function ProductCard({ product }: { product: Product }) {
-  const [isWishlisted, setIsWishlisted] = useState(false)
+  const { addDream, removeDream, isDreamSaved } = useDreams()
+  const isWishlisted = isDreamSaved(product.id)
   const discount = product.originalPrice 
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0
+
+  const toggleWishlist = () => {
+    if (isWishlisted) {
+      removeDream(product.id)
+    } else {
+      addDream({
+        id: product.id,
+        title: product.name,
+        category: product.category,
+        description: product.name,
+        image: product.image || '/placeholder.svg',
+        style: '',
+        colorPalette: '',
+        tileSize: '',
+        type: 'product',
+        price: product.price,
+        originalPrice: product.originalPrice,
+        rating: product.rating,
+        inStock: product.inStock,
+      })
+    }
+  }
 
   return (
     <Link href={`/products/${product.id}`}>
@@ -108,7 +131,7 @@ function ProductCard({ product }: { product: Product }) {
           <button 
             onClick={(e) => {
               e.preventDefault()
-              setIsWishlisted(!isWishlisted)
+              toggleWishlist()
             }}
             className="absolute top-2 sm:top-3 right-2 sm:right-3 w-6 h-6 sm:w-8 sm:h-8 bg-background rounded-full flex items-center justify-center shadow-sm hover:shadow-md transition-all opacity-0 group-hover:opacity-100"
           >

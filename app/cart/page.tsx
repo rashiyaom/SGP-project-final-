@@ -58,7 +58,7 @@ export default function CartPage() {
                         </h3>
                       </Link>
                       <p className="text-muted-foreground mb-1">
-                        Rs. {item.price.toLocaleString()} per unit
+                        ₹{item.price.toLocaleString()} per unit
                       </p>
                       {item.category && (
                         <p className="text-xs text-muted-foreground mb-4">
@@ -102,7 +102,7 @@ export default function CartPage() {
                     {/* Price */}
                     <div className="text-right">
                       <p className="text-2xl font-bold text-foreground">
-                        Rs. {(item.price * item.quantity).toLocaleString()}
+                        ₹{(item.price * item.quantity).toLocaleString()}
                       </p>
                     </div>
                   </div>
@@ -119,21 +119,21 @@ export default function CartPage() {
                   <div className="space-y-4 mb-6">
                     <div className="flex justify-between text-muted-foreground">
                       <span>Subtotal</span>
-                      <span>Rs. {subtotal.toLocaleString()}</span>
+                      <span>₹{subtotal.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Tax (10%)</span>
-                      <span>Rs. {tax.toLocaleString()}</span>
+                      <span>₹{tax.toLocaleString()}</span>
                     </div>
                     <div className="flex justify-between text-muted-foreground">
                       <span>Shipping</span>
                       <span className={shipping === 0 ? 'text-green-600 font-semibold' : ''}>
-                        {shipping === 0 ? 'FREE' : `Rs. ${shipping.toLocaleString()}`}
+                        {shipping === 0 ? 'FREE' : `₹${shipping.toLocaleString()}`}
                       </span>
                     </div>
                     {shipping === 0 && (
                       <p className="text-xs text-green-600 font-semibold">
-                        Free shipping on orders over Rs. 100
+                        Free shipping on orders over ₹100
                       </p>
                     )}
                   </div>
@@ -142,7 +142,7 @@ export default function CartPage() {
                     <div className="flex justify-between items-center">
                       <span className="font-semibold text-foreground">Total</span>
                       <span className="text-2xl font-bold text-primary">
-                        Rs. {total.toLocaleString()}
+                        ₹{total.toLocaleString()}
                       </span>
                     </div>
                   </div>

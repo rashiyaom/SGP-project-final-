@@ -205,7 +205,7 @@ export default function ToolsPage() {
 										<div className="absolute inset-0 bg-gradient-to-t from-foreground/80 to-transparent" />
 										<div className="absolute bottom-3 left-3 right-3">
 											<p className="text-sm font-medium text-background">{product.name}</p>
-											<p className="text-xs text-background/70">Rs. {product.price.toLocaleString()}</p>
+											<p className="text-xs text-background/70">₹{product.price.toLocaleString()}</p>
 										</div>
 										{selectedProducts.includes(product.id) && (
 											<div className="absolute top-3 right-3 w-6 h-6 bg-foreground rounded-full flex items-center justify-center">
@@ -224,7 +224,7 @@ export default function ToolsPage() {
 											<div key={product.id} className="p-4 border-b border-l border-border text-center">
 												<img src={product.image || "/placeholder.svg"} alt={product.name} className="w-16 h-16 rounded-lg object-cover mx-auto mb-2" />
 												<p className="font-medium text-foreground text-sm">{product.name}</p>
-												<p className="text-sm text-muted-foreground">Rs. {product.price.toLocaleString()}</p>
+												<p className="text-sm text-muted-foreground">₹{product.price.toLocaleString()}</p>
 											</div>
 										))}
 										{Object.keys(specLabels).map((key) => (

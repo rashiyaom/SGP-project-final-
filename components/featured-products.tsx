@@ -57,7 +57,7 @@ export function FeaturedProducts() {
                   {/* Content */}
                   <p className="text-[10px] sm:text-xs text-muted-foreground mb-0.5 sm:mb-1">{product.category}</p>
                   <h3 className="text-xs sm:text-sm font-medium text-foreground mb-1 sm:mb-2 leading-snug line-clamp-2">{product.name}</h3>
-                  <p className="text-xs sm:text-sm text-foreground font-medium">Rs. {product.price.toLocaleString()}</p>
+                  <p className="text-xs sm:text-sm text-foreground font-medium">₹{product.price.toLocaleString()}</p>
                 </div>
               </Link>
             </AnimatedSection>

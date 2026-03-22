@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useCart } from '@/contexts/cart-context'
@@ -12,6 +12,7 @@ import { useAuth } from '@/contexts/auth-context'
 export function Header() {
   const [mounted, setMounted] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
   const { theme, setTheme } = useTheme()
   const { getTotalItems } = useCart()
@@ -23,6 +24,24 @@ export function Header() {
   useEffect(() => {
     setMounted(true)
   }, [])
+
+  // Close dropdown on click outside
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(e.target as Node)) {
+        setShowUserMenu(false)
+      }
+    }
+    if (showUserMenu) {
+      document.addEventListener('mousedown', handleClickOutside)
+    }
+    return () => document.removeEventListener('mousedown', handleClickOutside)
+  }, [showUserMenu])
+
+  // Close dropdown on route change
+  useEffect(() => {
+    setShowUserMenu(false)
+  }, [pathname])
 
   const navItems = [
     { label: 'Home', href: '/' },
@@ -114,7 +133,7 @@ export function Header() {
 
             {/* User Profile / Login Button */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative" ref={userMenuRef}>
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
                   className="flex items-center gap-2 p-2 sm:px-3 sm:py-2 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0"
@@ -146,7 +165,7 @@ export function Header() {
                       My Profile
                     </Link>
                     <Link
-                      href="/profile"
+                      href="/profile?tab=wishlist"
                       onClick={() => setShowUserMenu(false)}
                       className="w-full flex items-center gap-2 px-4 py-3 text-sm text-foreground hover:bg-muted transition-colors"
                     >

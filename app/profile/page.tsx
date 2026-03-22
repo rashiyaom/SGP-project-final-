@@ -1,7 +1,8 @@
 'use client'
 
 import React, { useState, useEffect, useCallback, useRef } from 'react'
-import { useRouter } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
+import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
 import {
   User, Mail, Phone, MapPin, Heart, ShoppingBag, Package, Settings, LogOut,
@@ -71,6 +72,7 @@ const statusConfig = {
 // ─── Main Page ──────────────────────────────────────────────────
 export default function ProfilePage() {
   const router = useRouter()
+  const searchParams = useSearchParams()
   const { user, isAuthenticated, logout } = useAuth()
   const { items: cartItems, getTotalPrice } = useCart()
   const { dreams, removeDream } = useDreams()
@@ -124,6 +126,14 @@ export default function ProfilePage() {
       })
     }
   }, [isAuthenticated, user, router])
+
+  // ─── Read tab from URL query params ──────────────────────
+  useEffect(() => {
+    const tab = searchParams.get('tab')
+    if (tab && TABS.some(t => t.id === tab)) {
+      setActiveTab(tab as TabId)
+    }
+  }, [searchParams])
 
   // ─── Persist profile ──────────────────────
   const saveProfile = useCallback((data: UserProfile) => {
@@ -397,8 +407,8 @@ function WishlistTab({ dreams, removeDream }: { dreams: any[]; removeDream: (id:
         <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-muted flex items-center justify-center">
           <Heart className="w-7 h-7 text-muted-foreground" />
         </div>
-        <h3 className="text-lg font-semibold text-foreground mb-1">No saved dreams yet</h3>
-        <p className="text-sm text-muted-foreground mb-5">Explore our collections and save your favourites</p>
+        <h3 className="text-lg font-semibold text-foreground mb-1">No saved items yet</h3>
+        <p className="text-sm text-muted-foreground mb-5">Like products or save inspirations to see them here</p>
         <button onClick={() => router.push('/products')} className="px-5 py-2.5 bg-foreground text-background text-sm font-medium rounded-xl hover:opacity-90 transition-opacity">
           Browse Products
         </button>
@@ -406,48 +416,105 @@ function WishlistTab({ dreams, removeDream }: { dreams: any[]; removeDream: (id:
     )
   }
 
+  const productItems = dreams.filter((d) => d.type === 'product')
+  const inspirationItems = dreams.filter((d) => d.type !== 'product')
+
   return (
-    <div className="space-y-5">
+    <div className="space-y-8">
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-semibold text-foreground">My Wishlist</h2>
         <span className="text-sm text-muted-foreground">{dreams.length} item{dreams.length !== 1 ? 's' : ''}</span>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-        {dreams.map((dream) => (
-          <motion.div
-            key={dream.id}
-            layout
-            initial={{ opacity: 0, scale: 0.95 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.95 }}
-            className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-foreground/10 transition-all"
-          >
-            {/* Image */}
-            <div className="relative h-40 sm:h-48 bg-muted overflow-hidden">
-              {dream.image ? (
-                <img src={dream.image} alt={dream.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-4xl">✨</div>
-              )}
-              <button
-                onClick={() => removeDream(dream.id)}
-                className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full border border-border hover:bg-destructive hover:text-white hover:border-destructive transition-all"
+      {/* Product Wishlist Items */}
+      {productItems.length > 0 && (
+        <div className="space-y-3">
+          <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Liked Products</h3>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {productItems.map((item) => (
+              <motion.div
+                key={item.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-foreground/10 transition-all"
               >
-                <Trash2 className="w-3.5 h-3.5" />
-              </button>
-            </div>
-            {/* Info */}
-            <div className="p-4">
-              <h3 className="text-sm font-semibold text-foreground mb-1 truncate">{dream.title}</h3>
-              <p className="text-xs text-muted-foreground mb-2 truncate">{dream.category} • {dream.style}</p>
-              {dream.tileSize && (
-                <span className="inline-block text-[10px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground">{dream.tileSize}</span>
-              )}
-            </div>
-          </motion.div>
-        ))}
-      </div>
+                <Link href={`/products/${item.id}`}>
+                  <div className="relative h-40 sm:h-48 bg-muted overflow-hidden">
+                    <img src={item.image || '/placeholder.svg'} alt={item.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                    {item.inStock === false && (
+                      <div className="absolute inset-0 bg-background/60 flex items-center justify-center">
+                        <span className="text-xs font-medium text-muted-foreground">Out of Stock</span>
+                      </div>
+                    )}
+                    <button
+                      onClick={(e) => { e.preventDefault(); removeDream(item.id) }}
+                      className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full border border-border hover:bg-destructive hover:text-white hover:border-destructive transition-all"
+                    >
+                      <Trash2 className="w-3.5 h-3.5" />
+                    </button>
+                  </div>
+                </Link>
+                <div className="p-4">
+                  <Link href={`/products/${item.id}`}>
+                    <h3 className="text-sm font-semibold text-foreground mb-1 truncate hover:text-primary transition-colors">{item.title}</h3>
+                  </Link>
+                  <p className="text-xs text-muted-foreground mb-2 truncate">{item.category}</p>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-sm font-bold text-foreground">₹{item.price?.toLocaleString()}</span>
+                    {item.originalPrice && item.originalPrice > item.price && (
+                      <span className="text-xs text-muted-foreground line-through">₹{item.originalPrice.toLocaleString()}</span>
+                    )}
+                  </div>
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
+
+      {/* Inspiration Wishlist Items */}
+      {inspirationItems.length > 0 && (
+        <div className="space-y-3">
+          {productItems.length > 0 && (
+            <h3 className="text-sm font-medium text-muted-foreground uppercase tracking-wider">Saved Inspirations</h3>
+          )}
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            {inspirationItems.map((dream) => (
+              <motion.div
+                key={dream.id}
+                layout
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                className="bg-card border border-border rounded-2xl overflow-hidden group hover:border-foreground/10 transition-all"
+              >
+                <div className="relative h-40 sm:h-48 bg-muted overflow-hidden">
+                  {dream.image ? (
+                    <img src={dream.image} alt={dream.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center text-4xl">✨</div>
+                  )}
+                  <button
+                    onClick={() => removeDream(dream.id)}
+                    className="absolute top-3 right-3 p-2 bg-background/80 backdrop-blur-sm rounded-full border border-border hover:bg-destructive hover:text-white hover:border-destructive transition-all"
+                  >
+                    <Trash2 className="w-3.5 h-3.5" />
+                  </button>
+                </div>
+                <div className="p-4">
+                  <h3 className="text-sm font-semibold text-foreground mb-1 truncate">{dream.title}</h3>
+                  <p className="text-xs text-muted-foreground mb-2 truncate">{dream.category}{dream.style ? ` • ${dream.style}` : ''}</p>
+                  {dream.tileSize && (
+                    <span className="inline-block text-[10px] px-2 py-0.5 bg-muted rounded-full text-muted-foreground">{dream.tileSize}</span>
+                  )}
+                </div>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }

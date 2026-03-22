@@ -12,6 +12,12 @@ export interface DreamItem {
   colorPalette: string
   tileSize: string
   savedAt: number
+  // Product-specific optional fields
+  type?: 'inspiration' | 'product'
+  price?: number
+  originalPrice?: number
+  rating?: number
+  inStock?: boolean
 }
 
 interface DreamsContextType {

@@ -10,6 +10,7 @@ import { Heart, ShoppingCart, ArrowRight, Star, ChevronLeft, ChevronRight, Rotat
 import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
 import { useAuth } from '@/contexts/auth-context'
+import { useDreams } from '@/contexts/dreams-context'
 import { useParams, useRouter } from 'next/navigation'
 
 // Product images based on category
@@ -72,6 +73,8 @@ export default function ProductDetailPage() {
   const productId = params.id as string
   const { addItem } = useCart()
   const { isAuthenticated, requireAuth } = useAuth()
+  const { addDream, removeDream, isDreamSaved } = useDreams()
+  const isWishlisted = isDreamSaved(productId)
   
   const [quantity, setQuantity] = useState(2)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
@@ -273,8 +276,8 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-2xl font-semibold text-foreground">Rs. {product.price.toLocaleString()}</span>
-                <span className="text-muted-foreground line-through">Rs. {product.originalPrice.toLocaleString()}</span>
+                <span className="text-2xl font-semibold text-foreground">₹{product.price.toLocaleString()}</span>
+                <span className="text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
               </div>
 
               {/* Finish Options */}
@@ -344,7 +347,38 @@ export default function ProductDetailPage() {
                 >
                   {addedToCart ? 'ADDED!' : 'ADD TO CART'}
                   <ShoppingCart className="w-4 h-4" />
-                  <span className="ml-2">Rs. {(product.price * quantity).toLocaleString()}</span>
+                  <span className="ml-2">₹{(product.price * quantity).toLocaleString()}</span>
+                </button>
+                <button
+                  onClick={() => {
+                    if (isWishlisted) {
+                      removeDream(productId)
+                    } else {
+                      addDream({
+                        id: productId,
+                        title: product.name,
+                        category: product.category,
+                        description: product.name,
+                        image: productData.image || '/placeholder.svg',
+                        style: '',
+                        colorPalette: '',
+                        tileSize: '',
+                        type: 'product',
+                        price: product.price,
+                        originalPrice: product.originalPrice,
+                        rating: product.rating,
+                        inStock: product.inStock,
+                      })
+                    }
+                  }}
+                  className={`p-3 rounded border transition-colors ${
+                    isWishlisted
+                      ? 'bg-rose-50 dark:bg-rose-950 border-rose-300 dark:border-rose-700 text-rose-600'
+                      : 'border-border text-muted-foreground hover:bg-muted'
+                  }`}
+                  title={isWishlisted ? 'Remove from wishlist' : 'Add to wishlist'}
+                >
+                  <Heart className={`w-5 h-5 ${isWishlisted ? 'fill-rose-500 text-rose-500' : ''}`} />
                 </button>
               </div>
 
@@ -433,7 +467,7 @@ export default function ProductDetailPage() {
                       </button>
                     </div>
                     <h3 className="text-sm text-foreground mb-1">{item.name}</h3>
-                    <p className="text-sm font-semibold text-foreground">Rs. {item.price.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-foreground">₹{item.price.toLocaleString()}</p>
                   </div>
                 </Link>
               ))}

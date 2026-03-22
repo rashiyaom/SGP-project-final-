@@ -176,7 +176,7 @@ export default function CheckoutPage() {
                               Express Shipping
                             </span>
                             <span className="text-muted-foreground text-sm block">
-                              1-2 business days - $50
+                              1-2 business days - ₹500
                             </span>
                           </span>
                         </label>
@@ -320,7 +320,7 @@ export default function CheckoutPage() {
                       </p>
                     </div>
                     <p className="font-semibold text-foreground">
-                      ${(item.qty * item.price).toFixed(2)}
+                      ₹{(item.qty * item.price).toLocaleString()}
                     </p>
                   </div>
                 ))}
@@ -329,7 +329,7 @@ export default function CheckoutPage() {
               <div className="space-y-3 mb-6">
                 <div className="flex justify-between text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>$122.00</span>
+                  <span>₹122</span>
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Shipping</span>
@@ -337,7 +337,7 @@ export default function CheckoutPage() {
                 </div>
                 <div className="flex justify-between text-muted-foreground">
                   <span>Tax</span>
-                  <span>$12.20</span>
+                  <span>₹12</span>
                 </div>
               </div>
 
@@ -345,7 +345,7 @@ export default function CheckoutPage() {
                 <div className="flex justify-between items-center">
                   <span className="font-semibold text-foreground">Total</span>
                   <span className="text-2xl font-bold text-primary">
-                    $134.20
+                    ₹134
                   </span>
                 </div>
               </div>

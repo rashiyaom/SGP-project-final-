@@ -386,7 +386,7 @@ export default function InspirationDetailPage({
                               {product.name}
                             </p>
                             <p className="text-xs text-muted-foreground mt-1">
-                              Rs. {product.price}
+                              ₹{product.price}
                             </p>
                           </div>
                           <span className="text-primary group-hover:translate-x-1 transition-transform">
@@ -458,7 +458,7 @@ export default function InspirationDetailPage({
                           {product.name}
                         </p>
                         <p className="text-xs text-muted-foreground">
-                          Rs. {product.price.toLocaleString()}
+                          ₹{product.price.toLocaleString()}
                         </p>
                       </div>
                     </Link>

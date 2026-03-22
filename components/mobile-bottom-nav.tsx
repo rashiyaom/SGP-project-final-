@@ -10,8 +10,10 @@ import {
   Image,
   Heart,
   MessageSquare,
+  UserCircle,
 } from 'lucide-react'
 import { useDreams } from '@/contexts/dreams-context'
+import { useAuth } from '@/contexts/auth-context'
 
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
@@ -19,13 +21,22 @@ const navItems = [
   { label: 'Collections', href: '/collections', icon: Layers },
   { label: 'Gallery', href: '/inspiration', icon: Image },
   { label: 'Dreams', href: '/dreams', icon: Heart },
-  { label: 'Contact', href: '/contact', icon: MessageSquare },
+  // Last item is dynamic — Contact or Profile
 ]
 
 export function MobileBottomNav() {
   const pathname = usePathname()
   const { getTotalDreams } = useDreams()
+  const { isAuthenticated } = useAuth()
   const dreamCount = getTotalDreams()
+
+  // Swap last nav item based on auth state
+  const allItems = [
+    ...navItems,
+    isAuthenticated
+      ? { label: 'Profile', href: '/profile', icon: UserCircle }
+      : { label: 'Contact', href: '/contact', icon: MessageSquare },
+  ]
 
   const isActive = (href: string) => {
     if (href === '/') return pathname === '/'
@@ -50,7 +61,7 @@ export function MobileBottomNav() {
         <div className="mx-3 mb-3 rounded-[22px] border border-border/40 bg-background/75 backdrop-blur-2xl shadow-[0_8px_40px_-12px_rgba(0,0,0,0.12)] dark:shadow-[0_8px_40px_-12px_rgba(0,0,0,0.5)]">
 
           <div className="relative flex items-center justify-around px-1 h-[58px]">
-            {navItems.map((item) => {
+            {allItems.map((item) => {
               const active = isActive(item.href)
               const Icon = item.icon
               const badge =

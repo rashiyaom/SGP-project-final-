@@ -113,7 +113,7 @@ export function ProductFilters({ collection, onCollectionChange, onFiltersChange
   const PriceRangeSection = () => (
     <div className="mb-8">
       <h3 className="font-medium text-foreground text-sm mb-4">Price</h3>
-      <p className="text-sm text-muted-foreground mb-3">Rs. 500 - Rs. 50,000</p>
+      <p className="text-sm text-muted-foreground mb-3">₹500 - ₹50,000</p>
       <input
         type="range"
         min="500"

@@ -1,5 +1,7 @@
 import Link from 'next/link'
 
+const currentYear = new Date().getFullYear()
+
 export function Footer() {
   return (
     <footer className="relative bg-background text-foreground border-t border-border z-30">
@@ -26,7 +28,7 @@ export function Footer() {
               <li><Link href="/" className="text-foreground/80 hover:text-foreground text-xs sm:text-sm transition-colors">Home</Link></li>
               <li><Link href="/products" className="text-foreground/80 hover:text-foreground text-xs sm:text-sm transition-colors">Shop</Link></li>
               <li><Link href="/collections" className="text-foreground/80 hover:text-foreground text-xs sm:text-sm transition-colors">Collections</Link></li>
-              <li><Link href="/tools" className="text-foreground/80 hover:text-foreground text-xs sm:text-sm transition-colors">Calculator</Link></li>
+              <li><Link href="/calculator" className="text-foreground/80 hover:text-foreground text-xs sm:text-sm transition-colors">Calculator</Link></li>
             </ul>
           </div>
 
@@ -53,10 +55,10 @@ export function Footer() {
 
         {/* Bottom */}
         <div className="border-t border-foreground/20 pt-6 sm:pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-[10px] sm:text-xs text-foreground/50">
-          <p>2024 Omkar Ceramic. All rights reserved.</p>
+          <p>© {currentYear} Omkar Ceramic. All rights reserved.</p>
           <div className="flex gap-4 sm:gap-6">
-            <Link href="/contact" className="hover:text-foreground transition-colors">Privacy</Link>
-            <Link href="/contact" className="hover:text-foreground transition-colors">Terms</Link>
+            <Link href="/privacy" className="hover:text-foreground transition-colors">Privacy</Link>
+            <Link href="/terms" className="hover:text-foreground transition-colors">Terms</Link>
           </div>
         </div>
       </div>
