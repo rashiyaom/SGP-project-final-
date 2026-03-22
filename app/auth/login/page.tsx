@@ -117,19 +117,19 @@ export default function AuthPage() {
 
   const currentTheme = THEMES[activeThemeIdx]
 
-  useEffect(() => {
-    const interval = setInterval(() => {
-      handleThemeChange((activeThemeIdx + 1) % THEMES.length)
-    }, 8000)
-    return () => clearInterval(interval)
-  }, [activeThemeIdx])
-
   const handleThemeChange = (index: number) => {
     if (index === activeThemeIdx) return
     setIsAnimating(true)
     setActiveThemeIdx(index)
     setTimeout(() => setIsAnimating(false), 800)
   }
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      handleThemeChange((activeThemeIdx + 1) % THEMES.length)
+    }, 8000)
+    return () => clearInterval(interval)
+  }, [activeThemeIdx])
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { id, value } = e.target
@@ -337,7 +337,7 @@ export default function AuthPage() {
                  </div>
                  <div>
                    <h3 className="text-white font-medium text-sm mb-1">Seamless Experience</h3>
-                   <p className="text-white/60 text-xs">From selection to installation, we've got you covered</p>
+                   <p className="text-white/60 text-xs">From selection to installation, we&apos;ve got you covered</p>
                  </div>
                </div>
              </div>

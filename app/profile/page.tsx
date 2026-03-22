@@ -15,6 +15,7 @@ import { Footer } from '@/components/footer'
 import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
+import { useIsMounted } from '@/hooks/use-is-mounted'
 import dynamic from 'next/dynamic'
 
 const ProfileCard = dynamic(() => import('@/components/profile-card'), { ssr: false })
@@ -114,42 +115,40 @@ function ProfilePageInner() {
 
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [isEditing, setIsEditing] = useState(false)
-  const [mounted, setMounted] = useState(false)
+  const mounted = useIsMounted()
   const [showAvatarUpload, setShowAvatarUpload] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 
-  const [profile, setProfile] = useState<UserProfile>({
-    name: '',
-    email: '',
-    phone: '',
-    avatar: '',
-    address: '',
-    city: '',
-    state: '',
-    pincode: '',
-    bio: '',
-    joinedDate: new Date().toISOString(),
-    notifications: true,
-    newsletter: false,
+  const [profile, setProfile] = useState<UserProfile>(() => {
+    const defaults: UserProfile = {
+      name: '',
+      email: '',
+      phone: '',
+      avatar: '',
+      address: '',
+      city: '',
+      state: '',
+      pincode: '',
+      bio: '',
+      joinedDate: new Date().toISOString(),
+      notifications: true,
+      newsletter: false,
+    }
+    if (typeof window === 'undefined') return defaults
+    try {
+      const saved = localStorage.getItem('userProfile')
+      return saved ? JSON.parse(saved) : defaults
+    } catch { return defaults }
   })
 
   const [editForm, setEditForm] = useState<UserProfile>(profile)
 
   // ─── Init from auth + localStorage ──────────────────────
   useEffect(() => {
-    setMounted(true)
     if (!isAuthenticated) { router.push('/auth/login'); return }
 
-    const saved = localStorage.getItem('userProfile')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setProfile(parsed)
-        setEditForm(parsed)
-      } catch { /* fallback below */ }
-    }
-
     if (user) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setProfile(prev => {
         const updated = {
           ...prev,
@@ -166,6 +165,7 @@ function ProfilePageInner() {
   useEffect(() => {
     const tab = searchParams.get('tab')
     if (tab && TABS.some(t => t.id === tab)) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setActiveTab(tab as TabId)
     }
   }, [searchParams])

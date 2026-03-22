@@ -99,6 +99,7 @@ export default function ToolsPage() {
 
 	// Animate result on calculation change
 	useEffect(() => {
+		// eslint-disable-next-line react-hooks/set-state-in-effect
 		setShowResult(false)
 		if (calculations) {
 			const timeout = setTimeout(() => setShowResult(true), 100)

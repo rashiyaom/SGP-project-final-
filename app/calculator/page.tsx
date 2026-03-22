@@ -29,7 +29,7 @@ export default function CalculatorPage() {
               </h1>
 
               <p className="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
-                We're crafting an intelligent tile calculator to help you estimate your project with precision
+                We&apos;re crafting an intelligent tile calculator to help you estimate your project with precision
               </p>
             </motion.div>
           </div>

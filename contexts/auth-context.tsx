@@ -1,6 +1,6 @@
 'use client'
 
-import React, { createContext, useContext, useState, useEffect } from 'react'
+import React, { createContext, useContext, useState } from 'react'
 import { useRouter } from 'next/navigation'
 
 interface User {
@@ -18,25 +18,21 @@ interface AuthContextType {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
+function loadAuthFromStorage(): { user: User | null; isAuthenticated: boolean } {
+  if (typeof window === 'undefined') return { user: null, isAuthenticated: false }
+  const authStatus = localStorage.getItem('isAuthenticated')
+  const userEmail = localStorage.getItem('userEmail')
+  const userName = localStorage.getItem('userName')
+  if (authStatus === 'true' && userEmail) {
+    return { user: { name: userName || 'User', email: userEmail }, isAuthenticated: true }
+  }
+  return { user: null, isAuthenticated: false }
+}
+
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
-  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [user, setUser] = useState<User | null>(() => loadAuthFromStorage().user)
+  const [isAuthenticated, setIsAuthenticated] = useState<boolean>(() => loadAuthFromStorage().isAuthenticated)
   const router = useRouter()
-
-  // Check authentication status on mount
-  useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated')
-    const userEmail = localStorage.getItem('userEmail')
-    const userName = localStorage.getItem('userName')
-
-    if (authStatus === 'true' && userEmail) {
-      setUser({
-        name: userName || 'User',
-        email: userEmail
-      })
-      setIsAuthenticated(true)
-    }
-  }, [])
 
   const login = (email: string, password: string, name?: string) => {
     // Frontend-only login
