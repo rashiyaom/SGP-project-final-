@@ -5,7 +5,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
-import { Toast } from '@/components/toast'
 import {
   Search,
   X,
@@ -67,7 +66,7 @@ const containerVariants = {
 
 const itemVariants = {
   hidden: { opacity: 0, y: 24 },
-  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeInOut' } },
+  show: { opacity: 1, y: 0, transition: { duration: 0.45, ease: 'easeInOut' as const } },
 }
 
 const heroTextVariants = {
@@ -75,7 +74,7 @@ const heroTextVariants = {
   show: (i: number) => ({
     opacity: 1,
     y: 0,
-    transition: { delay: i * 0.15, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] },
+    transition: { delay: i * 0.15, duration: 0.6, ease: [0.25, 0.46, 0.45, 0.94] as const },
   }),
 }
 
@@ -86,7 +85,7 @@ const overlayVariants = {
 
 const actionsVariants = {
   rest: { opacity: 0, y: 16 },
-  hover: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' } },
+  hover: { opacity: 1, y: 0, transition: { duration: 0.3, ease: 'easeOut' as const } },
 }
 
 // ─── Skeleton Card ────────────────────────────────────────────────────────────
@@ -425,29 +424,37 @@ export default function InspirationPage() {
     <div className="min-h-screen bg-[oklch(0.99_0.002_60)] dark:bg-[oklch(0.13_0.005_60)] text-stone-800 dark:text-stone-200">
       <Header />
 
-      {showToast && (
-        <Toast
-          message={toastMessage}
-          type={toastType}
-          onClose={() => setShowToast(false)}
-        />
-      )}
+      {/* ── Toast ── */}
+      <AnimatePresence>
+        {showToast && (
+          <motion.div
+            initial={{ opacity: 0, y: 40, scale: 0.95 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 40, scale: 0.95 }}
+            transition={{ duration: 0.3 }}
+            className="fixed bottom-8 left-1/2 -translate-x-1/2 z-[100] bg-stone-900 dark:bg-white text-white dark:text-stone-900 text-sm font-medium px-5 py-3 rounded-2xl shadow-2xl flex items-center gap-2"
+          >
+            <Check size={14} className="text-[#d4af37]" />
+            {toastMessage}
+          </motion.div>
+        )}
+      </AnimatePresence>
 
       {/* ── Hero Banner ── */}
-      <section className="relative w-full h-[400px] sm:h-[480px] lg:h-[560px] overflow-hidden">
+      <section className="relative w-full h-[200px] sm:h-[260px] lg:h-[320px] overflow-hidden">
         {/* Background Image */}
         <div className="absolute inset-0 bg-gradient-to-br from-stone-200 via-stone-100 to-stone-50 dark:from-stone-900 dark:via-stone-800 dark:to-stone-700" />
         {/* Gradient Overlay */}
         <div className="absolute inset-0 bg-gradient-to-b from-black/30 via-black/40 to-black/70" />
 
         {/* Hero Content */}
-        <div className="relative z-10 h-full flex flex-col justify-end max-w-7xl mx-auto px-6 sm:px-12 pb-14">
+        <div className="relative z-10 h-full flex flex-col justify-center max-w-7xl mx-auto px-6 sm:px-12 pb-3">
           <motion.span
             custom={0}
             variants={heroTextVariants}
             initial="hidden"
             animate="show"
-            className="inline-block text-[#d4af37] text-xs font-semibold uppercase tracking-[0.25em] mb-3"
+            className="inline-block text-[#d4af37] text-xs font-semibold uppercase tracking-[0.25em] mb-2"
           >
             Curated Collection
           </motion.span>
@@ -456,7 +463,7 @@ export default function InspirationPage() {
             variants={heroTextVariants}
             initial="hidden"
             animate="show"
-            className="font-serif text-3xl sm:text-4xl lg:text-5xl text-white leading-tight max-w-2xl"
+            className="font-serif text-xl sm:text-2xl lg:text-3xl text-white leading-tight max-w-2xl"
           >
             Design Inspiration Gallery
           </motion.h1>
@@ -465,7 +472,7 @@ export default function InspirationPage() {
             variants={heroTextVariants}
             initial="hidden"
             animate="show"
-            className="mt-3 text-white/75 text-sm sm:text-base max-w-xl leading-relaxed"
+            className="mt-1.5 text-white/75 text-[11px] sm:text-xs max-w-xl leading-relaxed"
           >
             Explore thousands of curated spaces crafted with our premium ceramics,
             marble, and accessories. Find your perfect aesthetic.
@@ -475,7 +482,7 @@ export default function InspirationPage() {
 
       {/* ── Sticky Toolbar ── */}
       <div className="sticky top-0 z-40 bg-[oklch(0.99_0.002_60)]/80 dark:bg-[oklch(0.13_0.005_60)]/80 backdrop-blur-md border-b border-stone-200/60 dark:border-stone-800/60">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-3">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 py-2">
           <div className="flex flex-wrap items-center gap-3">
             {/* Search */}
             <div className="relative flex-1 min-w-[200px] max-w-md">
@@ -532,7 +539,7 @@ export default function InspirationPage() {
       </div>
 
       {/* ── Gallery Grid ── */}
-      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-10">
+      <main className="max-w-7xl mx-auto px-4 sm:px-6 py-5">
         {isLoading ? (
           /* Skeleton Loading */
           <div className="columns-1 sm:columns-2 lg:columns-3 2xl:columns-4 gap-5 space-y-5">

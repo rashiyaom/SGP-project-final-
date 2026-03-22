@@ -23,6 +23,8 @@ export interface GalleryItem {
   image: string
   description: string
   featured: boolean
+  style?: string
+  tileSize?: string
 }
 
 export interface CustomFilter {

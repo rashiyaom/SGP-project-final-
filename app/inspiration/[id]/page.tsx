@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useRef, useCallback } from 'react'
+import { useState, useRef, useCallback, useEffect, use } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { useDreams } from '@/contexts/dreams-context'
+import { useAdmin } from '@/contexts/admin-context'
 import {
   Heart,
   Share2,
@@ -205,10 +206,12 @@ function SimilarItem({ item }: { item: GalleryItem }) {
 export default function InspirationDetailPage({
   params,
 }: {
-  params: { id: string }
+  params: Promise<{ id: string }>
 }) {
+  const { id } = use(params)
   const router = useRouter()
   const { addDream, removeDream, isDreamSaved } = useDreams()
+  const { gallery } = useAdmin()
   const [isSaving, setIsSaving] = useState(false)
   const [showToast, setShowToast] = useState(false)
   const [toastMessage, setToastMessage] = useState('')
@@ -216,23 +219,19 @@ export default function InspirationDetailPage({
   const carouselRef = useRef<HTMLDivElement>(null)
   const toastTimer = useRef<NodeJS.Timeout | null>(null)
 
-  // ── Placeholder data — replace with real data fetching ──
-  const item: GalleryItem | null = {
-    id: params.id,
-    title: 'Loading...',
-    category: 'Category',
-    description: 'Loading description...',
-    image: '/placeholder.svg',
-    style: 'Modern',
-    colorPalette: [],
-    tileSize: 'Medium',
-    viewCount: 0,
-    tags: [],
-  } // e.g. await getInspirationById(params.id)
+  // Cleanup timer on unmount to prevent memory leak
+  useEffect(() => {
+    return () => {
+      if (toastTimer.current) clearTimeout(toastTimer.current)
+    }
+  }, [])
+
+  // ── Load gallery item from admin data ──
+  const item = gallery.find((g) => g.id === id) || null
   const products: Product[] = [] // featured products for this inspiration
   const similar: GalleryItem[] = [] // similar inspirations
   const allItems: GalleryItem[] = [] // full list for prev/next navigation
-  const currentIndex = allItems.findIndex((i) => i.id === params.id)
+  const currentIndex = Math.max(0, allItems.findIndex((i) => i.id === id))
   const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null
   const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null
 
@@ -261,9 +260,9 @@ export default function InspirationDetailPage({
         category: item.category,
         description: item.description,
         image: item.image,
-        style: item.style ?? 'Modern',
-        colorPalette: (item.colorPalette || []).join(', '),
-        tileSize: item.tileSize ?? 'Medium',
+        style: 'Modern',
+        colorPalette: '',
+        tileSize: 'Medium',
       }
       addDream(dreamItem)
       triggerToast('Saved to your Dream Board ✨')
@@ -326,9 +325,7 @@ export default function InspirationDetailPage({
 
   const specCards = [
     { label: 'Category', value: item.category },
-    { label: 'Style', value: item.style ?? '—' },
-    { label: 'Color Palette', value: item.colorPalette?.join(', ') ?? '—' },
-    { label: 'Tile Size', value: item.tileSize ?? '—' },
+    { label: 'Featured', value: item.featured ? 'Yes' : 'No' },
   ]
 
   return (
@@ -451,11 +448,11 @@ export default function InspirationDetailPage({
       </section>
 
       {/* ── Content ── */}
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-10 lg:py-14">
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 py-4 lg:py-6">
         <div className="lg:grid lg:grid-cols-3 lg:gap-12">
 
           {/* ── Left / Main ── */}
-          <div className="lg:col-span-2 space-y-12">
+          <div className="lg:col-span-2 space-y-6">
 
             {/* Title & Description */}
             <motion.div
@@ -463,34 +460,14 @@ export default function InspirationDetailPage({
               animate={{ opacity: 1, y: 0 }}
               transition={{ duration: 0.5 }}
             >
-              <div className="flex items-start gap-4 mb-4">
+              <div className="flex items-start gap-4 mb-3">
                 <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl leading-tight flex-1">
                   {item.title}
                 </h1>
-                {item.viewCount && (
-                  <div className="flex items-center gap-1 text-stone-400 text-xs mt-2 shrink-0">
-                    <Eye size={13} />
-                    <span>{item.viewCount.toLocaleString()} views</span>
-                  </div>
-                )}
               </div>
               <p className="text-stone-500 dark:text-stone-400 leading-relaxed text-base">
                 {item.description}
               </p>
-
-              {/* Tags */}
-              {item.tags && item.tags.length > 0 && (
-                <div className="flex flex-wrap gap-2 mt-5">
-                  {item.tags.map((tag) => (
-                    <span
-                      key={tag}
-                      className="text-xs px-3 py-1 rounded-full bg-stone-100 dark:bg-stone-800 text-stone-500 dark:text-stone-400"
-                    >
-                      #{tag}
-                    </span>
-                  ))}
-                </div>
-              )}
             </motion.div>
 
             {/* Spec Cards */}
@@ -552,8 +529,8 @@ export default function InspirationDetailPage({
           </div>
 
           {/* ── Right Sidebar (sticky on desktop) ── */}
-          <div className="mt-12 lg:mt-0">
-            <div className="lg:sticky lg:top-24 space-y-8">
+          <div className="mt-8 lg:mt-0">
+            <div className="lg:sticky lg:top-24 space-y-6">
 
               {/* Save + Share CTA */}
               <div className="rounded-2xl border border-stone-100 dark:border-stone-800 bg-white dark:bg-stone-900 p-5 shadow-sm">
