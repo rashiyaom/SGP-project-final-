@@ -17,6 +17,19 @@ import {
   ChevronDown,
 } from 'lucide-react'
 import { useAdmin } from '@/contexts/admin-context'
+import { VALIDATION } from '@/lib/constants'
+
+// Validation functions
+const isValidEmail = (email: string): boolean => {
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
+  return emailRegex.test(email)
+}
+
+const isValidPhone = (phone: string): boolean => {
+  // Accept 10+ digits (flexible for international numbers)
+  const phoneRegex = /^\d{10,}$/
+  return phoneRegex.test(phone.replace(/\D/g, ''))
+}
 
 const faqs = [
   { q: 'What is your return policy?', a: 'We offer 30-day returns on all unopened products with original packaging. Custom-cut tiles are non-returnable.' },
@@ -34,19 +47,60 @@ export default function ContactPage() {
     phone: '',
     message: '',
   })
+  const [errors, setErrors] = useState({
+    name: '',
+    email: '',
+    phone: '',
+    message: '',
+  })
   const [submitted, setSubmitted] = useState(false)
   const [activeLocation, setActiveLocation] = useState<'showroom' | 'warehouse'>('showroom')
   const [openFaq, setOpenFaq] = useState<number | null>(null)
 
+  const validateForm = (): boolean => {
+    const newErrors = {
+      name: '',
+      email: '',
+      phone: '',
+      message: '',
+    }
+
+    if (!formData.name.trim()) {
+      newErrors.name = 'Name is required'
+    } else if (formData.name.trim().length < 2) {
+      newErrors.name = 'Name must be at least 2 characters'
+    }
+
+    if (formData.email && !isValidEmail(formData.email)) {
+      newErrors.email = 'Please enter a valid email address'
+    }
+
+    if (formData.phone && !isValidPhone(formData.phone)) {
+      newErrors.phone = 'Please enter a valid phone number (10+ digits)'
+    }
+
+    if (!formData.message.trim()) {
+      newErrors.message = 'Message is required'
+    } else if (formData.message.trim().length < 10) {
+      newErrors.message = 'Message must be at least 10 characters'
+    } else if (formData.message.length > VALIDATION.MAX_MESSAGE_LENGTH) {
+      newErrors.message = `Message must not exceed ${VALIDATION.MAX_MESSAGE_LENGTH} characters`
+    }
+
+    setErrors(newErrors)
+    return !Object.values(newErrors).some(err => err !== '')
+  }
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    if (!formData.name || !formData.message) return
+    
+    if (!validateForm()) return
 
     addContactMessage({
-      name: formData.name,
-      email: formData.email,
-      phone: formData.phone,
-      message: formData.message,
+      name: formData.name.trim(),
+      email: formData.email.trim(),
+      phone: formData.phone.trim(),
+      message: formData.message.trim(),
     })
 
     setSubmitted(true)
@@ -200,9 +254,14 @@ export default function ContactPage() {
                           required
                           value={formData.name}
                           onChange={(e) => setFormData({ ...formData, name: e.target.value })}
-                          className="w-full px-4 py-3.5 border border-border/70 rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-foreground/10 transition-all text-sm"
+                          className={`w-full px-4 py-3.5 border rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 transition-all text-sm ${
+                            errors.name 
+                              ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' 
+                              : 'border-border/70 focus:border-foreground/40 focus:ring-foreground/10'
+                          }`}
                           placeholder="Your name"
                         />
+                        {errors.name && <p className="text-xs text-red-500">{errors.name}</p>}
                       </div>
                       <div className="space-y-2">
                         <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider">Phone</label>
@@ -210,9 +269,14 @@ export default function ContactPage() {
                           type="tel"
                           value={formData.phone}
                           onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                          className="w-full px-4 py-3.5 border border-border/70 rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-foreground/10 transition-all text-sm"
+                          className={`w-full px-4 py-3.5 border rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 transition-all text-sm ${
+                            errors.phone 
+                              ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' 
+                              : 'border-border/70 focus:border-foreground/40 focus:ring-foreground/10'
+                          }`}
                           placeholder="+91 98765 43210"
                         />
+                        {errors.phone && <p className="text-xs text-red-500">{errors.phone}</p>}
                       </div>
                     </div>
 
@@ -222,9 +286,14 @@ export default function ContactPage() {
                         type="email"
                         value={formData.email}
                         onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                        className="w-full px-4 py-3.5 border border-border/70 rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-foreground/10 transition-all text-sm"
+                        className={`w-full px-4 py-3.5 border rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 transition-all text-sm ${
+                          errors.email 
+                            ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' 
+                            : 'border-border/70 focus:border-foreground/40 focus:ring-foreground/10'
+                        }`}
                         placeholder="your@email.com"
                       />
+                      {errors.email && <p className="text-xs text-red-500">{errors.email}</p>}
                     </div>
 
                     <div className="space-y-2">
@@ -234,9 +303,15 @@ export default function ContactPage() {
                         value={formData.message}
                         onChange={(e) => setFormData({ ...formData, message: e.target.value })}
                         rows={5}
-                        className="w-full px-4 py-3.5 border border-border/70 rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:border-foreground/40 focus:ring-1 focus:ring-foreground/10 transition-all text-sm resize-none"
+                        className={`w-full px-4 py-3.5 border rounded-xl bg-background text-foreground placeholder:text-muted-foreground/40 focus:outline-none focus:ring-1 transition-all text-sm resize-none ${
+                          errors.message 
+                            ? 'border-red-500/50 focus:border-red-500/70 focus:ring-red-500/20' 
+                            : 'border-border/70 focus:border-foreground/40 focus:ring-foreground/10'
+                        }`}
                         placeholder="Tell us about your project — what kind of tiles you're looking for, the area size, budget, or anything else..."
                       />
+                      {errors.message && <p className="text-xs text-red-500">{errors.message}</p>}
+                      <p className="text-xs text-muted-foreground text-right">{formData.message.length}/{VALIDATION.MAX_MESSAGE_LENGTH}</p>
                     </div>
 
                     <button

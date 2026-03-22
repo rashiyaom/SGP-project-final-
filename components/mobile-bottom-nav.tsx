@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from 'framer-motion'
 import {
   Home,
   ShoppingBag,
-  Layers,
   Image,
   Heart,
   MessageSquare,
@@ -18,7 +17,6 @@ import { useAuth } from '@/contexts/auth-context'
 const navItems = [
   { label: 'Home', href: '/', icon: Home },
   { label: 'Shop', href: '/products', icon: ShoppingBag },
-  { label: 'Collections', href: '/collections', icon: Layers },
   { label: 'Gallery', href: '/inspiration', icon: Image },
   { label: 'Dreams', href: '/dreams', icon: Heart },
   // Last item is dynamic — Contact or Profile

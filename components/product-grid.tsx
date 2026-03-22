@@ -14,19 +14,30 @@ interface Product {
   rating: number
   inStock: boolean
   image: string
+  filters?: Record<string, string[]>
 }
 
 export function ProductGrid({
   sortBy,
   collection,
   filters = {},
+  searchQuery = '',
 }: {
   sortBy: string
   collection?: 'ceramic' | 'marble' | 'sanitary' | 'accessories' | null
   filters?: Record<string, string[]>
+  searchQuery?: string
 }) {
   const { products: adminProducts } = useAdmin()
   let displayProducts = [...adminProducts]
+
+  const q = searchQuery.trim().toLowerCase()
+  if (q) {
+    displayProducts = displayProducts.filter((p) => {
+      const hay = `${p.name} ${p.category} ${p.description ?? ''}`.toLowerCase()
+      return hay.includes(q)
+    })
+  }
 
   // Filter by collection
   if (collection === 'ceramic') {
@@ -53,9 +64,7 @@ export function ProductGrid({
     )
   }
 
-  // Apply filter-group based filters (e.g., ceramicTypes, marbleFinishes, etc.)
-  // For each active filter group (excluding allCategories), if the user checked any options,
-  // only keep products that have at least one matching option in their stored filters
+  // Apply filter-group based filters
   const activeFilterGroups = Object.entries(filters).filter(
     ([group, values]) => group !== 'allCategories' && values.length > 0
   )
@@ -78,10 +87,25 @@ export function ProductGrid({
   }
 
   return (
-    <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-4 lg:gap-6">
-      {displayProducts.map((product) => (
-        <ProductCard key={product.id} product={product} />
-      ))}
+    <div className="space-y-4">
+      {q && (
+        <p className="text-xs sm:text-sm text-muted-foreground">
+          {displayProducts.length} result{displayProducts.length !== 1 ? 's' : ''} for <span className="text-foreground font-medium">“{searchQuery.trim()}”</span>
+        </p>
+      )}
+
+      <div className="grid grid-cols-2 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-3 gap-2.5 sm:gap-4 lg:gap-6">
+        {displayProducts.map((product) => (
+          <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+
+      {displayProducts.length === 0 && (
+        <div className="py-14 text-center border border-border rounded-xl bg-muted/10">
+          <p className="text-sm text-muted-foreground">No products found.</p>
+          <p className="text-xs text-muted-foreground mt-1">Try a different search or clear filters.</p>
+        </div>
+      )}
     </div>
   )
 }

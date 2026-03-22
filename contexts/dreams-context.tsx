@@ -33,16 +33,21 @@ const DreamsContext = createContext<DreamsContextType | undefined>(undefined)
 export function DreamsProvider({ children }: { children: React.ReactNode }) {
   const [dreams, setDreams] = useState<DreamItem[]>([])
   const [isLoaded, setIsLoaded] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // Load dreams from localStorage on mount
   useEffect(() => {
-    const savedDreams = localStorage.getItem('dreams')
-    if (savedDreams) {
-      try {
+    try {
+      const savedDreams = localStorage.getItem('dreams')
+      if (savedDreams) {
         setDreams(JSON.parse(savedDreams))
-      } catch (error) {
-        console.error('Error loading dreams:', error)
       }
+      setLoadError(null)
+    } catch (error) {
+      const errorMsg = error instanceof Error ? error.message : 'Failed to load dreams'
+      console.error('Error loading dreams:', error)
+      setLoadError(errorMsg)
+      setDreams([])
     }
     setIsLoaded(true)
   }, [])

@@ -156,7 +156,7 @@ export function HeroSection() {
                 it maximizes its space for your comfort. Each piece is crafted for lasting beauty.
               </p>
               <Link
-                href="/collections"
+                href="/products"
                 className="inline-flex items-center gap-2 px-4 sm:px-5 py-2 sm:py-2.5 border border-foreground text-foreground text-xs sm:text-sm font-medium rounded-full hover:bg-foreground hover:text-background transition-colors"
               >
                 Shop collection

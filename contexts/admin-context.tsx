@@ -186,6 +186,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoaded, setIsLoaded] = useState(false)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
   // Load from localStorage on mount
   useEffect(() => {
@@ -207,8 +208,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       if (savedAdmin === 'true') setIsAdmin(true)
       const savedMessages = localStorage.getItem('admin_contactMessages')
       if (savedMessages) setContactMessages(JSON.parse(savedMessages))
+      setLoadError(null)
     } catch (e) {
+      const errorMsg = e instanceof Error ? e.message : 'Failed to load admin data'
       console.error('Error loading admin data:', e)
+      setLoadError(errorMsg)
+      // Fall back to defaults on error
     }
     setIsLoaded(true)
   }, [])

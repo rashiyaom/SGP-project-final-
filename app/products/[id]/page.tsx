@@ -11,7 +11,7 @@ import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
 import { useAuth } from '@/contexts/auth-context'
 import { useDreams } from '@/contexts/dreams-context'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams } from 'next/navigation'
 
 // Product images based on category
 const productImages: Record<string, string[]> = {
@@ -69,7 +69,6 @@ const productDatabase: Record<string, any> = {
 
 export default function ProductDetailPage() {
   const params = useParams()
-  const router = useRouter()
   const productId = params.id as string
   const { addItem } = useCart()
   const { isAuthenticated, requireAuth } = useAuth()

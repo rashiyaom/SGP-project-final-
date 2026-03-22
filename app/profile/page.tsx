@@ -1,6 +1,6 @@
 'use client'
 
-import React, { useState, useEffect, useCallback, useRef } from 'react'
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -71,6 +71,41 @@ const statusConfig = {
 
 // ─── Main Page ──────────────────────────────────────────────────
 export default function ProfilePage() {
+  return (
+    <Suspense fallback={<ProfileSkeleton />}>
+      <ProfilePageInner />
+    </Suspense>
+  )
+}
+
+function ProfileSkeleton() {
+  return (
+    <main className="min-h-screen bg-background flex flex-col">
+      <Header />
+      <section className="flex-1 py-10">
+        <div className="max-w-7xl mx-auto px-6 sm:px-12">
+          <div className="h-8 w-56 bg-muted/40 rounded mb-6" />
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-1 border border-border rounded-2xl p-5">
+              <div className="h-24 bg-muted/40 rounded-xl" />
+            </div>
+            <div className="lg:col-span-2 border border-border rounded-2xl p-5">
+              <div className="h-10 bg-muted/40 rounded mb-4" />
+              <div className="space-y-3">
+                <div className="h-14 bg-muted/30 rounded" />
+                <div className="h-14 bg-muted/30 rounded" />
+                <div className="h-14 bg-muted/30 rounded" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+      <Footer />
+    </main>
+  )
+}
+
+function ProfilePageInner() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const { user, isAuthenticated, logout } = useAuth()

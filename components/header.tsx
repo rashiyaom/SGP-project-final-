@@ -46,7 +46,6 @@ export function Header() {
   const navItems = [
     { label: 'Home', href: '/' },
     { label: 'Shop', href: '/products' },
-    { label: 'Collections', href: '/collections' },
     { label: 'Gallery', href: '/inspiration' },
     { label: 'Calculator', href: '/calculator' },
     { label: 'Contact', href: '/contact' },
