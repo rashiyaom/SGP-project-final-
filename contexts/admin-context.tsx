@@ -180,64 +180,59 @@ const ADMIN_PASSWORD = 'admin123'
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(defaultProducts)
-  const [gallery, setGallery] = useState<GalleryItem[]>(defaultGallery)
-  const [customFilters, setCustomFilters] = useState<CustomFilter[]>(defaultFilters)
-  const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
-  const [isAdmin, setIsAdmin] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
-
-  // Load from localStorage on mount
-  useEffect(() => {
+  const [products, setProducts] = useState<Product[]>(() => {
+    if (typeof window === 'undefined') return defaultProducts
     try {
-      const savedProducts = localStorage.getItem('admin_products')
-      const savedGallery = localStorage.getItem('admin_gallery')
-      const savedFilters = localStorage.getItem('admin_customFilters')
-      const savedAdmin = localStorage.getItem('admin_isAdmin')
-
-      if (savedProducts) setProducts(JSON.parse(savedProducts))
-      if (savedGallery) setGallery(JSON.parse(savedGallery))
-      if (savedFilters) {
-        const parsed = JSON.parse(savedFilters)
-        // If previously saved as empty array, use defaults instead
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCustomFilters(parsed)
-        }
+      const saved = localStorage.getItem('admin_products')
+      return saved ? JSON.parse(saved) : defaultProducts
+    } catch { return defaultProducts }
+  })
+  const [gallery, setGallery] = useState<GalleryItem[]>(() => {
+    if (typeof window === 'undefined') return defaultGallery
+    try {
+      const saved = localStorage.getItem('admin_gallery')
+      return saved ? JSON.parse(saved) : defaultGallery
+    } catch { return defaultGallery }
+  })
+  const [customFilters, setCustomFilters] = useState<CustomFilter[]>(() => {
+    if (typeof window === 'undefined') return defaultFilters
+    try {
+      const saved = localStorage.getItem('admin_customFilters')
+      if (saved) {
+        const parsed = JSON.parse(saved)
+        if (Array.isArray(parsed) && parsed.length > 0) return parsed
       }
-      if (savedAdmin === 'true') setIsAdmin(true)
-      const savedMessages = localStorage.getItem('admin_contactMessages')
-      if (savedMessages) setContactMessages(JSON.parse(savedMessages))
-      setLoadError(null)
-    } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Failed to load admin data'
-      console.error('Error loading admin data:', e)
-      setLoadError(errorMsg)
-      // Fall back to defaults on error
-    }
-    setIsLoaded(true)
-  }, [])
+      return defaultFilters
+    } catch { return defaultFilters }
+  })
+  const [contactMessages, setContactMessages] = useState<ContactMessage[]>(() => {
+    if (typeof window === 'undefined') return []
+    try {
+      const saved = localStorage.getItem('admin_contactMessages')
+      return saved ? JSON.parse(saved) : []
+    } catch { return [] }
+  })
+  const [isAdmin, setIsAdmin] = useState<boolean>(() => {
+    if (typeof window === 'undefined') return false
+    return localStorage.getItem('admin_isAdmin') === 'true'
+  })
 
   // Save to localStorage on change
   useEffect(() => {
-    if (!isLoaded) return
     localStorage.setItem('admin_products', JSON.stringify(products))
-  }, [products, isLoaded])
+  }, [products])
 
   useEffect(() => {
-    if (!isLoaded) return
     localStorage.setItem('admin_gallery', JSON.stringify(gallery))
-  }, [gallery, isLoaded])
+  }, [gallery])
 
   useEffect(() => {
-    if (!isLoaded) return
     localStorage.setItem('admin_customFilters', JSON.stringify(customFilters))
-  }, [customFilters, isLoaded])
+  }, [customFilters])
 
   useEffect(() => {
-    if (!isLoaded) return
     localStorage.setItem('admin_contactMessages', JSON.stringify(contactMessages))
-  }, [contactMessages, isLoaded])
+  }, [contactMessages])
 
   // ===== PRODUCT CRUD =====
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)

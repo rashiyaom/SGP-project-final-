@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
 
 interface UseScrollAnimationOptions {
   threshold?: number
@@ -8,15 +8,12 @@ interface UseScrollAnimationOptions {
   triggerOnce?: boolean
 }
 
-export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
+export function useScrollAnimation(options: UseScrollAnimationOptions = {}, externalRef?: React.RefObject<HTMLElement | null>) {
   const { threshold = 0.1, rootMargin = '0px 0px -50px 0px', triggerOnce = true } = options
-  const ref = useRef<HTMLElement>(null)
+  const internalRef = useRef<HTMLElement>(null)
+  const ref = externalRef ?? internalRef
   const [isVisible, setIsVisible] = useState(false)
-  const [hasMounted, setHasMounted] = useState(false)
-
-  useEffect(() => {
-    setHasMounted(true)
-  }, [])
+  const hasMounted = useSyncExternalStore(() => () => {}, () => true, () => false)
 
   useEffect(() => {
     if (!hasMounted) return
@@ -41,7 +38,7 @@ export function useScrollAnimation(options: UseScrollAnimationOptions = {}) {
     observer.observe(element)
 
     return () => observer.disconnect()
-  }, [threshold, rootMargin, triggerOnce, hasMounted])
+  }, [threshold, rootMargin, triggerOnce, hasMounted, ref])
 
   return { ref, isVisible, hasMounted }
 }

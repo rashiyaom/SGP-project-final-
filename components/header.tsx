@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, useSyncExternalStore } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useCart } from '@/contexts/cart-context'
@@ -10,7 +10,7 @@ import { useDreams } from '@/contexts/dreams-context'
 import { useAuth } from '@/contexts/auth-context'
 
 export function Header() {
-  const [mounted, setMounted] = useState(false)
+  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -20,10 +20,6 @@ export function Header() {
   const { user, isAuthenticated, logout } = useAuth()
   const cartItemCount = getTotalItems()
   const dreamCount = getTotalDreams()
-
-  useEffect(() => {
-    setMounted(true)
-  }, [])
 
   // Close dropdown on click outside
   useEffect(() => {
@@ -40,6 +36,7 @@ export function Header() {
 
   // Close dropdown on route change
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setShowUserMenu(false)
   }, [pathname])
 

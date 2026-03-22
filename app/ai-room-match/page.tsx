@@ -27,7 +27,7 @@ export default function AIRoomMatchPage() {
               AI-Powered Recommendations
             </h2>
             <p className="text-muted-foreground text-lg mb-8 max-w-2xl mx-auto">
-              Our advanced AI analyzes your room's style, colors, and design to suggest tiles that match perfectly.
+              Our advanced AI analyzes your room&apos;s style, colors, and design to suggest tiles that match perfectly.
             </p>
             <Button className="bg-primary hover:bg-primary/90 text-primary-foreground mb-8">
               Coming Soon - Get Notified

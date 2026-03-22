@@ -26,6 +26,53 @@ const collectionToCategoryMap: Record<string, string> = {
   accessories: 'Accessories',
 }
 
+interface FilterSectionProps {
+  title: string
+  filterGroup: string
+  options: { id: string; label: string }[]
+  checkedState: Record<string, Set<string>>
+  toggleFilter: (filterGroup: string, optionId: string) => void
+}
+
+function FilterSection({ title, filterGroup, options, checkedState, toggleFilter }: FilterSectionProps) {
+  return (
+    <div className="mb-8">
+      <h3 className="font-medium text-foreground text-sm mb-4">By {title}</h3>
+      <div className="space-y-2.5">
+        {options.map((option) => (
+          <label key={option.id} className="flex items-center gap-2.5 cursor-pointer group">
+            <input
+              type="checkbox"
+              checked={checkedState[filterGroup]?.has(option.id) || false}
+              onChange={() => toggleFilter(filterGroup, option.id)}
+              className="w-4 h-4 rounded border-muted-foreground cursor-pointer accent-foreground"
+            />
+            <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">
+              {option.label}
+            </span>
+          </label>
+        ))}
+      </div>
+    </div>
+  )
+}
+
+function PriceRangeSection() {
+  return (
+    <div className="mb-8">
+      <h3 className="font-medium text-foreground text-sm mb-4">Price</h3>
+      <p className="text-sm text-muted-foreground mb-3">₹500 - ₹50,000</p>
+      <input
+        type="range"
+        min="500"
+        max="50000"
+        defaultValue="25000"
+        className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer"
+      />
+    </div>
+  )
+}
+
 export function ProductFilters({ collection, onCollectionChange, onFiltersChange }: ProductFiltersProps) {
   const { customFilters } = useAdmin()
 
@@ -78,51 +125,9 @@ export function ProductFilters({ collection, onCollectionChange, onFiltersChange
 
   // Reset checked state when collection changes
   useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setCheckedState({})
   }, [collection])
-
-  const FilterSection = ({
-    title,
-    filterGroup,
-    options,
-  }: {
-    title: string
-    filterGroup: string
-    options: { id: string; label: string }[]
-  }) => (
-    <div className="mb-8">
-      <h3 className="font-medium text-foreground text-sm mb-4">By {title}</h3>
-      <div className="space-y-2.5">
-        {options.map((option) => (
-          <label key={option.id} className="flex items-center gap-2.5 cursor-pointer group">
-            <input
-              type="checkbox"
-              checked={checkedState[filterGroup]?.has(option.id) || false}
-              onChange={() => toggleFilter(filterGroup, option.id)}
-              className="w-4 h-4 rounded border-muted-foreground cursor-pointer accent-foreground"
-            />
-            <span className="text-muted-foreground group-hover:text-foreground transition-colors text-sm">
-              {option.label}
-            </span>
-          </label>
-        ))}
-      </div>
-    </div>
-  )
-
-  const PriceRangeSection = () => (
-    <div className="mb-8">
-      <h3 className="font-medium text-foreground text-sm mb-4">Price</h3>
-      <p className="text-sm text-muted-foreground mb-3">₹500 - ₹50,000</p>
-      <input
-        type="range"
-        min="500"
-        max="50000"
-        defaultValue="25000"
-        className="w-full h-1 bg-muted rounded-lg appearance-none cursor-pointer"
-      />
-    </div>
-  )
 
   return (
     <div className="h-fit sticky top-24">
@@ -161,6 +166,8 @@ export function ProductFilters({ collection, onCollectionChange, onFiltersChange
               title={filter.label}
               filterGroup={filter.filterGroup}
               options={filter.options}
+              checkedState={checkedState}
+              toggleFilter={toggleFilter}
             />
           ))}
           <PriceRangeSection />
@@ -174,6 +181,8 @@ export function ProductFilters({ collection, onCollectionChange, onFiltersChange
             title="Categories"
             filterGroup="allCategories"
             options={allCategoryOptions}
+            checkedState={checkedState}
+            toggleFilter={toggleFilter}
           />
           <PriceRangeSection />
         </>

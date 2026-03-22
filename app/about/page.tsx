@@ -122,7 +122,7 @@ export default function AboutPage() {
               transition={{ delay: 0.5, duration: 0.8 }}
               className="text-base sm:text-lg text-muted-foreground leading-relaxed max-w-2xl mx-auto"
             >
-              A curated collection of premium tiles and surfaces, sourced from the world's most distinguished manufacturers.
+              A curated collection of premium tiles and surfaces, sourced from the world&apos;s most distinguished manufacturers.
             </motion.p>
           </motion.div>
         </div>

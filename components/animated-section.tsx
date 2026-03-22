@@ -1,6 +1,6 @@
 'use client'
 
-import React from "react"
+import React, { useRef } from "react"
 
 import { useScrollAnimation } from '@/hooks/use-scroll-animation'
 import { ReactNode, forwardRef } from 'react'
@@ -42,7 +42,8 @@ const animations = {
 
 export const AnimatedSection = forwardRef<HTMLDivElement, AnimatedSectionProps>(
   ({ children, className = '', animation = 'fade-up', delay = 0, duration = 700 }, forwardedRef) => {
-    const { ref, isVisible, hasMounted } = useScrollAnimation({ threshold: 0.1 })
+    const divRef = useRef<HTMLDivElement>(null)
+    const { isVisible, hasMounted } = useScrollAnimation({ threshold: 0.1 }, divRef as React.RefObject<HTMLElement | null>)
 
     const anim = animations[animation]
     
@@ -52,7 +53,7 @@ export const AnimatedSection = forwardRef<HTMLDivElement, AnimatedSectionProps>(
     return (
       <div
         ref={(el) => {
-          (ref as React.MutableRefObject<HTMLDivElement | null>).current = el
+          divRef.current = el
           if (typeof forwardedRef === 'function') {
             forwardedRef(el)
           } else if (forwardedRef) {

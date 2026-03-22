@@ -99,7 +99,7 @@ export function HeroSection() {
             </div>
             <div className="text-right">
               <p className="text-xs text-foreground/70 uppercase tracking-wider">Space to Recharge</p>
-              <p className="text-xs text-foreground/70 uppercase tracking-wider">life's batteries.</p>
+              <p className="text-xs text-foreground/70 uppercase tracking-wider">life&apos;s batteries.</p>
             </div>
           </div>
         </div>

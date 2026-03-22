@@ -31,33 +31,21 @@ interface DreamsContextType {
 const DreamsContext = createContext<DreamsContextType | undefined>(undefined)
 
 export function DreamsProvider({ children }: { children: React.ReactNode }) {
-  const [dreams, setDreams] = useState<DreamItem[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
-
-  // Load dreams from localStorage on mount
-  useEffect(() => {
+  const [dreams, setDreams] = useState<DreamItem[]>(() => {
+    if (typeof window === 'undefined') return []
     try {
       const savedDreams = localStorage.getItem('dreams')
-      if (savedDreams) {
-        setDreams(JSON.parse(savedDreams))
-      }
-      setLoadError(null)
+      return savedDreams ? JSON.parse(savedDreams) : []
     } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to load dreams'
       console.error('Error loading dreams:', error)
-      setLoadError(errorMsg)
-      setDreams([])
+      return []
     }
-    setIsLoaded(true)
-  }, [])
+  })
 
   // Save dreams to localStorage whenever they change
   useEffect(() => {
-    if (isLoaded) {
-      localStorage.setItem('dreams', JSON.stringify(dreams))
-    }
-  }, [dreams, isLoaded])
+    localStorage.setItem('dreams', JSON.stringify(dreams))
+  }, [dreams])
 
   const addDream = (dream: Omit<DreamItem, 'savedAt'>) => {
     setDreams((prevDreams) => {
