@@ -2,15 +2,16 @@
 
 import Link from 'next/link'
 import { Sun, Moon, ShoppingCart, Heart, User, LogOut } from 'lucide-react'
-import { useState, useEffect, useRef, useSyncExternalStore } from 'react'
+import { useState, useEffect, useRef } from 'react'
 import { usePathname } from 'next/navigation'
 import { useTheme } from 'next-themes'
 import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
 import { useAuth } from '@/contexts/auth-context'
+import { useIsMounted } from '@/hooks/use-is-mounted'
 
 export function Header() {
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+  const mounted = useIsMounted()
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()

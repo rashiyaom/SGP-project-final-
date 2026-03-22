@@ -1,6 +1,6 @@
 'use client'
 
-import React, { Suspense, useState, useEffect, useCallback, useRef, useSyncExternalStore } from 'react'
+import React, { Suspense, useState, useEffect, useCallback, useRef } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import { motion, AnimatePresence } from 'framer-motion'
@@ -15,6 +15,7 @@ import { Footer } from '@/components/footer'
 import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 import { useDreams } from '@/contexts/dreams-context'
+import { useIsMounted } from '@/hooks/use-is-mounted'
 import dynamic from 'next/dynamic'
 
 const ProfileCard = dynamic(() => import('@/components/profile-card'), { ssr: false })
@@ -114,7 +115,7 @@ function ProfilePageInner() {
 
   const [activeTab, setActiveTab] = useState<TabId>('overview')
   const [isEditing, setIsEditing] = useState(false)
-  const mounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+  const mounted = useIsMounted()
   const [showAvatarUpload, setShowAvatarUpload] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
 

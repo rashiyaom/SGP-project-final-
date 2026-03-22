@@ -1,6 +1,7 @@
 'use client'
 
-import { useEffect, useRef, useState, useSyncExternalStore } from 'react'
+import { useEffect, useRef, useState } from 'react'
+import { useIsMounted } from '@/hooks/use-is-mounted'
 
 interface UseScrollAnimationOptions {
   threshold?: number
@@ -13,7 +14,7 @@ export function useScrollAnimation(options: UseScrollAnimationOptions = {}, exte
   const internalRef = useRef<HTMLElement>(null)
   const ref = externalRef ?? internalRef
   const [isVisible, setIsVisible] = useState(false)
-  const hasMounted = useSyncExternalStore(() => () => {}, () => true, () => false)
+  const hasMounted = useIsMounted()
 
   useEffect(() => {
     if (!hasMounted) return
