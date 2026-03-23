@@ -17,7 +17,6 @@ const _playfair = Playfair_Display({ subsets: ["latin"], variable: '--font-serif
 export const metadata: Metadata = {
   title: 'Luxe Tiles - Premium Tiles & Home Accessories',
   description: 'Discover luxury tiles, marble, and premium home accessories for your dream space. Expert design consultation, AR visualization, and seamless checkout.',
-  generator: 'v0.app',
   icons: {
     icon: [
       {

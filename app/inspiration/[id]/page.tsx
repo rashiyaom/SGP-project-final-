@@ -178,26 +178,43 @@ function ProductCard({ product }: { product: Product }) {
 
 function SimilarItem({ item }: { item: GalleryItem }) {
   return (
-    <Link href={`/inspiration/${item.id}`} className="group flex items-center gap-4 p-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/60 transition-colors">
-      <div className="relative w-[80px] h-[60px] rounded-lg overflow-hidden shrink-0 bg-stone-100 dark:bg-stone-800">
-        <Image
-          src={item.image}
-          alt={item.title}
-          fill
-          className="object-cover transition-transform duration-300 group-hover:scale-105"
-        />
-      </div>
-      <div className="flex-1 min-w-0">
-        <p className="text-[10px] font-semibold uppercase tracking-wider text-[#d4af37] mb-0.5">
-          {item.category}
-        </p>
-        <h4 className="text-sm font-medium text-stone-800 dark:text-stone-200 line-clamp-1 group-hover:text-[#bfa14a] transition-colors">
-          {item.title}
-        </h4>
-        <p className="text-xs text-stone-400 line-clamp-1 mt-0.5">{item.description}</p>
-      </div>
-      <ChevronRight size={14} className="text-stone-300 group-hover:text-[#d4af37] transition-colors shrink-0" />
-    </Link>
+    <motion.div whileHover={{ x: 4 }} transition={{ duration: 0.2 }}>
+      <Link
+        href={`/inspiration/${item.id}`}
+        className="group flex items-center gap-3 p-3 rounded-xl hover:bg-stone-50 dark:hover:bg-stone-800/60 transition-all duration-200 border border-transparent hover:border-stone-100 dark:hover:border-stone-700/50"
+      >
+        {/* Image Thumbnail */}
+        <div className="relative w-[80px] h-[60px] rounded-lg overflow-hidden shrink-0 bg-stone-100 dark:bg-stone-800 ring-1 ring-stone-200 dark:ring-stone-700/50">
+          <Image
+            src={item.image}
+            alt={item.title}
+            fill
+            className="object-cover transition-transform duration-300 group-hover:scale-110"
+          />
+          {/* Category Badge */}
+          <div className="absolute top-1 left-1 bg-[#d4af37] text-white text-[8px] font-bold px-2 py-0.5 rounded-full">
+            {item.category}
+          </div>
+        </div>
+
+        {/* Content */}
+        <div className="flex-1 min-w-0">
+          <h4 className="text-sm font-medium text-stone-800 dark:text-stone-200 line-clamp-1 group-hover:text-[#bfa14a] transition-colors">
+            {item.title}
+          </h4>
+          <p className="text-xs text-stone-400 line-clamp-1 mt-0.5">{item.description}</p>
+          {/* Featured indicator */}
+          {item.featured && (
+            <div className="text-[10px] text-[#d4af37] font-semibold mt-1 flex items-center gap-1">
+              <span>★</span> Featured
+            </div>
+          )}
+        </div>
+
+        {/* Arrow */}
+        <ChevronRight size={16} className="text-stone-300 group-hover:text-[#d4af37] transition-all duration-200 shrink-0 group-hover:translate-x-1" />
+      </Link>
+    </motion.div>
   )
 }
 
@@ -229,11 +246,77 @@ export default function InspirationDetailPage({
   // ── Load gallery item from admin data ──
   const item = gallery.find((g) => g.id === id) || null
   const products: Product[] = [] // featured products for this inspiration
-  const similar: GalleryItem[] = [] // similar inspirations
-  const allItems: GalleryItem[] = [] // full list for prev/next navigation
+  const allItems: GalleryItem[] = gallery || [] // full list for prev/next navigation
   const currentIndex = Math.max(0, allItems.findIndex((i) => i.id === id))
   const prevItem = currentIndex > 0 ? allItems[currentIndex - 1] : null
   const nextItem = currentIndex < allItems.length - 1 ? allItems[currentIndex + 1] : null
+
+  // ── Advanced Similar Inspirations Algorithm ──
+  const similar = item
+    ? (() => {
+        // Scoring system for recommendations
+        type ScoredItem = GalleryItem & { score: number }
+        const scored: ScoredItem[] = gallery
+          .filter((g) => g.id !== item.id)
+          .map((g) => {
+            let score = 0
+
+            // 1. Category Match (40 points) - HIGHEST PRIORITY
+            if (g.category === item.category) {
+              score += 40
+            }
+
+            // 2. Featured Items Boost (15 points)
+            if (g.featured === item.featured) {
+              score += 15
+            }
+
+            // 3. Title Similarity (10 points) - keyword overlap
+            const itemTitleWords = item.title.toLowerCase().split(' ')
+            const gTitleWords = g.title.toLowerCase().split(' ')
+            const commonWords = itemTitleWords.filter((w) => gTitleWords.includes(w)).length
+            score += Math.min(commonWords * 5, 10)
+
+            // 4. Diversity Bonus (15 points) - add variety to recommendations
+            // Prefer items that are NOT the most recently added
+            const recentIndex = gallery.findIndex((x) => x.id === g.id)
+            const currentItemIndex = gallery.findIndex((x) => x.id === item.id)
+            if (Math.abs(recentIndex - currentItemIndex) > gallery.length / 3) {
+              score += 15
+            }
+
+            // 5. "Related" Items from similar categories (5 points)
+            // E.g., Bathroom → Living Room (same style family)
+            const relatedCategories: Record<string, string[]> = {
+              'Bathroom': ['Living Room', 'Bedroom', 'Entryway'],
+              'Kitchen': ['Living Room', 'Dining', 'Entryway'],
+              'Living Room': ['Bedroom', 'Kitchen', 'Entryway'],
+              'Bedroom': ['Living Room', 'Entryway', 'Bathroom'],
+              'Entryway': ['Living Room', 'Kitchen', 'Bathroom'],
+              'Outdoor': ['Entryway', 'Living Room', 'Kitchen'],
+              'Commercial': ['Entryway', 'Kitchen', 'Bathroom'],
+              'Accent': ['Living Room', 'Bedroom', 'Kitchen'],
+            }
+            if (relatedCategories[item.category]?.includes(g.category)) {
+              score += 5
+            }
+
+            return { ...g, score }
+          })
+
+        // Sort by score (descending), then by position for consistency
+        const recommended = scored
+          .sort((a, b) => {
+            if (b.score !== a.score) return b.score - a.score
+            // Tiebreaker: maintain gallery order
+            return gallery.findIndex((x) => x.id === a.id) - gallery.findIndex((x) => x.id === b.id)
+          })
+          .slice(0, 8) // Show up to 8 recommendations
+          .map(({ score, ...item }) => item)
+
+        return recommended
+      })()
+    : []
 
   const isSaved = item ? isDreamSaved(item.id) : false
 
@@ -564,18 +647,73 @@ export default function InspirationDetailPage({
               {/* Similar Inspirations */}
               {similar.length > 0 && (
                 <div>
-                  <h3 className="font-serif text-lg mb-4">Similar Inspirations</h3>
-                  <div className="space-y-1">
-                    {similar.slice(0, 6).map((s) => (
-                      <SimilarItem key={s.id} item={s} />
-                    ))}
+                  <div className="flex items-center gap-2 mb-4">
+                    <h3 className="font-serif text-lg">More Like This</h3>
+                    <span className="text-xs text-stone-400 bg-stone-100 dark:bg-stone-800 px-2.5 py-1 rounded-full">
+                      {similar.length} suggestions
+                    </span>
                   </div>
+
+                  {/* Grid Layout for Better Presentation */}
+                  <div className="space-y-2">
+                    {/* Top Row - Featured Items (up to 3) */}
+                    <div className="grid grid-cols-1 gap-2">
+                      {similar.slice(0, 3).map((s, idx) => (
+                        <motion.div
+                          key={s.id}
+                          initial={{ opacity: 0, x: -20 }}
+                          whileInView={{ opacity: 1, x: 0 }}
+                          transition={{ duration: 0.3, delay: idx * 0.05 }}
+                          viewport={{ once: true }}
+                        >
+                          <SimilarItem item={s} />
+                        </motion.div>
+                      ))}
+                    </div>
+
+                    {/* Show "View More" if additional items exist */}
+                    {similar.length > 3 && (
+                      <motion.button
+                        initial={{ opacity: 0 }}
+                        whileInView={{ opacity: 1 }}
+                        transition={{ duration: 0.3, delay: 0.15 }}
+                        viewport={{ once: true }}
+                        onClick={() => {
+                          // Expand to show all suggestions
+                          const moreItems = document.getElementById('more-suggestions')
+                          if (moreItems) {
+                            moreItems.style.display = moreItems.style.display === 'none' ? 'block' : 'none'
+                          }
+                        }}
+                        className="w-full py-2.5 px-3 text-sm font-medium text-[#bfa14a] hover:text-[#d4af37] hover:bg-stone-50 dark:hover:bg-stone-800/30 rounded-lg transition-colors mt-2"
+                      >
+                        View {similar.length - 3} more suggestions ↓
+                      </motion.button>
+                    )}
+
+                    {/* Hidden Additional Suggestions */}
+                    {similar.length > 3 && (
+                      <div id="more-suggestions" className="hidden space-y-2 pt-2 border-t border-stone-100 dark:border-stone-800/50">
+                        {similar.slice(3).map((s, idx) => (
+                          <motion.div
+                            key={s.id}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.3, delay: idx * 0.05 }}
+                          >
+                            <SimilarItem item={s} />
+                          </motion.div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+
                   <Link
                     href="/inspiration"
-                    className="mt-4 flex items-center gap-2 text-sm text-[#bfa14a] hover:text-[#d4af37] transition-colors font-medium"
+                    className="mt-4 flex items-center gap-2 text-sm text-[#bfa14a] hover:text-[#d4af37] transition-colors font-medium group"
                   >
-                    Browse all
-                    <ExternalLink size={13} />
+                    Browse all inspirations
+                    <ExternalLink size={13} className="group-hover:translate-x-0.5 transition-transform" />
                   </Link>
                 </div>
               )}

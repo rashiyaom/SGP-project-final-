@@ -34,8 +34,13 @@ import {
   MessageSquare,
   Mail,
   Phone,
+  Download,
+  List,
 } from 'lucide-react'
 import { useAdmin, type Product, type GalleryItem, type CustomFilter, type ContactMessage } from '@/contexts/admin-context'
+import FullscreenProductForm from '@/components/admin-product-form'
+import AdminProductListView from '@/components/admin-product-list-view'
+import { exportProductsToExcel } from '@/lib/excel-export'
 import Link from 'next/link'
 
 // ===== ADMIN LOGIN =====
@@ -778,6 +783,7 @@ export default function AdminPage() {
   const router = useRouter()
   const [activeTab, setActiveTab] = useState<Tab>('dashboard')
   const [searchQuery, setSearchQuery] = useState('')
+  const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid')
 
   // Modals
   const [showProductForm, setShowProductForm] = useState(false)
@@ -818,7 +824,7 @@ export default function AdminPage() {
       {/* Modals */}
       <AnimatePresence>
         {showProductForm && (
-          <ProductFormModal
+          <FullscreenProductForm
             product={editingProduct}
             onSave={(data) => {
               if (editingProduct) {
@@ -970,6 +976,26 @@ export default function AdminPage() {
         {/* ============================================== */}
         {activeTab === 'dashboard' && (
           <div className="space-y-8">
+            {/* Dashboard Header with Export */}
+            <div className="flex items-center justify-between">
+              <div>
+                <h1 className="font-serif text-2xl text-foreground mb-1">Dashboard</h1>
+                <p className="text-sm text-muted-foreground">Complete overview of your products and inventory</p>
+              </div>
+              <button
+                onClick={() => {
+                  exportProductsToExcel({
+                    products: products,
+                    categoryName: 'All Products',
+                  })
+                }}
+                className="flex items-center gap-2 h-11 px-5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity shadow-sm"
+              >
+                <Download className="w-4 h-4" />
+                Export All Products
+              </button>
+            </div>
+
             {/* Overall Stats */}
             <div className="grid grid-cols-2 lg:grid-cols-5 gap-3 sm:gap-4">
               <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: 0 }}
@@ -1130,6 +1156,18 @@ export default function AdminPage() {
                 </div>
                 <button
                   onClick={() => {
+                    exportProductsToExcel({
+                      products: getCategoryProducts(currentCategoryName),
+                      categoryName: currentCategoryMeta.label,
+                    })
+                  }}
+                  className="h-10 px-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-medium hover:opacity-90 transition-opacity flex items-center gap-2 whitespace-nowrap shadow-sm"
+                >
+                  <Download className="w-4 h-4" />
+                  <span className="hidden sm:inline">Export</span>
+                </button>
+                <button
+                  onClick={() => {
                     setEditingProduct(undefined)
                     setShowProductForm(true)
                   }}
@@ -1202,97 +1240,143 @@ export default function AdminPage() {
               )
             })()}
 
-            {/* Products Grid */}
+            {/* Products Grid/List View */}
             <div>
               <div className="flex items-center justify-between mb-4">
                 <h3 className="font-medium text-foreground text-sm">
                   {searchQuery ? `Search results (${currentProducts.length})` : `All ${currentCategoryMeta.shortLabel} Products`}
                 </h3>
-                <p className="text-xs text-muted-foreground">{currentProducts.length} items</p>
-              </div>
-
-              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
-                <AnimatePresence mode="popLayout">
-                  {currentProducts.map((product) => (
-                    <motion.div
-                      key={product.id}
-                      layout
-                      initial={{ opacity: 0, scale: 0.95 }}
-                      animate={{ opacity: 1, scale: 1 }}
-                      exit={{ opacity: 0, scale: 0.95 }}
-                      className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
-                    >
-                      <div className="relative aspect-square bg-muted/30 overflow-hidden">
-                        <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
-                        <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
-                          product.inStock ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'
-                        }`}>
-                          {product.inStock ? 'In Stock' : 'Out of Stock'}
-                        </div>
-                        {product.originalPrice && (
-                          <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                            -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
-                          </div>
-                        )}
-                        <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
-                          <button
-                            onClick={() => { setEditingProduct(product); setShowProductForm(true) }}
-                            className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                          >
-                            <Pencil className="w-4 h-4 text-gray-800" />
-                          </button>
-                          <button
-                            onClick={() => setDeleteTarget({ type: 'product', id: product.id, title: product.name })}
-                            className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
-                          >
-                            <Trash2 className="w-4 h-4 text-white" />
-                          </button>
-                        </div>
-                      </div>
-                      <div className="p-4">
-                        <h3 className="font-medium text-foreground text-sm mb-1.5 line-clamp-1">{product.name}</h3>
-                        {product.filters && Object.values(product.filters).flat().length > 0 && (
-                          <div className="flex flex-wrap gap-1 mb-2">
-                            {Object.values(product.filters).flat().slice(0, 3).map((tag, i) => (
-                              <span key={i} className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">{tag}</span>
-                            ))}
-                            {Object.values(product.filters).flat().length > 3 && (
-                              <span className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">
-                                +{Object.values(product.filters).flat().length - 3}
-                              </span>
-                            )}
-                          </div>
-                        )}
-                        <div className="flex items-center justify-between">
-                          <div className="flex items-baseline gap-1.5">
-                            <span className="font-bold text-foreground">₹{product.price.toLocaleString()}</span>
-                            {product.originalPrice && (
-                              <span className="text-xs text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
-                            )}
-                          </div>
-                          <div className="flex items-center gap-0.5">
-                            <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
-                            <span className="text-xs font-medium text-foreground">{product.rating}</span>
-                          </div>
-                        </div>
-                      </div>
-                    </motion.div>
-                  ))}
-                </AnimatePresence>
-
-                {currentProducts.length === 0 && (
-                  <div className="col-span-full py-20 text-center">
-                    <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
-                    <p className="text-muted-foreground mb-2">No products found</p>
+                <div className="flex items-center gap-3">
+                  <p className="text-xs text-muted-foreground">{currentProducts.length} items</p>
+                  <div className="flex items-center gap-1 bg-muted/50 border border-border rounded-lg p-0.5">
                     <button
-                      onClick={() => { setEditingProduct(undefined); setShowProductForm(true) }}
-                      className="text-sm text-foreground underline underline-offset-4 hover:no-underline"
+                      onClick={() => setViewMode('grid')}
+                      className={`p-1.5 rounded transition-colors ${
+                        viewMode === 'grid'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      title="Grid view"
                     >
-                      Add your first {currentCategoryMeta.shortLabel} product
+                      <Grid3X3 className="w-4 h-4" />
+                    </button>
+                    <button
+                      onClick={() => setViewMode('list')}
+                      className={`p-1.5 rounded transition-colors ${
+                        viewMode === 'list'
+                          ? 'bg-foreground text-background'
+                          : 'text-muted-foreground hover:text-foreground'
+                      }`}
+                      title="List view"
+                    >
+                      <List className="w-4 h-4" />
                     </button>
                   </div>
-                )}
+                </div>
               </div>
+
+              {viewMode === 'grid' ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                  <AnimatePresence mode="popLayout">
+                    {currentProducts.map((product) => (
+                      <motion.div
+                        key={product.id}
+                        layout
+                        initial={{ opacity: 0, scale: 0.95 }}
+                        animate={{ opacity: 1, scale: 1 }}
+                        exit={{ opacity: 0, scale: 0.95 }}
+                        className="bg-card border border-border rounded-2xl overflow-hidden group hover:shadow-lg transition-shadow"
+                      >
+                        <div className="relative aspect-square bg-muted/30 overflow-hidden">
+                          <img src={product.image} alt={product.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-500" />
+                          <div className={`absolute top-3 left-3 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wider ${
+                            product.inStock ? 'bg-emerald-500/90 text-white' : 'bg-red-500/90 text-white'
+                          }`}>
+                            {product.inStock ? 'In Stock' : 'Out of Stock'}
+                          </div>
+                          {product.originalPrice && (
+                            <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
+                              -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">
+                            <button
+                              onClick={() => { setEditingProduct(product); setShowProductForm(true) }}
+                              className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                            >
+                              <Pencil className="w-4 h-4 text-gray-800" />
+                            </button>
+                            <button
+                              onClick={() => setDeleteTarget({ type: 'product', id: product.id, title: product.name })}
+                              className="w-10 h-10 bg-red-500 rounded-full flex items-center justify-center shadow-lg hover:scale-110 transition-transform"
+                            >
+                              <Trash2 className="w-4 h-4 text-white" />
+                            </button>
+                          </div>
+                        </div>
+                        <div className="p-4">
+                          <h3 className="font-medium text-foreground text-sm mb-1.5 line-clamp-1">{product.name}</h3>
+                          {product.filters && Object.values(product.filters).flat().length > 0 && (
+                            <div className="flex flex-wrap gap-1 mb-2">
+                              {Object.values(product.filters).flat().slice(0, 3).map((tag, i) => (
+                                <span key={i} className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">{tag}</span>
+                              ))}
+                              {Object.values(product.filters).flat().length > 3 && (
+                                <span className="px-1.5 py-0.5 bg-muted/70 rounded text-[9px] text-muted-foreground">
+                                  +{Object.values(product.filters).flat().length - 3}
+                                </span>
+                              )}
+                            </div>
+                          )}
+                          <div className="flex items-center justify-between">
+                            <div className="flex items-baseline gap-1.5">
+                              <span className="font-bold text-foreground">₹{product.price?.toLocaleString('en-IN') || '0'}</span>
+                              {product.originalPrice && (
+                                <span className="text-xs text-muted-foreground line-through">₹{product.originalPrice.toLocaleString('en-IN')}</span>
+                              )}
+                            </div>
+                            <div className="flex items-center gap-0.5">
+                              <Star className="w-3 h-3 fill-amber-400 text-amber-400" />
+                              <span className="text-xs font-medium text-foreground">{product.rating.toFixed(1)}</span>
+                            </div>
+                          </div>
+                        </div>
+                      </motion.div>
+                    ))}
+                  </AnimatePresence>
+
+                  {currentProducts.length === 0 && (
+                    <div className="col-span-full py-20 text-center">
+                      <Package className="w-12 h-12 text-muted-foreground/30 mx-auto mb-3" />
+                      <p className="text-muted-foreground mb-2">No products found</p>
+                      <button
+                        onClick={() => { setEditingProduct(undefined); setShowProductForm(true) }}
+                        className="text-sm text-foreground underline underline-offset-4 hover:no-underline"
+                      >
+                        Add your first {currentCategoryMeta.shortLabel} product
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <AdminProductListView
+                  products={currentProducts}
+                  searchQuery={searchQuery}
+                  categoryMeta={{
+                    color: currentCategoryMeta.color,
+                    bgLight: currentCategoryMeta.bgLight,
+                    textColor: currentCategoryMeta.textColor,
+                    borderColor: currentCategoryMeta.borderColor,
+                  }}
+                  onEdit={(product) => {
+                    setEditingProduct(product)
+                    setShowProductForm(true)
+                  }}
+                  onDelete={(id, name) => {
+                    setDeleteTarget({ type: 'product', id, title: name })
+                  }}
+                />
+              )}
             </div>
           </div>
         )}

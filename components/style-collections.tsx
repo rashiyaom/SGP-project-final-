@@ -70,8 +70,10 @@ export function StyleCollections() {
 
   // Smooth scroll-based activation with progress tracking
   const handleScroll = useCallback(() => {
+    // Cancel previous RAF to prevent accumulation
     if (rafRef.current) {
       cancelAnimationFrame(rafRef.current)
+      rafRef.current = null
     }
 
     rafRef.current = requestAnimationFrame(() => {
@@ -92,14 +94,15 @@ export function StyleCollections() {
       const maxProgress = Math.max(...newProgress)
       if (maxProgress > 0.3) {
         const newActiveIndex = newProgress.indexOf(maxProgress)
-        if (newActiveIndex !== scrollActiveIndex) {
-          setScrollActiveIndex(newActiveIndex)
-        }
+        setScrollActiveIndex(newActiveIndex)
       } else {
         setScrollActiveIndex(null)
       }
+      
+      // Clear RAF ref after execution
+      rafRef.current = null
     })
-  }, [scrollActiveIndex])
+  }, [])  // Remove scrollActiveIndex dependency to prevent infinite loops
 
   useEffect(() => {
     window.addEventListener('scroll', handleScroll, { passive: true })
@@ -109,6 +112,7 @@ export function StyleCollections() {
       window.removeEventListener('scroll', handleScroll)
       if (rafRef.current) {
         cancelAnimationFrame(rafRef.current)
+        rafRef.current = null
       }
     }
   }, [handleScroll])

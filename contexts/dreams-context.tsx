@@ -52,10 +52,29 @@ export function DreamsProvider({ children }: { children: React.ReactNode }) {
     setIsLoaded(true)
   }, [])
 
-  // Save dreams to localStorage whenever they change
+  // Save dreams to localStorage whenever they change (with size limit)
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('dreams', JSON.stringify(dreams))
+      try {
+        const dreamsJson = JSON.stringify(dreams)
+        // Check localStorage size limit (~5MB = 5242880 bytes)
+        if (dreamsJson.length > 4500000) {
+          console.warn('Dreams data exceeds 4.5MB limit. Clearing old items.')
+          // Keep only newest 100 dreams
+          const recentDreams = dreams.slice(-100)
+          localStorage.setItem('dreams', JSON.stringify(recentDreams))
+        } else {
+          localStorage.setItem('dreams', JSON.stringify(dreams))
+        }
+      } catch (error) {
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+          console.error('localStorage quota exceeded. Keeping only last 50 dreams.')
+          const recentDreams = dreams.slice(-50)
+          localStorage.setItem('dreams', JSON.stringify(recentDreams))
+        } else {
+          console.error('Error saving dreams:', error)
+        }
+      }
     }
   }, [dreams, isLoaded])
 

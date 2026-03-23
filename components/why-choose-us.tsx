@@ -217,9 +217,11 @@ export function WhyChooseUs() {
     cards.forEach((card) => observer.observe(card))
     
     return () => {
+      // Properly cleanup: unobserve all cards and disconnect observer
       cards.forEach((card) => observer.unobserve(card))
+      observer.disconnect()
     }
-  }, [isInView])
+  }, [])  // Empty dependency array - only run once on mount
 
   return (
     <section ref={sectionRef} className="relative py-20 sm:py-28 lg:py-36 bg-gradient-to-b from-background via-background to-muted/20 overflow-hidden">

@@ -326,10 +326,15 @@ export default function InspirationPage() {
     }))
   }, [gallery])
 
-  // Debounce search
+  // Debounce search - properly debounce the actual search update
   useEffect(() => {
-    const t = setTimeout(() => setDebouncedSearch(searchQuery), 300)
-    return () => clearTimeout(t)
+    const debounceTimer = setTimeout(() => {
+      setDebouncedSearch(searchQuery)
+    }, 300)
+    
+    return () => {
+      clearTimeout(debounceTimer)
+    }
   }, [searchQuery])
 
   // Simulate initial loading
@@ -338,7 +343,7 @@ export default function InspirationPage() {
     return () => clearTimeout(t)
   }, [])
 
-  // Filter + sort
+  // Filter + sort (now depends on debouncedSearch to prevent excessive filtering)
   const filteredGallery = useMemo(() => {
     let result = [...galleryData]
 
@@ -379,6 +384,7 @@ export default function InspirationPage() {
   const visibleItems = filteredGallery.slice(0, displayedItems)
   const hasMore = displayedItems < filteredGallery.length
   const hasActiveFilters = activeCategory !== 'All' || debouncedSearch.trim() !== ''
+  const MAX_DISPLAY_ITEMS = 500  // Prevent DOM bloat
 
   const handleClearFilters = () => {
     setSearchQuery('')
@@ -389,7 +395,8 @@ export default function InspirationPage() {
   const handleLoadMore = useCallback(() => {
     setIsLoadingMore(true)
     setTimeout(() => {
-      setDisplayedItems((prev) => prev + ITEMS_PER_PAGE)
+      // Cap at MAX_DISPLAY_ITEMS to prevent performance issues
+      setDisplayedItems((prev) => Math.min(prev + ITEMS_PER_PAGE, MAX_DISPLAY_ITEMS))
       setIsLoadingMore(false)
     }, 600)
   }, [])

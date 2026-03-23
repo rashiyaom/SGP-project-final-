@@ -6,14 +6,18 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 export interface Product {
   id: string
   name: string
-  price: number
+  price?: number
+  pricingType: 'fixed' | 'inquire' // 'fixed' = has price, 'inquire' = price varies
   originalPrice?: number
   category: 'Ceramic Tiles' | 'Marble' | 'Bathroom & Sanitary Ware' | 'Accessories'
   rating: number
   inStock: boolean
-  image: string
+  images: string[] // Support multiple images per product
+  image: string // Fallback to first image for backward compatibility
   description?: string
   filters?: Record<string, string[]>
+  sku?: string
+  tags?: string[]
 }
 
 export interface GalleryItem {
@@ -81,36 +85,36 @@ interface AdminContextType {
 // ===== DEFAULT DATA =====
 const defaultProducts: Product[] = [
   // Ceramic Tiles
-  { id: '1', name: 'Ceramic White Pearl 60x60', price: 1200, category: 'Ceramic Tiles', rating: 4.9, inStock: true, image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=600&auto=format&fit=crop', description: 'Premium white ceramic tile with pearl finish' },
-  { id: '2', name: 'Minimal Design Tile 45x45', price: 1000, category: 'Ceramic Tiles', rating: 4.6, inStock: true, image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=600&auto=format&fit=crop', description: 'Clean minimal design for modern spaces' },
-  { id: '3', name: 'Slate Blue Gray 60x60', price: 1800, category: 'Ceramic Tiles', rating: 4.8, inStock: true, image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop', description: 'Elegant slate blue-gray ceramic tile' },
-  { id: '4', name: 'Cement Pattern Tile', price: 1100, category: 'Ceramic Tiles', rating: 4.6, inStock: true, image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Modern cement pattern tile' },
-  { id: '5', name: 'Terracotta Rustic 30x30', price: 950, originalPrice: 1200, category: 'Ceramic Tiles', rating: 4.5, inStock: true, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'Warm terracotta rustic tile' },
-  { id: '6', name: 'Hexagon Mosaic White', price: 1400, category: 'Ceramic Tiles', rating: 4.7, inStock: true, image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop', description: 'Beautiful hexagonal mosaic pattern' },
+  { id: '1', name: 'Ceramic White Pearl 60x60', pricingType: 'fixed', price: 1200, category: 'Ceramic Tiles', rating: 4.9, inStock: true, images: ['https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=600&auto=format&fit=crop', description: 'Premium white ceramic tile with pearl finish' },
+  { id: '2', name: 'Minimal Design Tile 45x45', pricingType: 'fixed', price: 1000, category: 'Ceramic Tiles', rating: 4.6, inStock: true, images: ['https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=600&auto=format&fit=crop', description: 'Clean minimal design for modern spaces' },
+  { id: '3', name: 'Slate Blue Gray 60x60', pricingType: 'fixed', price: 1800, category: 'Ceramic Tiles', rating: 4.8, inStock: true, images: ['https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop', description: 'Elegant slate blue-gray ceramic tile' },
+  { id: '4', name: 'Cement Pattern Tile', pricingType: 'fixed', price: 1100, category: 'Ceramic Tiles', rating: 4.6, inStock: true, images: ['https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Modern cement pattern tile' },
+  { id: '5', name: 'Terracotta Rustic 30x30', pricingType: 'fixed', price: 950, originalPrice: 1200, category: 'Ceramic Tiles', rating: 4.5, inStock: true, images: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'Warm terracotta rustic tile' },
+  { id: '6', name: 'Hexagon Mosaic White', pricingType: 'fixed', price: 1400, category: 'Ceramic Tiles', rating: 4.7, inStock: true, images: ['https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop', description: 'Beautiful hexagonal mosaic pattern' },
   
   // Marble
-  { id: '7', name: 'Marble Elegance 60x60', price: 2500, originalPrice: 3000, category: 'Marble', rating: 4.8, inStock: true, image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=600&auto=format&fit=crop', description: 'Elegant marble with natural veining' },
-  { id: '8', name: 'Cream Travertine 80x80', price: 2200, originalPrice: 2600, category: 'Marble', rating: 4.7, inStock: true, image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop', description: 'Premium cream travertine marble' },
-  { id: '9', name: 'Polished Quartz White', price: 3200, originalPrice: 4000, category: 'Marble', rating: 4.9, inStock: true, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop', description: 'Ultra-polished white quartz' },
-  { id: '10', name: 'Thassos White Premium', price: 3500, category: 'Marble', rating: 4.8, inStock: true, image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop', description: 'Thassos premium white marble' },
-  { id: '11', name: 'Black Marquina Marble', price: 4200, category: 'Marble', rating: 4.9, inStock: true, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'Luxurious black Marquina marble' },
-  { id: '12', name: 'Calacatta Gold Slab', price: 5500, originalPrice: 6500, category: 'Marble', rating: 5.0, inStock: false, image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=600&auto=format&fit=crop', description: 'Premium Calacatta gold slab' },
+  { id: '7', name: 'Marble Elegance 60x60', pricingType: 'fixed', price: 2500, originalPrice: 3000, category: 'Marble', rating: 4.8, inStock: true, images: ['https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=600&auto=format&fit=crop', description: 'Elegant marble with natural veining' },
+  { id: '8', name: 'Cream Travertine 80x80', pricingType: 'fixed', price: 2200, originalPrice: 2600, category: 'Marble', rating: 4.7, inStock: true, images: ['https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop', description: 'Premium cream travertine marble' },
+  { id: '9', name: 'Polished Quartz White', pricingType: 'fixed', price: 3200, originalPrice: 4000, category: 'Marble', rating: 4.9, inStock: true, images: ['https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop', description: 'Ultra-polished white quartz' },
+  { id: '10', name: 'Thassos White Premium', pricingType: 'fixed', price: 3500, category: 'Marble', rating: 4.8, inStock: true, images: ['https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=600&auto=format&fit=crop', description: 'Thassos premium white marble' },
+  { id: '11', name: 'Black Marquina Marble', pricingType: 'fixed', price: 4200, category: 'Marble', rating: 4.9, inStock: true, images: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'Luxurious black Marquina marble' },
+  { id: '12', name: 'Calacatta Gold Slab', pricingType: 'inquire', originalPrice: 6500, category: 'Marble', rating: 5.0, inStock: false, images: ['https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600607687920-4e2a09cf159d?q=80&w=600&auto=format&fit=crop', description: 'Premium Calacatta gold slab' },
   
   // Bathroom & Sanitary Ware
-  { id: '13', name: 'Designer Wash Basin', price: 8500, originalPrice: 10000, category: 'Bathroom & Sanitary Ware', rating: 4.7, inStock: true, image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600&auto=format&fit=crop', description: 'Modern designer wash basin' },
-  { id: '14', name: 'Chrome Designer Faucet', price: 3200, originalPrice: 4200, category: 'Bathroom & Sanitary Ware', rating: 4.7, inStock: true, image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop', description: 'Premium chrome faucet' },
-  { id: '15', name: 'Wall Mounted Toilet', price: 12000, category: 'Bathroom & Sanitary Ware', rating: 4.8, inStock: true, image: 'https://images.unsplash.com/photo-1585412727339-54e4bae3bbf9?q=80&w=600&auto=format&fit=crop', description: 'Sleek wall-mounted toilet' },
-  { id: '16', name: 'Rainfall Shower Set', price: 7500, originalPrice: 9000, category: 'Bathroom & Sanitary Ware', rating: 4.6, inStock: true, image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Luxury rainfall shower set' },
-  { id: '17', name: 'Freestanding Bathtub', price: 45000, category: 'Bathroom & Sanitary Ware', rating: 4.9, inStock: false, image: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?q=80&w=600&auto=format&fit=crop', description: 'Elegant freestanding bathtub' },
-  { id: '18', name: 'Vanity Mirror Cabinet', price: 6800, category: 'Bathroom & Sanitary Ware', rating: 4.5, inStock: true, image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop', description: 'Premium vanity mirror cabinet' },
+  { id: '13', name: 'Designer Wash Basin', pricingType: 'fixed', price: 8500, originalPrice: 10000, category: 'Bathroom & Sanitary Ware', rating: 4.7, inStock: true, images: ['https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1584622650111-993a426fbf0a?q=80&w=600&auto=format&fit=crop', description: 'Modern designer wash basin' },
+  { id: '14', name: 'Chrome Designer Faucet', pricingType: 'fixed', price: 3200, originalPrice: 4200, category: 'Bathroom & Sanitary Ware', rating: 4.7, inStock: true, images: ['https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop', description: 'Premium chrome faucet' },
+  { id: '15', name: 'Wall Mounted Toilet', pricingType: 'fixed', price: 12000, category: 'Bathroom & Sanitary Ware', rating: 4.8, inStock: true, images: ['https://images.unsplash.com/photo-1585412727339-54e4bae3bbf9?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1585412727339-54e4bae3bbf9?q=80&w=600&auto=format&fit=crop', description: 'Sleek wall-mounted toilet' },
+  { id: '16', name: 'Rainfall Shower Set', pricingType: 'fixed', price: 7500, originalPrice: 9000, category: 'Bathroom & Sanitary Ware', rating: 4.6, inStock: true, images: ['https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Luxury rainfall shower set' },
+  { id: '17', name: 'Freestanding Bathtub', pricingType: 'inquire', category: 'Bathroom & Sanitary Ware', rating: 4.9, inStock: false, images: ['https://images.unsplash.com/photo-1507652313519-d4e9174996dd?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1507652313519-d4e9174996dd?q=80&w=600&auto=format&fit=crop', description: 'Elegant freestanding bathtub' },
+  { id: '18', name: 'Vanity Mirror Cabinet', pricingType: 'fixed', price: 6800, category: 'Bathroom & Sanitary Ware', rating: 4.5, inStock: true, images: ['https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1552321554-5fefe8c9ef14?q=80&w=600&auto=format&fit=crop', description: 'Premium vanity mirror cabinet' },
   
   // Accessories
-  { id: '19', name: 'Glass Mosaic Border', price: 2000, category: 'Accessories', rating: 4.9, inStock: true, image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop', description: 'Decorative glass mosaic border' },
-  { id: '20', name: 'Black Matte Trim', price: 2800, category: 'Accessories', rating: 4.8, inStock: true, image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop', description: 'Modern black matte trim' },
-  { id: '21', name: 'Stainless Towel Rail', price: 1500, category: 'Accessories', rating: 4.6, inStock: true, image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Stainless steel towel rail' },
-  { id: '22', name: 'Brass Soap Dispenser', price: 1200, originalPrice: 1500, category: 'Accessories', rating: 4.7, inStock: true, image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop', description: 'Elegant brass soap dispenser' },
-  { id: '23', name: 'Chrome Robe Hook Set', price: 800, category: 'Accessories', rating: 4.5, inStock: true, image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop', description: 'Chrome robe hook set' },
-  { id: '24', name: 'Premium Tile Grout', price: 450, category: 'Accessories', rating: 4.4, inStock: true, image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'High-quality premium tile grout' },
+  { id: '19', name: 'Glass Mosaic Border', pricingType: 'fixed', price: 2000, category: 'Accessories', rating: 4.9, inStock: true, images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop', description: 'Decorative glass mosaic border' },
+  { id: '20', name: 'Black Matte Trim', pricingType: 'fixed', price: 2800, category: 'Accessories', rating: 4.8, inStock: true, images: ['https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=600&auto=format&fit=crop', description: 'Modern black matte trim' },
+  { id: '21', name: 'Stainless Towel Rail', pricingType: 'fixed', price: 1500, category: 'Accessories', rating: 4.6, inStock: true, images: ['https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1620626011761-996317b8d101?q=80&w=600&auto=format&fit=crop', description: 'Stainless steel towel rail' },
+  { id: '22', name: 'Brass Soap Dispenser', pricingType: 'fixed', price: 1200, originalPrice: 1500, category: 'Accessories', rating: 4.7, inStock: true, images: ['https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1556909114-f6e7ad7d3136?q=80&w=600&auto=format&fit=crop', description: 'Elegant brass soap dispenser' },
+  { id: '23', name: 'Chrome Robe Hook Set', pricingType: 'fixed', price: 800, category: 'Accessories', rating: 4.5, inStock: true, images: ['https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=600&auto=format&fit=crop', description: 'Chrome robe hook set' },
+  { id: '24', name: 'Premium Tile Grout', pricingType: 'fixed', price: 450, category: 'Accessories', rating: 4.4, inStock: true, images: ['https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop'], image: 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?q=80&w=600&auto=format&fit=crop', description: 'High-quality premium tile grout' },
 ]
 
 const defaultGallery: GalleryItem[] = [
@@ -220,25 +224,61 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setIsLoaded(true)
   }, [])
 
-  // Save to localStorage on change
+  // Save to localStorage on change (with size limit and batching)
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('admin_products', JSON.stringify(products))
+    try {
+      const productsJson = JSON.stringify(products)
+      if (productsJson.length > 4500000) {
+        console.warn('Products data exceeds 4.5MB. Consider database migration.')
+      }
+      localStorage.setItem('admin_products', productsJson)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded for products')
+      }
+    }
   }, [products, isLoaded])
 
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('admin_gallery', JSON.stringify(gallery))
+    try {
+      const galleryJson = JSON.stringify(gallery)
+      if (galleryJson.length > 4500000) {
+        console.warn('Gallery data exceeds 4.5MB. Consider database migration.')
+      }
+      localStorage.setItem('admin_gallery', galleryJson)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded for gallery')
+      }
+    }
   }, [gallery, isLoaded])
 
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('admin_customFilters', JSON.stringify(customFilters))
+    try {
+      const filtersJson = JSON.stringify(customFilters)
+      localStorage.setItem('admin_customFilters', filtersJson)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded for filters')
+      }
+    }
   }, [customFilters, isLoaded])
 
   useEffect(() => {
     if (!isLoaded) return
-    localStorage.setItem('admin_contactMessages', JSON.stringify(contactMessages))
+    try {
+      const messagesJson = JSON.stringify(contactMessages)
+      localStorage.setItem('admin_contactMessages', messagesJson)
+    } catch (error) {
+      if (error instanceof Error && error.name === 'QuotaExceededError') {
+        console.error('localStorage quota exceeded for messages. Keeping last 100.')
+        const recent = contactMessages.slice(-100)
+        localStorage.setItem('admin_contactMessages', JSON.stringify(recent))
+      }
+    }
   }, [contactMessages, isLoaded])
 
   // ===== PRODUCT CRUD =====

@@ -48,23 +48,47 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   // Save cart to localStorage whenever it changes
   useEffect(() => {
     if (isLoaded) {
-      localStorage.setItem('cart', JSON.stringify(items))
+      try {
+        const cartJson = JSON.stringify(items)
+        // Warn if approaching limit
+        if (cartJson.length > 4500000) {
+          console.warn('Cart data exceeds 4.5MB. Consider using backend storage.')
+        }
+        localStorage.setItem('cart', cartJson)
+      } catch (error) {
+        if (error instanceof Error && error.name === 'QuotaExceededError') {
+          console.error('localStorage quota exceeded. Clearing old cart items.')
+          // Keep only last 50 items
+          const recentItems = items.slice(-50)
+          localStorage.setItem('cart', JSON.stringify(recentItems))
+        }
+      }
     }
   }, [items, isLoaded])
 
   const addItem = (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => {
+    // Validate item data
+    if (!item.id || !item.name || item.price < 0) {
+      console.error('Invalid item data:', item)
+      return
+    }
+
+    // Validate quantity
+    const quantity = Math.max(1, Math.min(999, Math.floor(item.quantity || 1)))
+
     setItems((prevItems) => {
       const existingItem = prevItems.find((i) => i.id === item.id)
       if (existingItem) {
-        // Update quantity if item already exists
+        // Update quantity if item already exists (but don't exceed 999 total)
+        const newQuantity = Math.min(999, existingItem.quantity + quantity)
         return prevItems.map((i) =>
           i.id === item.id
-            ? { ...i, quantity: i.quantity + (item.quantity || 1) }
+            ? { ...i, quantity: newQuantity }
             : i
         )
       }
       // Add new item
-      return [...prevItems, { ...item, quantity: item.quantity || 1 }]
+      return [...prevItems, { ...item, quantity } as CartItem]
     })
   }
 
@@ -73,13 +97,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateQuantity = (id: string, quantity: number) => {
-    if (quantity <= 0) {
+    // Validate quantity: must be between 1 and 999
+    const validQuantity = Math.max(1, Math.min(999, Math.floor(quantity)))
+    
+    if (validQuantity !== quantity) {
+      console.warn(`Quantity adjusted to valid range: ${quantity} → ${validQuantity}`)
+    }
+
+    if (validQuantity <= 0) {
       removeItem(id)
       return
     }
+    
     setItems((prevItems) =>
       prevItems.map((item) =>
-        item.id === id ? { ...item, quantity } : item
+        item.id === id ? { ...item, quantity: validQuantity } : item
       )
     )
   }
