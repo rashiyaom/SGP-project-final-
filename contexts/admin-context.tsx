@@ -52,198 +52,173 @@ export interface ContactMessage {
 interface AdminContextType {
   // Products
   products: Product[]
-  addProduct: (product: Omit<Product, 'id'>) => void
-  updateProduct: (id: string, product: Partial<Product>) => void
-  deleteProduct: (id: string) => void
+  addProduct: (product: Omit<Product, 'id'>) => Promise<void>
+  updateProduct: (id: string, product: Partial<Product>) => Promise<void>
+  deleteProduct: (id: string) => Promise<void>
   getProductsByCategory: (category: string) => Product[]
 
   // Gallery
   gallery: GalleryItem[]
-  addGalleryItem: (item: Omit<GalleryItem, 'id'>) => void
-  updateGalleryItem: (id: string, item: Partial<GalleryItem>) => void
-  deleteGalleryItem: (id: string) => void
+  addGalleryItem: (item: Omit<GalleryItem, 'id'>) => Promise<void>
+  updateGalleryItem: (id: string, item: Partial<GalleryItem>) => Promise<void>
+  deleteGalleryItem: (id: string) => Promise<void>
 
   // Custom Filters
   customFilters: CustomFilter[]
-  addCustomFilter: (filter: Omit<CustomFilter, 'id'>) => void
-  updateCustomFilter: (id: string, filter: Partial<CustomFilter>) => void
-  deleteCustomFilter: (id: string) => void
+  addCustomFilter: (filter: Omit<CustomFilter, 'id'>) => Promise<void>
+  updateCustomFilter: (id: string, filter: Partial<CustomFilter>) => Promise<void>
+  deleteCustomFilter: (id: string) => Promise<void>
   getFiltersForCategory: (category: Product['category']) => CustomFilter[]
 
   // Contact Messages
   contactMessages: ContactMessage[]
-  addContactMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => void
-  markMessageRead: (id: string) => void
-  deleteContactMessage: (id: string) => void
+  addContactMessage: (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => Promise<void>
+  markMessageRead: (id: string) => Promise<void>
+  deleteContactMessage: (id: string) => Promise<void>
 
   // Admin Auth
   isAdmin: boolean
-  adminLogin: (password: string) => boolean
-  adminLogout: () => void
+  adminLogin: (password: string) => Promise<boolean>
+  adminLogout: () => Promise<void>
+  
+  // Loading states
+  isLoading: boolean
+  error: string | null
 }
-
-// ===== DEFAULT DATA =====
-const defaultProducts: Product[] = []
-
-const defaultGallery: GalleryItem[] = []
-
-// ===== DEFAULT FILTERS (seeded from existing website filters) =====
-const defaultFilters: CustomFilter[] = []
 
 const ADMIN_PASSWORD = 'admin123'
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
-  const [products, setProducts] = useState<Product[]>(defaultProducts)
-  const [gallery, setGallery] = useState<GalleryItem[]>(defaultGallery)
-  const [customFilters, setCustomFilters] = useState<CustomFilter[]>(defaultFilters)
+  const [products, setProducts] = useState<Product[]>([])
+  const [gallery, setGallery] = useState<GalleryItem[]>([])
+  const [customFilters, setCustomFilters] = useState<CustomFilter[]>([])
   const [contactMessages, setContactMessages] = useState<ContactMessage[]>([])
   const [isAdmin, setIsAdmin] = useState(false)
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  // Load from localStorage on mount
+  // Get user email from sessionStorage (set during login)
   useEffect(() => {
-    try {
-      const savedProducts = localStorage.getItem('admin_products')
-      const savedGallery = localStorage.getItem('admin_gallery')
-      const savedFilters = localStorage.getItem('admin_customFilters')
-      const savedAdmin = localStorage.getItem('admin_isAdmin')
-
-      if (savedProducts) setProducts(JSON.parse(savedProducts))
-      if (savedGallery) setGallery(JSON.parse(savedGallery))
-      if (savedFilters) {
-        const parsed = JSON.parse(savedFilters)
-        // If previously saved as empty array, use defaults instead
-        if (Array.isArray(parsed) && parsed.length > 0) {
-          setCustomFilters(parsed)
-        }
-      }
-      if (savedAdmin === 'true') setIsAdmin(true)
-      const savedMessages = localStorage.getItem('admin_contactMessages')
-      if (savedMessages) setContactMessages(JSON.parse(savedMessages))
-      setLoadError(null)
-    } catch (e) {
-      const errorMsg = e instanceof Error ? e.message : 'Failed to load admin data'
-      console.error('Error loading admin data:', e)
-      setLoadError(errorMsg)
-      // Fall back to defaults on error
+    const email = sessionStorage.getItem('userEmail')
+    setUserEmail(email)
+    if (email) {
+      loadAdminData(email)
     }
-    setIsLoaded(true)
   }, [])
 
-  // Save to localStorage on change (with size limit and batching)
-  useEffect(() => {
-    if (!isLoaded) return
+  // Load admin data from MongoDB
+  const loadAdminData = async (email: string) => {
     try {
-      const productsJson = JSON.stringify(products)
-      if (productsJson.length > 4500000) {
-        console.warn('Products data exceeds 4.5MB. Consider database migration.')
+      setIsLoading(true)
+      const res = await fetch(`/api/users/admin?email=${encodeURIComponent(email)}`)
+      if (res.ok) {
+        const data = await res.json()
+        const adminData = data.data || {}
+        setProducts(adminData.products || [])
+        setGallery(adminData.gallery || [])
+        setCustomFilters(adminData.filters || [])
+        setContactMessages(adminData.contactMessages || [])
       }
-      localStorage.setItem('admin_products', productsJson)
-    } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('localStorage quota exceeded for products')
-      }
+      setError(null)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load admin data'
+      console.error('Error loading admin data:', err)
+      setError(errorMsg)
+    } finally {
+      setIsLoading(false)
     }
-  }, [products, isLoaded])
+  }
 
-  useEffect(() => {
-    if (!isLoaded) return
-    try {
-      const galleryJson = JSON.stringify(gallery)
-      if (galleryJson.length > 4500000) {
-        console.warn('Gallery data exceeds 4.5MB. Consider database migration.')
-      }
-      localStorage.setItem('admin_gallery', galleryJson)
-    } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('localStorage quota exceeded for gallery')
-      }
-    }
-  }, [gallery, isLoaded])
+  // Save admin data to MongoDB
+  const saveAdminData = async () => {
+    if (!userEmail) return
 
-  useEffect(() => {
-    if (!isLoaded) return
     try {
-      const filtersJson = JSON.stringify(customFilters)
-      localStorage.setItem('admin_customFilters', filtersJson)
-    } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('localStorage quota exceeded for filters')
-      }
+      await fetch('/api/users/admin', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          adminData: {
+            products,
+            gallery,
+            filters: customFilters,
+            contactMessages
+          }
+        })
+      })
+      setError(null)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save admin data'
+      console.error('Error saving admin data:', err)
+      setError(errorMsg)
     }
-  }, [customFilters, isLoaded])
+  }
 
+  // Auto-save whenever data changes
   useEffect(() => {
-    if (!isLoaded) return
-    try {
-      const messagesJson = JSON.stringify(contactMessages)
-      localStorage.setItem('admin_contactMessages', messagesJson)
-    } catch (error) {
-      if (error instanceof Error && error.name === 'QuotaExceededError') {
-        console.error('localStorage quota exceeded for messages. Keeping last 100.')
-        const recent = contactMessages.slice(-100)
-        localStorage.setItem('admin_contactMessages', JSON.stringify(recent))
-      }
+    if (userEmail && (products.length > 0 || gallery.length > 0 || customFilters.length > 0 || contactMessages.length > 0)) {
+      saveAdminData()
     }
-  }, [contactMessages, isLoaded])
+  }, [products, gallery, customFilters, contactMessages, userEmail])
 
   // ===== PRODUCT CRUD =====
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
 
-  const addProduct = useCallback((product: Omit<Product, 'id'>) => {
+  const addProduct = async (product: Omit<Product, 'id'>) => {
     const newProduct: Product = { ...product, id: generateId() }
     setProducts(prev => [...prev, newProduct])
-  }, [])
+  }
 
-  const updateProduct = useCallback((id: string, updates: Partial<Product>) => {
+  const updateProduct = async (id: string, updates: Partial<Product>) => {
     setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
-  }, [])
+  }
 
-  const deleteProduct = useCallback((id: string) => {
+  const deleteProduct = async (id: string) => {
     setProducts(prev => prev.filter(p => p.id !== id))
-  }, [])
+  }
 
-  const getProductsByCategory = useCallback((category: string) => {
+  const getProductsByCategory = (category: string) => {
     return products.filter(p => p.category === category)
-  }, [products])
+  }
 
   // ===== GALLERY CRUD =====
-  const addGalleryItem = useCallback((item: Omit<GalleryItem, 'id'>) => {
+  const addGalleryItem = async (item: Omit<GalleryItem, 'id'>) => {
     const newItem: GalleryItem = { ...item, id: generateId() }
     setGallery(prev => [...prev, newItem])
-  }, [])
+  }
 
-  const updateGalleryItem = useCallback((id: string, updates: Partial<GalleryItem>) => {
+  const updateGalleryItem = async (id: string, updates: Partial<GalleryItem>) => {
     setGallery(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g))
-  }, [])
+  }
 
-  const deleteGalleryItem = useCallback((id: string) => {
+  const deleteGalleryItem = async (id: string) => {
     setGallery(prev => prev.filter(g => g.id !== id))
-  }, [])
+  }
 
   // ===== CUSTOM FILTERS CRUD =====
-  const addCustomFilter = useCallback((filter: Omit<CustomFilter, 'id'>) => {
+  const addCustomFilter = async (filter: Omit<CustomFilter, 'id'>) => {
     const newFilter: CustomFilter = { ...filter, id: generateId() }
     setCustomFilters(prev => [...prev, newFilter])
-  }, [])
+  }
 
-  const updateCustomFilter = useCallback((id: string, updates: Partial<CustomFilter>) => {
+  const updateCustomFilter = async (id: string, updates: Partial<CustomFilter>) => {
     setCustomFilters(prev => prev.map(f => f.id === id ? { ...f, ...updates } : f))
-  }, [])
+  }
 
-  const deleteCustomFilter = useCallback((id: string) => {
+  const deleteCustomFilter = async (id: string) => {
     setCustomFilters(prev => prev.filter(f => f.id !== id))
-  }, [])
+  }
 
-  const getFiltersForCategory = useCallback((category: Product['category']) => {
+  const getFiltersForCategory = (category: Product['category']) => {
     return customFilters.filter(f => f.category === category || f.category === 'all')
-  }, [customFilters])
+  }
 
   // ===== CONTACT MESSAGES CRUD =====
-  const addContactMessage = useCallback((msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => {
+  const addContactMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => {
     const newMsg: ContactMessage = {
       ...msg,
       id: generateId(),
@@ -251,30 +226,29 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       read: false,
     }
     setContactMessages(prev => [newMsg, ...prev])
-  }, [])
+  }
 
-  const markMessageRead = useCallback((id: string) => {
+  const markMessageRead = async (id: string) => {
     setContactMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
-  }, [])
+  }
 
-  const deleteContactMessage = useCallback((id: string) => {
+  const deleteContactMessage = async (id: string) => {
     setContactMessages(prev => prev.filter(m => m.id !== id))
-  }, [])
+  }
 
   // ===== ADMIN AUTH =====
-  const adminLogin = useCallback((password: string) => {
+  const adminLogin = async (password: string) => {
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true)
-      localStorage.setItem('admin_isAdmin', 'true')
       return true
     }
     return false
-  }, [])
+  }
 
-  const adminLogout = useCallback(() => {
+  const adminLogout = async () => {
     setIsAdmin(false)
-    localStorage.removeItem('admin_isAdmin')
-  }, [])
+    await saveAdminData()
+  }
 
   return (
     <AdminContext.Provider value={{
@@ -299,6 +273,8 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       adminLogin,
       adminLogout,
+      isLoading,
+      error
     }}>
       {children}
     </AdminContext.Provider>

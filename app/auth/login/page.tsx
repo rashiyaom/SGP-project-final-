@@ -200,65 +200,122 @@ export default function AuthPage() {
     
     setIsLoading(true)
     
-    // Simulate API call delay
-    setTimeout(() => {
-      // Frontend-only validation
-      if (isLogin) {
-        // Login logic - store in localStorage and redirect
-        localStorage.setItem('isAuthenticated', 'true')
-        localStorage.setItem('userEmail', formData.email)
-        localStorage.setItem('userName', formData.email.split('@')[0])
-        
-        // Check if there's a redirect path stored
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin')
-        if (redirectPath) {
-          sessionStorage.removeItem('redirectAfterLogin')
-          router.push(redirectPath)
-        } else {
-          router.push('/')
-        }
-      } else {
-        // Signup logic - store user data and redirect
-        localStorage.setItem('isAuthenticated', 'true')
-        localStorage.setItem('userName', formData.name)
-        localStorage.setItem('userEmail', formData.email)
-        
-        // Check if there's a redirect path stored
-        const redirectPath = sessionStorage.getItem('redirectAfterLogin')
-        if (redirectPath) {
-          sessionStorage.removeItem('redirectAfterLogin')
-          router.push(redirectPath)
-        } else {
-          router.push('/')
-        }
-      }
-      
-      setIsLoading(false)
-    }, 1000)
+    // MongoDB-based authentication
+    if (isLogin) {
+      // Login: Verify user in MongoDB with password
+      fetch('/api/users?email=' + encodeURIComponent(formData.email) + '&password=' + encodeURIComponent(formData.password))
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Store user info in sessionStorage (not localStorage - more secure)
+            sessionStorage.setItem('isAuthenticated', 'true')
+            sessionStorage.setItem('userEmail', formData.email)
+            sessionStorage.setItem('userName', data.data.name)
+            sessionStorage.setItem('userId', data.data._id)
+            
+            // Check if there's a redirect path stored
+            const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+            if (redirectPath) {
+              sessionStorage.removeItem('redirectAfterLogin')
+              router.push(redirectPath)
+            } else {
+              router.push('/')
+            }
+          } else if (data.error === 'Invalid password') {
+            setErrors({ ...errors, password: 'Incorrect password' })
+          } else if (data.error === 'User not found') {
+            setErrors({ ...errors, email: 'User not found' })
+          } else {
+            setErrors({ ...errors, email: data.error || 'Login failed' })
+          }
+          setIsLoading(false)
+        })
+        .catch(err => {
+          console.error('Login error:', err)
+          setErrors({ ...errors, email: 'Login failed' })
+          setIsLoading(false)
+        })
+    } else {
+      // Signup: Create new user in MongoDB
+      fetch('/api/users', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: formData.name,
+          email: formData.email,
+          password: formData.password
+        })
+      })
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            // Store user info in sessionStorage
+            sessionStorage.setItem('isAuthenticated', 'true')
+            sessionStorage.setItem('userEmail', formData.email)
+            sessionStorage.setItem('userName', formData.name)
+            sessionStorage.setItem('userId', data.data._id)
+            
+            // Check if there's a redirect path stored
+            const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+            if (redirectPath) {
+              sessionStorage.removeItem('redirectAfterLogin')
+              router.push(redirectPath)
+            } else {
+              router.push('/')
+            }
+          } else if (data.error === 'User already exists') {
+            setErrors({ ...errors, email: 'Email already registered' })
+          } else {
+            setErrors({ ...errors, email: data.error || 'Signup failed' })
+          }
+          setIsLoading(false)
+        })
+        .catch(err => {
+          console.error('Signup error:', err)
+          setErrors({ ...errors, email: 'Signup failed' })
+          setIsLoading(false)
+        })
+    }
   }
   
   const handleSocialLogin = (provider: 'google' | 'apple') => {
     setIsLoading(true)
     
-    // Simulate social login
-    setTimeout(() => {
-      const email = `user@${provider}.com`
-      const name = provider === 'google' ? 'Google User' : 'Apple User'
-      
-      localStorage.setItem('isAuthenticated', 'true')
-      localStorage.setItem('userName', name)
-      localStorage.setItem('userEmail', email)
-      
-      const redirectPath = sessionStorage.getItem('redirectAfterLogin')
-      if (redirectPath) {
-        sessionStorage.removeItem('redirectAfterLogin')
-        router.push(redirectPath)
-      } else {
-        router.push('/')
-      }
-      
-      setIsLoading(false)
-    }, 1000)
+    // Simulate social login with MongoDB
+    const email = `${Math.random().toString(36).substring(7)}@${provider}.com`
+    const name = provider === 'google' ? 'Google User' : 'Apple User'
+    
+    // Try to create or find user
+    fetch('/api/users', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        name: name,
+        email: email,
+        password: Math.random().toString(36).substring(2, 15) // Random password for social login
+      })
+    })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success || data.error === 'User already exists') {
+          sessionStorage.setItem('isAuthenticated', 'true')
+          sessionStorage.setItem('userName', name)
+          sessionStorage.setItem('userEmail', email)
+          
+          const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+          if (redirectPath) {
+            sessionStorage.removeItem('redirectAfterLogin')
+            router.push(redirectPath)
+          } else {
+            router.push('/')
+          }
+        }
+        setIsLoading(false)
+      })
+      .catch(err => {
+        console.error('Social login error:', err)
+        setIsLoading(false)
+      })
   }
 
   return (

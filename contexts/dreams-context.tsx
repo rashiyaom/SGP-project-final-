@@ -22,74 +22,91 @@ export interface DreamItem {
 
 interface DreamsContextType {
   dreams: DreamItem[]
-  addDream: (dream: Omit<DreamItem, 'savedAt'>) => void
-  removeDream: (id: string) => void
+  addDream: (dream: Omit<DreamItem, 'savedAt'>) => Promise<void>
+  removeDream: (id: string) => Promise<void>
   isDreamSaved: (id: string) => boolean
   getTotalDreams: () => number
+  isLoading: boolean
+  error: string | null
 }
 
 const DreamsContext = createContext<DreamsContextType | undefined>(undefined)
 
 export function DreamsProvider({ children }: { children: React.ReactNode }) {
   const [dreams, setDreams] = useState<DreamItem[]>([])
-  const [isLoaded, setIsLoaded] = useState(false)
-  const [loadError, setLoadError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [userEmail, setUserEmail] = useState<string | null>(null)
 
-  // Load dreams from localStorage on mount
+  // Load dreams from MongoDB on mount
   useEffect(() => {
-    try {
-      const savedDreams = localStorage.getItem('dreams')
-      if (savedDreams) {
-        setDreams(JSON.parse(savedDreams))
-      }
-      setLoadError(null)
-    } catch (error) {
-      const errorMsg = error instanceof Error ? error.message : 'Failed to load dreams'
-      console.error('Error loading dreams:', error)
-      setLoadError(errorMsg)
-      setDreams([])
+    const email = sessionStorage.getItem('userEmail')
+    setUserEmail(email)
+    if (email) {
+      loadDreams(email)
     }
-    setIsLoaded(true)
   }, [])
 
-  // Save dreams to localStorage whenever they change (with size limit)
-  useEffect(() => {
-    if (isLoaded) {
-      try {
-        const dreamsJson = JSON.stringify(dreams)
-        // Check localStorage size limit (~5MB = 5242880 bytes)
-        if (dreamsJson.length > 4500000) {
-          console.warn('Dreams data exceeds 4.5MB limit. Clearing old items.')
-          // Keep only newest 100 dreams
-          const recentDreams = dreams.slice(-100)
-          localStorage.setItem('dreams', JSON.stringify(recentDreams))
-        } else {
-          localStorage.setItem('dreams', JSON.stringify(dreams))
-        }
-      } catch (error) {
-        if (error instanceof Error && error.name === 'QuotaExceededError') {
-          console.error('localStorage quota exceeded. Keeping only last 50 dreams.')
-          const recentDreams = dreams.slice(-50)
-          localStorage.setItem('dreams', JSON.stringify(recentDreams))
-        } else {
-          console.error('Error saving dreams:', error)
-        }
+  const loadDreams = async (email: string) => {
+    try {
+      setIsLoading(true)
+      const res = await fetch(`/api/users/dreams?email=${encodeURIComponent(email)}`)
+      if (res.ok) {
+        const data = await res.json()
+        setDreams(data.data || [])
       }
+      setError(null)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to load dreams'
+      console.error('Error loading dreams:', err)
+      setError(errorMsg)
+    } finally {
+      setIsLoading(false)
     }
-  }, [dreams, isLoaded])
+  }
 
-  const addDream = (dream: Omit<DreamItem, 'savedAt'>) => {
+  const saveDreams = async (dreamItems: DreamItem[]) => {
+    if (!userEmail) return
+
+    try {
+      await fetch('/api/users/dreams', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          dreams: dreamItems
+        })
+      })
+      setError(null)
+    } catch (err) {
+      const errorMsg = err instanceof Error ? err.message : 'Failed to save dreams'
+      console.error('Error saving dreams:', err)
+      setError(errorMsg)
+    }
+  }
+
+  const addDream = async (dream: Omit<DreamItem, 'savedAt'>) => {
     setDreams((prevDreams) => {
       const existingDream = prevDreams.find((d) => d.id === dream.id)
+      let newDreams: DreamItem[]
+      
       if (existingDream) {
-        return prevDreams
+        newDreams = prevDreams
+      } else {
+        newDreams = [...prevDreams, { ...dream, savedAt: Date.now() }]
       }
-      return [...prevDreams, { ...dream, savedAt: Date.now() }]
+      
+      saveDreams(newDreams)
+      return newDreams
     })
   }
 
-  const removeDream = (id: string) => {
-    setDreams((prevDreams) => prevDreams.filter((dream) => dream.id !== id))
+  const removeDream = async (id: string) => {
+    setDreams((prevDreams) => {
+      const newDreams = prevDreams.filter((dream) => dream.id !== id)
+      saveDreams(newDreams)
+      return newDreams
+    })
   }
 
   const isDreamSaved = (id: string) => {
@@ -108,6 +125,8 @@ export function DreamsProvider({ children }: { children: React.ReactNode }) {
         removeDream,
         isDreamSaved,
         getTotalDreams,
+        isLoading,
+        error
       }}
     >
       {children}

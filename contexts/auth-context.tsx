@@ -27,10 +27,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   // Check authentication status on mount
   useEffect(() => {
-    const authStatus = localStorage.getItem('isAuthenticated')
-    const userEmail = localStorage.getItem('userEmail')
-    const userName = localStorage.getItem('userName')
-    const lastActivity = localStorage.getItem('lastActivity')
+    // Read from sessionStorage (not localStorage)
+    // sessionStorage is cleared when browser closes (more secure)
+    const authStatus = sessionStorage.getItem('isAuthenticated')
+    const userEmail = sessionStorage.getItem('userEmail')
+    const userName = sessionStorage.getItem('userName')
+    const lastActivity = sessionStorage.getItem('lastActivity')
 
     // Check if session has expired (30 minutes of inactivity)
     if (lastActivity && authStatus === 'true') {
@@ -67,17 +69,19 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSessionExpiry = () => {
     setUser(null)
     setIsAuthenticated(false)
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userName')
-    localStorage.removeItem('lastActivity')
+    // Clear sessionStorage (not localStorage)
+    sessionStorage.removeItem('isAuthenticated')
+    sessionStorage.removeItem('userEmail')
+    sessionStorage.removeItem('userName')
+    sessionStorage.removeItem('lastActivity')
+    sessionStorage.removeItem('userId')
     router.push('/auth/login')
     console.warn('Session expired due to inactivity')
   }
 
   const updateLastActivity = useCallback(() => {
     if (isAuthenticated) {
-      localStorage.setItem('lastActivity', Date.now().toString())
+      sessionStorage.setItem('lastActivity', Date.now().toString())
       startSessionTimer()
     }
   }, [isAuthenticated, startSessionTimer])
@@ -99,10 +103,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData)
     setIsAuthenticated(true)
     
-    localStorage.setItem('isAuthenticated', 'true')
-    localStorage.setItem('userEmail', email)
-    localStorage.setItem('userName', userData.name)
-    localStorage.setItem('lastActivity', Date.now().toString())
+    // Store in sessionStorage (cleared on browser close)
+    // Real authentication handled by login page using MongoDB
+    sessionStorage.setItem('isAuthenticated', 'true')
+    sessionStorage.setItem('userEmail', email)
+    sessionStorage.setItem('userName', userData.name)
+    sessionStorage.setItem('lastActivity', Date.now().toString())
     
     startSessionTimer()
   }
@@ -116,10 +122,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(null)
     setIsAuthenticated(false)
     
-    localStorage.removeItem('isAuthenticated')
-    localStorage.removeItem('userEmail')
-    localStorage.removeItem('userName')
-    localStorage.removeItem('lastActivity')
+    // Clear sessionStorage (not localStorage)
+    sessionStorage.removeItem('isAuthenticated')
+    sessionStorage.removeItem('userEmail')
+    sessionStorage.removeItem('userName')
+    sessionStorage.removeItem('lastActivity')
+    sessionStorage.removeItem('userId')
     
     router.push('/')
   }

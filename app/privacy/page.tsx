@@ -24,7 +24,7 @@ export default function PrivacyPage() {
 
             <h2 className="text-lg font-semibold text-foreground mt-8">3. Data Storage</h2>
             <p className="text-sm leading-relaxed">
-              Your data is stored locally on your device using browser localStorage. We do not transmit personal data to external servers. Profile information, cart data, and preferences remain on your device.
+              Your data is securely stored in our MongoDB database on the cloud. We use industry-standard encryption to protect your personal information during transmission and storage. Profile information, cart data, order history, and preferences are stored in our secure cloud database and synchronized across your devices.
             </p>
 
             <h2 className="text-lg font-semibold text-foreground mt-8">4. Cookies</h2>
@@ -34,7 +34,7 @@ export default function PrivacyPage() {
 
             <h2 className="text-lg font-semibold text-foreground mt-8">5. Your Rights</h2>
             <p className="text-sm leading-relaxed">
-              You can delete all your stored data at any time through your Profile → Settings → Delete Account. You may also clear your browser&apos;s localStorage to remove all data.
+              You can delete all your account data at any time through your Profile → Settings → Delete Account. Contact us at <a href="mailto:omkar_cera@gmail.com" className="text-foreground underline underline-offset-2">omkar_cera@gmail.com</a> to request data deletion, and we will permanently remove your information from our database within 30 days.
             </p>
 
             <h2 className="text-lg font-semibold text-foreground mt-8">6. Contact</h2>

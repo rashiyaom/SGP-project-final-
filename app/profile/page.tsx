@@ -135,18 +135,39 @@ function ProfilePageInner() {
 
   const [editForm, setEditForm] = useState<UserProfile>(profile)
 
-  // ─── Init from auth + localStorage ──────────────────────
+  // ─── Init from auth + MongoDB ──────────────────────
   useEffect(() => {
     setMounted(true)
     if (!isAuthenticated) { router.push('/auth/login'); return }
 
-    const saved = localStorage.getItem('userProfile')
-    if (saved) {
-      try {
-        const parsed = JSON.parse(saved)
-        setProfile(parsed)
-        setEditForm(parsed)
-      } catch { /* fallback below */ }
+    // Load profile from MongoDB
+    const userEmail = sessionStorage.getItem('userEmail')
+    if (userEmail) {
+      fetch(`/api/users?email=${encodeURIComponent(userEmail)}`)
+        .then(res => res.json())
+        .then(data => {
+          if (data.success) {
+            const userData = data.data
+            const profileData: UserProfile = {
+              name: userData.profile?.name || user?.name || '',
+              email: userData.email || '',
+              phone: userData.profile?.phone || '',
+              address: userData.profile?.address || '',
+              city: userData.profile?.city || '',
+              state: userData.profile?.state || '',
+              zipCode: userData.profile?.zipCode || '',
+              country: userData.profile?.country || '',
+              bio: userData.profile?.bio || '',
+              avatar: userData.profile?.avatar || user?.avatar || '',
+              joinedDate: userData.createdAt || new Date().toISOString(),
+              notifications: userData.profile?.preferences?.emailNotifications ?? true,
+              newsletter: userData.profile?.preferences?.smsNotifications ?? false,
+            }
+            setProfile(profileData)
+            setEditForm(profileData)
+          }
+        })
+        .catch(err => console.error('Error loading profile:', err))
     }
 
     if (user) {
@@ -170,14 +191,41 @@ function ProfilePageInner() {
     }
   }, [searchParams])
 
-  // ─── Persist profile ──────────────────────
+  // ─── Persist profile to MongoDB ──────────────────────
   const saveProfile = useCallback((data: UserProfile) => {
     setProfile(data)
     setEditForm(data)
-    localStorage.setItem('userProfile', JSON.stringify(data))
-    // Also sync name back to auth localStorage
-    if (data.name) localStorage.setItem('userName', data.name)
-    if (data.email) localStorage.setItem('userEmail', data.email)
+    
+    // Save to MongoDB
+    const userEmail = sessionStorage.getItem('userEmail')
+    if (userEmail) {
+      fetch('/api/users', {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail,
+          updates: {
+            profile: {
+              name: data.name,
+              phone: data.phone,
+              address: data.address,
+              city: data.city,
+              state: data.state,
+              zipCode: data.zipCode,
+              country: data.country,
+              bio: data.bio,
+              avatar: data.avatar,
+              preferences: {
+                emailNotifications: data.notifications,
+                smsNotifications: data.newsletter
+              }
+            }
+          }
+        })
+      })
+        .then(res => res.json())
+        .catch(err => console.error('Error saving profile:', err))
+    }
   }, [])
 
   const handleSave = () => {
@@ -720,7 +768,7 @@ function SettingsTab({ profile, saveProfile, logout }: { profile: UserProfile; s
             <p className="text-sm text-foreground">Are you sure? This action cannot be undone.</p>
             <div className="flex items-center gap-2">
               <button
-                onClick={() => { localStorage.clear(); logout() }}
+                onClick={() => { logout() }}
                 className="px-4 py-2 bg-destructive text-white text-sm font-medium rounded-xl hover:opacity-90 transition-opacity"
               >
                 Yes, Delete
