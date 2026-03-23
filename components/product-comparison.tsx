@@ -11,56 +11,7 @@ interface ComparisonProduct {
   features: Record<string, string | boolean>
 }
 
-const comparisonProducts: ComparisonProduct[] = [
-  {
-    id: '1',
-    name: 'Marble Elegance',
-    price: 2500,
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=400&auto=format&fit=crop',
-    features: {
-      material: 'Italian Marble',
-      finish: 'Polished',
-      size: '60x60 cm',
-      waterAbsorption: '<0.5%',
-      slipResistant: true,
-      floorSuitable: true,
-      wallSuitable: true,
-      warranty: '15 Years',
-    },
-  },
-  {
-    id: '3',
-    name: 'Granite Premium',
-    price: 3200,
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=400&auto=format&fit=crop',
-    features: {
-      material: 'Granite',
-      finish: 'Polished',
-      size: '60x60 cm',
-      waterAbsorption: '<0.3%',
-      slipResistant: true,
-      floorSuitable: true,
-      wallSuitable: false,
-      warranty: '15 Years',
-    },
-  },
-  {
-    id: '6',
-    name: 'Cream Travertine',
-    price: 2200,
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=400&auto=format&fit=crop',
-    features: {
-      material: 'Travertine',
-      finish: 'Tumbled',
-      size: '60x60 cm',
-      waterAbsorption: '<3%',
-      slipResistant: false,
-      floorSuitable: true,
-      wallSuitable: true,
-      warranty: '12 Years',
-    },
-  },
-]
+const comparisonProducts: ComparisonProduct[] = []
 
 const comparisonFeatures = [
   { key: 'material', label: 'Material' },
