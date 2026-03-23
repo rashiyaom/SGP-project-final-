@@ -25,3 +25,24 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# Audit and documentation files (auto-generated)
+*.AUDIT_REPORT.md
+.AUDIT_REPORT.md
+.DEPLOYMENT_READY.md
+.FIXES_APPLIED.md
+.IMPLEMENTATION_SUMMARY.md
+.PHASE_1_5_QUICK_FIXES.md
+*_AUDIT_COMPLETE.md
+ADVANCED_RECOMMENDATIONS.md
+AUDIT_FINAL_REPORT.md
+AUDIT_SUMMARY.md
+CRITICAL_FIXES_APPLIED.md
+GALLERY_REDESIGN_PROMPT.md
+RECOMMENDATIONS_QUICK_GUIDE.md
+SCALABILITY_AUDIT.md
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
