@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
       storedPassword: user.password,
       storedPasswordType: user.password ? (user.password.startsWith('$2') ? 'bcrypt_hash' : 'plain_text') : 'undefined',
       passwordExists: !!user.password,
+      comparisonMethod: '',
+      comparisonResult: false,
+      comparisonError: '',
     }
 
     // Try comparison
