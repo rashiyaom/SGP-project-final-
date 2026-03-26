@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/db/connect'
 import User from '@/lib/models/User'
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 
 /**
  * POST /api/admin/init
@@ -17,11 +18,14 @@ export async function POST(req: NextRequest) {
     let adminUser = await User.findOne({ email: adminEmail })
 
     if (!adminUser) {
+      // Hash admin password before storing
+      const hashedPassword = await bcrypt.hash('admin@omkar123', 10)
+
       // Create admin user if it doesn't exist
       adminUser = await User.create({
         email: adminEmail,
         name: 'Omkar Admin',
-        password: 'admin@omkar123',
+        password: hashedPassword,
         isAdmin: true,
         cart: [],
         dreams: [],

@@ -18,10 +18,14 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Include password only if password param provided (login attempt)
+    // Always select password field when it might be needed for login verification
     let query = User.findOne({ email })
-    if (!password) {
-      query = query.select('-password') // Hide password for non-login requests
+    if (password) {
+      // Login attempt - need password for verification
+      query = query.select('+password')
+    } else {
+      // Non-login request - hide password
+      query = query.select('-password')
     }
 
     const user = await query
@@ -35,7 +39,17 @@ export async function GET(req: NextRequest) {
 
     // If password provided, verify it
     if (password) {
-      const isPasswordValid = await bcrypt.compare(password, user.password)
+      let isPasswordValid = false
+      
+      // Check if password is a bcrypt hash (starts with $2a$, $2b$, or $2y$)
+      if (user.password && user.password.startsWith('$2')) {
+        // Password is hashed, use bcrypt comparison
+        isPasswordValid = await bcrypt.compare(password, user.password)
+      } else if (user.password) {
+        // Fallback for plain text passwords (legacy support)
+        isPasswordValid = password === user.password
+      }
+      
       if (!isPasswordValid) {
         return NextResponse.json(
           { success: false, error: 'Invalid email or password' },
