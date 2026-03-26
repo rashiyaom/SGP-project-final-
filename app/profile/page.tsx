@@ -238,18 +238,39 @@ function ProfilePageInner() {
     setIsEditing(false)
   }
 
-  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleAvatarChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0]
     if (!file) return
-    const reader = new FileReader()
-    reader.onloadend = () => {
-      const url = reader.result as string
-      const updated = { ...editForm, avatar: url }
-      setEditForm(updated)
-      saveProfile(updated)
-      setShowAvatarUpload(false)
+
+    try {
+      // Upload to Cloudinary
+      const reader = new FileReader()
+      reader.onloadend = async () => {
+        const base64 = reader.result as string
+        
+        const uploadRes = await fetch('/api/upload', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            base64,
+            folder: 'omkar-ceramics/avatars'
+          })
+        })
+
+        if (uploadRes.ok) {
+          const { data } = await uploadRes.json()
+          const updated = { ...editForm, avatar: data.secure_url }
+          setEditForm(updated)
+          saveProfile(updated)
+          setShowAvatarUpload(false)
+        } else {
+          console.error('Failed to upload avatar')
+        }
+      }
+      reader.readAsDataURL(file)
+    } catch (error) {
+      console.error('Avatar upload error:', error)
     }
-    reader.readAsDataURL(file)
   }
 
   if (!mounted || !isAuthenticated) return null
