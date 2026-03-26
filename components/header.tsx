@@ -140,11 +140,11 @@ export function Header() {
                 >
                   <div className="w-6 h-6 bg-gradient-to-br from-[#d4af37] to-[#8b7635] rounded-full flex items-center justify-center flex-shrink-0">
                     <span className="text-white font-bold text-xs uppercase">
-                      {user.name.charAt(0)}
+                      {(user.name || 'U').charAt(0)}
                     </span>
                   </div>
                   <span className="hidden sm:block text-sm font-medium text-foreground max-w-[100px] truncate">
-                    {user.name}
+                    {user.name || 'User'}
                   </span>
                 </button>
 
@@ -152,7 +152,7 @@ export function Header() {
                 {showUserMenu && (
                   <div className="absolute right-0 mt-2 w-48 bg-background border border-border rounded-2xl shadow-xl overflow-hidden z-50">
                     <div className="p-3 border-b border-border">
-                      <p className="text-sm font-semibold text-foreground truncate">{user.name}</p>
+                      <p className="text-sm font-semibold text-foreground truncate">{user.name || 'User'}</p>
                       <p className="text-xs text-muted-foreground truncate">{user.email}</p>
                     </div>
                     <Link
