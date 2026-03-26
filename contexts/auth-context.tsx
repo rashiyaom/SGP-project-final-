@@ -12,6 +12,8 @@ interface User {
 interface AuthContextType {
   user: User | null
   isAuthenticated: boolean
+  isAdmin: boolean
+  loading: boolean
   login: (email: string, password: string, name?: string) => void
   logout: () => void
   requireAuth: (callback: () => void) => void
@@ -22,6 +24,8 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined)
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null)
   const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isAdmin, setIsAdmin] = useState(false)
+  const [loading, setLoading] = useState(true)
   const [sessionTimeout, setSessionTimeout] = useState(30 * 60 * 1000) // 30 minutes default
   const router = useRouter()
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null)
@@ -29,9 +33,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   // Check authentication status on mount - sync with MongoDB
   useEffect(() => {
     const checkAuthStatus = async () => {
+      setLoading(true);
       try {
         const email = sessionStorage.getItem('userEmail')
-        if (!email) return
+        if (!email) {
+          setLoading(false);
+          return
+        }
 
         // Fetch user from MongoDB to validate session
         const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
@@ -41,6 +49,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         }
 
         const userData = await response.json()
+
+        // Check for admin role
+        if (userData.role === 'admin') {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
+
         const lastActivity = userData.session?.lastActivity ? new Date(userData.session.lastActivity).getTime() : Date.now()
         
         // Check if session has expired (30 minutes of inactivity)
@@ -59,16 +75,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           return
         }
 
-        setUser({
-          name: userData.name,
-          email: userData.email,
-          _id: userData._id
-        })
+        setUser({ name: userData.name, email: userData.email, _id: userData._id })
         setIsAuthenticated(true)
-        startSessionTimer()
+        resetSessionTimer()
       } catch (error) {
-        console.error('Error checking auth status:', error)
+        console.error('Auth check failed:', error)
         handleSessionExpiry()
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -87,6 +101,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }, sessionTimeout)
   }, [sessionTimeout])
 
+  const resetSessionTimer = useCallback(() => {
+    startSessionTimer();
+  }, [startSessionTimer]);
+
   const handleSessionExpiry = () => {
     setUser(null)
     setIsAuthenticated(false)
@@ -101,7 +119,8 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }
 
   const updateLastActivity = useCallback(async () => {
-    if (!isAuthenticated || !user?.email) return
+    const email = sessionStorage.getItem('userEmail')
+    if (!isAuthenticated || !email) return
     
     try {
       // Update MongoDB session last activity
@@ -109,7 +128,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user.email,
+          email,
           session: { 
             isActive: true,
             lastActivity: new Date()
@@ -120,69 +139,74 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     } catch (error) {
       console.error('Error updating last activity:', error)
     }
-  }, [isAuthenticated, user?.email, startSessionTimer])
+  }, [isAuthenticated, startSessionTimer])
 
-  const login = (email: string, password: string, name?: string) => {
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/
-    if (!emailRegex.test(email)) {
-      console.error('Invalid email format')
-      return
-    }
-
-    // Frontend-only login - actual auth handled by login page
-    const userData = {
-      name: name || email.split('@')[0],
-      email: email
-    }
-    
-    setUser(userData)
-    setIsAuthenticated(true)
-    
-    // Store minimal data in sessionStorage (cleared on browser close)
-    // Real auth state stored in MongoDB
-    sessionStorage.setItem('isAuthenticated', 'true')
-    sessionStorage.setItem('userEmail', email)
-    sessionStorage.setItem('userName', userData.name)
-    
-    startSessionTimer()
-  }
-
-  const logout = async () => {
-    // Clear session timer
-    if (sessionTimerRef.current) {
-      clearTimeout(sessionTimerRef.current)
-    }
-
-    try {
-      // Clear session in MongoDB
-      if (user?.email) {
-        await fetch('/api/users', {
-          method: 'PATCH',
+  const login = useCallback(
+    async (email: string, password: string, name?: string) => {
+      try {
+        const response = await fetch('/api/users', {
+          method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: user.email,
-            session: { isActive: false, lastActivity: null, loginTime: null, redirectAfterLogin: null }
-          })
+          body: JSON.stringify({ email, password, name })
         })
+
+        const data = await response.json()
+
+        if (response.ok) {
+          setUser({ name: data.name, email: data.email, _id: data._id })
+          setIsAuthenticated(true)
+          sessionStorage.setItem('userEmail', data.email)
+          
+          if (data.role === 'admin') {
+            setIsAdmin(true);
+          }
+
+          // Update session in MongoDB
+          await fetch('/api/users', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              email: data.email,
+              session: { isActive: true, lastActivity: new Date() }
+            })
+          })
+        } else {
+          console.error('Login failed:', data.message)
+        }
+      } catch (error) {
+        console.error('Error during login:', error)
       }
-    } catch (error) {
-      console.error('Error clearing session:', error)
+    },
+    []
+  )
+
+  const logout = useCallback(async () => {
+    const email = sessionStorage.getItem('userEmail')
+    if (email) {
+      try {
+        // Clear session in MongoDB
+        await fetch(
+          '/api/users',
+          {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ email, session: { isActive: false } })
+          }
+        )
+      } catch (error) {
+        console.error('Failed to update session on logout:', error)
+      }
     }
 
     setUser(null)
     setIsAuthenticated(false)
-    
-    // Clear sessionStorage
-    sessionStorage.removeItem('isAuthenticated')
+    setIsAdmin(false)
     sessionStorage.removeItem('userEmail')
-    sessionStorage.removeItem('userName')
-    sessionStorage.removeItem('lastActivity')
-    sessionStorage.removeItem('userId')
-    sessionStorage.removeItem('redirectAfterLogin')
-    
+    if (sessionTimerRef.current) {
+      clearTimeout(sessionTimerRef.current)
+    }
     router.push('/')
-  }
+  }, [])
 
   // Function to check if user is authenticated before performing action
   const requireAuth = async (callback: () => void) => {
@@ -228,11 +252,17 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     }
   }, [])
 
-  return (
-    <AuthContext.Provider value={{ user, isAuthenticated, login, logout, requireAuth }}>
-      {children}
-    </AuthContext.Provider>
-  )
+  const value = {
+    user,
+    isAuthenticated,
+    isAdmin,
+    loading,
+    login,
+    logout,
+    requireAuth
+  }
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>
 }
 
 export function useAuth() {

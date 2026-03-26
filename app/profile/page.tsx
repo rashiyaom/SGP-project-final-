@@ -29,6 +29,7 @@ interface UserProfile {
   city: string
   state: string
   pincode: string
+  country: string
   bio: string
   joinedDate: string
   notifications: boolean
@@ -127,6 +128,7 @@ function ProfilePageInner() {
     city: '',
     state: '',
     pincode: '',
+    country: '',
     bio: '',
     joinedDate: new Date().toISOString(),
     notifications: true,
@@ -155,10 +157,10 @@ function ProfilePageInner() {
               address: userData.profile?.address || '',
               city: userData.profile?.city || '',
               state: userData.profile?.state || '',
-              zipCode: userData.profile?.zipCode || '',
+              pincode: userData.profile?.pincode || userData.profile?.zipCode || '',
               country: userData.profile?.country || '',
               bio: userData.profile?.bio || '',
-              avatar: userData.profile?.avatar || user?.avatar || '',
+              avatar: userData.profile?.avatar || '',
               joinedDate: userData.createdAt || new Date().toISOString(),
               notifications: userData.profile?.preferences?.emailNotifications ?? true,
               newsletter: userData.profile?.preferences?.smsNotifications ?? false,
@@ -211,7 +213,7 @@ function ProfilePageInner() {
               address: data.address,
               city: data.city,
               state: data.state,
-              zipCode: data.zipCode,
+              pincode: data.pincode,
               country: data.country,
               bio: data.bio,
               avatar: data.avatar,

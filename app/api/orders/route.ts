@@ -1,6 +1,38 @@
 import dbConnect from '@/lib/db/connect'
 import Order from '@/lib/models/Order'
 import { NextRequest, NextResponse } from 'next/server'
+import { sendOrderConfirmationEmail } from '@/lib/email'
+import { z } from 'zod'
+
+// Zod schema for creating an order
+const orderSchema = z.object({
+  email: z.string().email({ message: "Invalid email address" }),
+  userId: z.string().optional(),
+  items: z.array(z.object({
+    id: z.string(),
+    name: z.string(),
+    price: z.number(),
+    quantity: z.number().min(1),
+    image: z.string().url(),
+  })).min(1, { message: "Order must contain at least one item" }),
+  shippingAddress: z.object({
+    address: z.string().min(1, { message: "Address is required" }),
+    city: z.string().min(1, { message: "City is required" }),
+    state: z.string().min(1, { message: "State is required" }),
+    zipCode: z.string().min(1, { message: "Zip code is required" }),
+  }),
+  paymentMethod: z.string().min(1, { message: "Payment method is required" }),
+  totalAmount: z.number().positive({ message: "Total amount must be positive" }),
+});
+
+// Zod schema for updating an order
+const updateOrderSchema = z.object({
+  orderId: z.string().min(1, { message: "Order ID is required" }),
+  status: z.enum(['pending', 'confirmed', 'processing', 'shipped', 'delivered', 'cancelled']).optional(),
+  trackingNumber: z.string().optional(),
+  notes: z.string().optional(),
+});
+
 
 export async function GET(req: NextRequest) {
   try {
@@ -40,16 +72,18 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   try {
     await dbConnect()
-
     const body = await req.json()
-    const { email, userId, items, shippingAddress, paymentMethod, totalAmount } = body
 
-    if (!email || !items || !shippingAddress || totalAmount === undefined) {
+    // Validate request body
+    const validation = orderSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Missing required fields' },
+        { success: false, error: "Invalid input", details: validation.error.flatten().fieldErrors },
         { status: 400 }
-      )
+      );
     }
+
+    const { email, userId, items, shippingAddress, paymentMethod, totalAmount } = validation.data;
 
     // Create new order
     const order = await Order.create({
@@ -61,6 +95,9 @@ export async function POST(req: NextRequest) {
       totalAmount,
       status: 'pending'
     })
+
+    // Send confirmation email - fire and forget
+    sendOrderConfirmationEmail(order.toObject());
 
     return NextResponse.json({ success: true, data: order }, { status: 201 })
   } catch (error: any) {
@@ -75,16 +112,18 @@ export async function POST(req: NextRequest) {
 export async function PATCH(req: NextRequest) {
   try {
     await dbConnect()
-
     const body = await req.json()
-    const { orderId, status, trackingNumber, notes } = body
 
-    if (!orderId) {
+    // Validate request body
+    const validation = updateOrderSchema.safeParse(body);
+    if (!validation.success) {
       return NextResponse.json(
-        { success: false, error: 'Order ID is required' },
+        { success: false, error: "Invalid input", details: validation.error.flatten().fieldErrors },
         { status: 400 }
-      )
+      );
     }
+
+    const { orderId, status, trackingNumber, notes } = validation.data;
 
     const updateData: any = {}
 

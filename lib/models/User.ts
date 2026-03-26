@@ -55,7 +55,15 @@ const UserSchema = new mongoose.Schema(
         createdAt: Date
       }
     ],
-    wishlist: [String], // Array of product IDs
+    wishlist: [
+      {
+        productId: { type: String, required: true },
+        name: { type: String, required: true },
+        image: { type: String, required: true },
+        price: { type: Number, required: true },
+        savedAt: { type: Date, default: Date.now }
+      }
+    ],
     isAdmin: {
       type: Boolean,
       default: false
