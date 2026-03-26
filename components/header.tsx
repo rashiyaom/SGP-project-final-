@@ -184,15 +184,7 @@ export function Header() {
                   </div>
                 )}
               </div>
-            ) : (
-              <Link
-                href="/auth/login"
-                className="flex items-center gap-2 px-3 py-2 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] text-white text-sm font-semibold rounded-full hover:shadow-lg transition-all duration-200 flex-shrink-0"
-              >
-                <User className="w-4 h-4" />
-                <span className="hidden sm:inline">Login</span>
-              </Link>
-            )}
+            ) : null}
 
           </div>
         </div>
