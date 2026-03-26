@@ -86,17 +86,31 @@ export async function POST(req: NextRequest) {
       password,
       cart: [],
       dreams: [],
-      wishlist: []
+      wishlist: [],
+      profile: {},
+      adminData: {
+        products: [],
+        gallery: [],
+        filters: [],
+        contactMessages: []
+      },
+      isAdmin: false
     })
 
     const userWithoutPassword = user.toObject()
     delete userWithoutPassword.password
 
     return NextResponse.json({ success: true, data: userWithoutPassword }, { status: 201 })
-  } catch (error) {
+  } catch (error: any) {
     console.error('Create user error:', error)
+    // Log detailed error info for debugging
+    console.error('Error details:', {
+      message: error?.message,
+      code: error?.code,
+      name: error?.name
+    })
     return NextResponse.json(
-      { success: false, error: 'Internal server error' },
+      { success: false, error: error?.message || 'Internal server error' },
       { status: 500 }
     )
   }

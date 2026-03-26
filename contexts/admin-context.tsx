@@ -99,13 +99,20 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [userEmail, setUserEmail] = useState<string | null>(null)
+  const ADMIN_EMAIL = 'admin@omkar.com' // ✅ FIXED: Use dedicated admin email for storing admin data
 
   // Get user email from sessionStorage (set during login)
   useEffect(() => {
     const email = sessionStorage.getItem('userEmail')
-    setUserEmail(email)
-    if (email) {
-      loadAdminData(email)
+    setUserEmail(email || ADMIN_EMAIL) // ✅ FIXED: Use admin email if no user logged in
+    
+    // Initialize admin user on app startup
+    fetch('/api/admin/init', { method: 'POST' }).catch(err => {
+      console.error('Failed to initialize admin user:', err)
+    })
+    
+    if (email || sessionStorage.getItem('isAdminLogged')) {
+      loadAdminData(email || ADMIN_EMAIL)
     }
   }, [])
 
@@ -158,10 +165,15 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     }
   }
 
-  // Auto-save whenever data changes
+  // Auto-save whenever data changes with debounce
   useEffect(() => {
     if (userEmail && (products.length > 0 || gallery.length > 0 || customFilters.length > 0 || contactMessages.length > 0)) {
-      saveAdminData()
+      // ✅ FIXED: Save immediately when products are modified
+      const timer = setTimeout(() => {
+        saveAdminData()
+      }, 500) // Small delay to batch rapid changes
+      
+      return () => clearTimeout(timer)
     }
   }, [products, gallery, customFilters, contactMessages, userEmail])
 
@@ -169,6 +181,24 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
 
   const addProduct = async (product: Omit<Product, 'id'>) => {
+    // ✅ FIXED: Validate required fields before adding
+    if (!product.name || product.name.trim() === '') {
+      setError('Product name is required')
+      throw new Error('Product name is required')
+    }
+    if (!product.category || product.category.trim() === '') {
+      setError('Product category is required')
+      throw new Error('Product category is required')
+    }
+    if (product.pricingType === 'fixed' && (!product.price || product.price <= 0)) {
+      setError('Product price must be greater than 0')
+      throw new Error('Product price must be greater than 0')
+    }
+    if (!product.image && (!product.images || product.images.length === 0)) {
+      setError('Product must have at least one image')
+      throw new Error('Product must have at least one image')
+    }
+    
     const newProduct: Product = { ...product, id: generateId() }
     setProducts(prev => [...prev, newProduct])
   }
@@ -240,6 +270,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const adminLogin = async (password: string) => {
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true)
+      // ✅ FIXED: Save admin session to sessionStorage
+      sessionStorage.setItem('isAdminLogged', 'true')
+      sessionStorage.setItem('adminLoginTime', Date.now().toString())
       return true
     }
     return false
@@ -247,8 +280,19 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const adminLogout = async () => {
     setIsAdmin(false)
+    // ✅ FIXED: Clear admin session from sessionStorage
+    sessionStorage.removeItem('isAdminLogged')
+    sessionStorage.removeItem('adminLoginTime')
     await saveAdminData()
   }
+
+  // ✅ FIXED: Check admin session on page load
+  useEffect(() => {
+    const isAdminLogged = sessionStorage.getItem('isAdminLogged') === 'true'
+    if (isAdminLogged) {
+      setIsAdmin(true)
+    }
+  }, [])
 
   return (
     <AdminContext.Provider value={{

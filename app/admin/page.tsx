@@ -44,14 +44,14 @@ import { exportProductsToExcel } from '@/lib/excel-export'
 import Link from 'next/link'
 
 // ===== ADMIN LOGIN =====
-function AdminLogin({ onLogin }: { onLogin: (password: string) => boolean }) {
+function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<boolean> | boolean }) {
   const [password, setPassword] = useState('')
   const [error, setError] = useState(false)
   const [shake, setShake] = useState(false)
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
-    const success = onLogin(password)
+    const success = await Promise.resolve(onLogin(password))
     if (!success) {
       setError(true)
       setShake(true)
@@ -144,12 +144,14 @@ function ProductFormModal({
   const { customFilters } = useAdmin()
   const [form, setForm] = useState({
     name: product?.name || '',
+    pricingType: (product?.pricingType || 'fixed') as 'fixed' | 'inquire',
     price: product?.price || 0,
     originalPrice: product?.originalPrice || 0,
     category: (product?.category || 'Ceramic Tiles') as Product['category'],
     rating: product?.rating || 4.5,
     inStock: product?.inStock ?? true,
     image: product?.image || '',
+    images: product?.images || [],
     description: product?.description || '',
     filters: product?.filters || {} as Record<string, string[]>,
   })
@@ -174,8 +176,25 @@ function ProductFormModal({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // ✅ Validate required fields
+    if (!form.name || form.name.trim() === '') {
+      alert('❌ Product name is required')
+      return
+    }
+    if (form.pricingType === 'fixed' && (!form.price || form.price <= 0)) {
+      alert('❌ Product price must be greater than 0')
+      return
+    }
+    if (!form.image) {
+      alert('❌ Product image is required')
+      return
+    }
+    
     onSave({
       ...form,
+      pricingType: form.pricingType,
+      images: form.image ? [form.image] : [],
       originalPrice: form.originalPrice || undefined,
     })
     onClose()
@@ -827,12 +846,19 @@ export default function AdminPage() {
           <FullscreenProductForm
             product={editingProduct}
             onSave={(data) => {
-              if (editingProduct) {
-                updateProduct(editingProduct.id, data)
-              } else {
-                addProduct(data)
+              try {
+                if (editingProduct) {
+                  updateProduct(editingProduct.id, data)
+                } else {
+                  addProduct(data)
+                }
+                setEditingProduct(undefined)
+                setShowProductForm(false)
+              } catch (err) {
+                // ✅ FIXED: Show validation error to user
+                const errorMsg = err instanceof Error ? err.message : 'Failed to add product'
+                alert('Error: ' + errorMsg)
               }
-              setEditingProduct(undefined)
             }}
             onClose={() => {
               setShowProductForm(false)
@@ -1057,7 +1083,7 @@ export default function AdminPage() {
                   const inStock = catProducts.filter(p => p.inStock).length
                   const outOfStock = catProducts.filter(p => !p.inStock).length
                   const avgPrice = catProducts.length > 0
-                    ? Math.round(catProducts.reduce((s, p) => s + p.price, 0) / catProducts.length)
+                    ? Math.round(catProducts.reduce((s, p) => s + (p.price || 0), 0) / catProducts.length)
                     : 0
                   const catFilters = getCategoryFilters(cat.id)
 
@@ -1115,7 +1141,7 @@ export default function AdminPage() {
                       <div className="p-2.5">
                         <p className="text-[9px] uppercase tracking-wider text-muted-foreground">{catMeta?.shortLabel}</p>
                         <h4 className="text-xs font-medium text-foreground line-clamp-1 mt-0.5">{product.name}</h4>
-                        <p className="text-xs font-bold text-foreground mt-1">₹{product.price.toLocaleString()}</p>
+                        <p className="text-xs font-bold text-foreground mt-1">₹{(product.price || 0).toLocaleString()}</p>
                       </div>
                     </div>
                   )
@@ -1188,7 +1214,7 @@ export default function AdminPage() {
                 const avgRating = catProds.length > 0
                   ? (catProds.reduce((s, p) => s + p.rating, 0) / catProds.length).toFixed(1)
                   : '0'
-                const totalValue = catProds.reduce((s, p) => s + p.price, 0)
+                const totalValue = catProds.reduce((s, p) => s + (p.price || 0), 0)
                 return [
                   { label: 'Total Products', value: catProds.length, icon: Package },
                   { label: 'In Stock', value: inStock, icon: Check },
@@ -1296,7 +1322,7 @@ export default function AdminPage() {
                           </div>
                           {product.originalPrice && (
                             <div className="absolute top-3 right-3 px-2 py-1 rounded-full bg-red-500 text-white text-[10px] font-bold">
-                              -{Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)}%
+                              -{Math.round(((product.originalPrice! - (product.price || 0)) / (product.originalPrice || 1)) * 100)}%
                             </div>
                           )}
                           <div className="absolute inset-0 bg-black/0 group-hover:bg-black/40 transition-colors flex items-center justify-center gap-2 opacity-0 group-hover:opacity-100">

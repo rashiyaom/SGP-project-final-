@@ -46,3 +46,9 @@ SCALABILITY_AUDIT.md
 .DS_Store
 .AppleDouble
 .LSOverride
+# Ignore ALL documentation/markdown files in root (auto-generated)
+/*.md
+!README.md
+!CONTRIBUTING.md
+!LICENSE.md
+

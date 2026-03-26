@@ -131,11 +131,32 @@ export default function FullscreenProductForm({
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
+    
+    // ✅ FIXED: Validate all required fields
+    if (!form.name || form.name.trim() === '') {
+      alert('❌ Product name is required')
+      return
+    }
+    
+    if (!form.category || form.category.trim() === '') {
+      alert('❌ Product category is required')
+      return
+    }
+    
+    if (form.pricingType === 'fixed' && (!form.price || form.price <= 0)) {
+      alert('❌ Product price must be greater than 0 for fixed pricing')
+      return
+    }
+    
     const validImages = form.images.filter((img) => img.trim())
+    if (validImages.length === 0) {
+      alert('❌ Product must have at least one image URL')
+      return
+    }
     
     onSave({
       ...form,
-      images: validImages.length > 0 ? validImages : [''],
+      images: validImages,
       image: validImages[0] || '', // Primary image is first
       originalPrice: form.originalPrice || undefined,
     })
