@@ -1,6 +1,7 @@
 import dbConnect from '@/lib/db/connect'
 import User from '@/lib/models/User'
 import { NextRequest, NextResponse } from 'next/server'
+import bcrypt from 'bcryptjs'
 
 export async function GET(req: NextRequest) {
   try {
@@ -34,9 +35,10 @@ export async function GET(req: NextRequest) {
 
     // If password provided, verify it
     if (password) {
-      if (user.password !== password) {
+      const isPasswordValid = await bcrypt.compare(password, user.password)
+      if (!isPasswordValid) {
         return NextResponse.json(
-          { success: false, error: 'Invalid password' },
+          { success: false, error: 'Invalid email or password' },
           { status: 401 }
         )
       }
@@ -79,11 +81,14 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    // Hash password before storing
+    const hashedPassword = await bcrypt.hash(password, 10)
+
     // Create new user
     const user = await User.create({
       email,
       name,
-      password,
+      password: hashedPassword,
       cart: [],
       dreams: [],
       wishlist: [],
