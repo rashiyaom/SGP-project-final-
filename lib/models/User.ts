@@ -65,6 +65,12 @@ const UserSchema = new mongoose.Schema(
       gallery: [mongoose.Schema.Types.Mixed],
       filters: [mongoose.Schema.Types.Mixed],
       contactMessages: [mongoose.Schema.Types.Mixed]
+    },
+    session: {
+      isActive: { type: Boolean, default: false },
+      lastActivity: { type: Date, default: null },
+      loginTime: { type: Date, default: null },
+      redirectAfterLogin: { type: String, default: null }
     }
   },
   {

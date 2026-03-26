@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation'
 interface User {
   name: string
   email: string
+  _id?: string
 }
 
 interface AuthContextType {
@@ -25,33 +26,53 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const router = useRouter()
   const sessionTimerRef = useRef<NodeJS.Timeout | null>(null)
 
-  // Check authentication status on mount
+  // Check authentication status on mount - sync with MongoDB
   useEffect(() => {
-    // Read from sessionStorage (not localStorage)
-    // sessionStorage is cleared when browser closes (more secure)
-    const authStatus = sessionStorage.getItem('isAuthenticated')
-    const userEmail = sessionStorage.getItem('userEmail')
-    const userName = sessionStorage.getItem('userName')
-    const lastActivity = sessionStorage.getItem('lastActivity')
+    const checkAuthStatus = async () => {
+      try {
+        const email = sessionStorage.getItem('userEmail')
+        if (!email) return
 
-    // Check if session has expired (30 minutes of inactivity)
-    if (lastActivity && authStatus === 'true') {
-      const timeSinceLastActivity = Date.now() - parseInt(lastActivity)
-      if (timeSinceLastActivity > sessionTimeout) {
-        // Session expired
+        // Fetch user from MongoDB to validate session
+        const response = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+        if (!response.ok) {
+          handleSessionExpiry()
+          return
+        }
+
+        const userData = await response.json()
+        const lastActivity = userData.session?.lastActivity ? new Date(userData.session.lastActivity).getTime() : Date.now()
+        
+        // Check if session has expired (30 minutes of inactivity)
+        const timeSinceLastActivity = Date.now() - lastActivity
+        if (timeSinceLastActivity > sessionTimeout) {
+          // Session expired - update MongoDB
+          await fetch('/api/users', {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ 
+              email,
+              session: { isActive: false, lastActivity: null, loginTime: null }
+            })
+          })
+          handleSessionExpiry()
+          return
+        }
+
+        setUser({
+          name: userData.name,
+          email: userData.email,
+          _id: userData._id
+        })
+        setIsAuthenticated(true)
+        startSessionTimer()
+      } catch (error) {
+        console.error('Error checking auth status:', error)
         handleSessionExpiry()
-        return
       }
     }
 
-    if (authStatus === 'true' && userEmail) {
-      setUser({
-        name: userName || 'User',
-        email: userEmail
-      })
-      setIsAuthenticated(true)
-      startSessionTimer()
-    }
+    checkAuthStatus()
   }, [sessionTimeout])
 
   const startSessionTimer = useCallback(() => {
@@ -69,7 +90,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const handleSessionExpiry = () => {
     setUser(null)
     setIsAuthenticated(false)
-    // Clear sessionStorage (not localStorage)
+    // Clear sessionStorage
     sessionStorage.removeItem('isAuthenticated')
     sessionStorage.removeItem('userEmail')
     sessionStorage.removeItem('userName')
@@ -79,12 +100,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     console.warn('Session expired due to inactivity')
   }
 
-  const updateLastActivity = useCallback(() => {
-    if (isAuthenticated) {
-      sessionStorage.setItem('lastActivity', Date.now().toString())
+  const updateLastActivity = useCallback(async () => {
+    if (!isAuthenticated || !user?.email) return
+    
+    try {
+      // Update MongoDB session last activity
+      await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: user.email,
+          session: { 
+            isActive: true,
+            lastActivity: new Date()
+          }
+        })
+      })
       startSessionTimer()
+    } catch (error) {
+      console.error('Error updating last activity:', error)
     }
-  }, [isAuthenticated, startSessionTimer])
+  }, [isAuthenticated, user?.email, startSessionTimer])
 
   const login = (email: string, password: string, name?: string) => {
     // Validate email format
@@ -94,7 +130,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return
     }
 
-    // Frontend-only login
+    // Frontend-only login - actual auth handled by login page
     const userData = {
       name: name || email.split('@')[0],
       email: email
@@ -103,41 +139,61 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     setUser(userData)
     setIsAuthenticated(true)
     
-    // Store in sessionStorage (cleared on browser close)
-    // Real authentication handled by login page using MongoDB
+    // Store minimal data in sessionStorage (cleared on browser close)
+    // Real auth state stored in MongoDB
     sessionStorage.setItem('isAuthenticated', 'true')
     sessionStorage.setItem('userEmail', email)
     sessionStorage.setItem('userName', userData.name)
-    sessionStorage.setItem('lastActivity', Date.now().toString())
     
     startSessionTimer()
   }
 
-  const logout = () => {
+  const logout = async () => {
     // Clear session timer
     if (sessionTimerRef.current) {
       clearTimeout(sessionTimerRef.current)
     }
 
+    try {
+      // Clear session in MongoDB
+      if (user?.email) {
+        await fetch('/api/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: user.email,
+            session: { isActive: false, lastActivity: null, loginTime: null, redirectAfterLogin: null }
+          })
+        })
+      }
+    } catch (error) {
+      console.error('Error clearing session:', error)
+    }
+
     setUser(null)
     setIsAuthenticated(false)
     
-    // Clear sessionStorage (not localStorage)
+    // Clear sessionStorage
     sessionStorage.removeItem('isAuthenticated')
     sessionStorage.removeItem('userEmail')
     sessionStorage.removeItem('userName')
     sessionStorage.removeItem('lastActivity')
     sessionStorage.removeItem('userId')
+    sessionStorage.removeItem('redirectAfterLogin')
     
     router.push('/')
   }
 
   // Function to check if user is authenticated before performing action
-  const requireAuth = (callback: () => void) => {
+  const requireAuth = async (callback: () => void) => {
     if (!isAuthenticated) {
-      // Store the intended action in sessionStorage to execute after login
-      if (typeof window !== 'undefined') {
-        sessionStorage.setItem('redirectAfterLogin', window.location.pathname)
+      // Store redirect intent in MongoDB for persistence
+      const currentPath = typeof window !== 'undefined' ? window.location.pathname : '/booking'
+      try {
+        // Temporarily store redirect without email (will be saved on next auth attempt)
+        sessionStorage.setItem('redirectAfterLogin', currentPath)
+      } catch (error) {
+        console.error('Error storing redirect:', error)
       }
       router.push('/auth/login')
     } else {

@@ -207,14 +207,39 @@ export default function AuthPage() {
         .then(res => res.json())
         .then(data => {
           if (data.success) {
-            // Store user info in sessionStorage (not localStorage - more secure)
+            // Store user info in sessionStorage (cleared on browser close)
             sessionStorage.setItem('isAuthenticated', 'true')
             sessionStorage.setItem('userEmail', formData.email)
             sessionStorage.setItem('userName', data.data.name)
             sessionStorage.setItem('userId', data.data._id)
             
-            // Check if there's a redirect path stored
+            // Get redirect path from sessionStorage (set by requireAuth)
             const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+            
+            // Update MongoDB with redirect path for persistence
+            const updateData: any = {
+              session: {
+                isActive: true,
+                lastActivity: new Date(),
+                loginTime: new Date()
+              }
+            }
+            
+            if (redirectPath) {
+              updateData.session.redirectAfterLogin = redirectPath
+            }
+            
+            // Update session in MongoDB
+            fetch('/api/users', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: formData.email,
+                ...updateData
+              })
+            }).catch(err => console.error('Error updating session:', err))
+            
+            // Clear redirect from sessionStorage and navigate
             if (redirectPath) {
               sessionStorage.removeItem('redirectAfterLogin')
               router.push(redirectPath)
@@ -255,8 +280,33 @@ export default function AuthPage() {
             sessionStorage.setItem('userName', formData.name)
             sessionStorage.setItem('userId', data.data._id)
             
-            // Check if there's a redirect path stored
+            // Get redirect path from sessionStorage
             const redirectPath = sessionStorage.getItem('redirectAfterLogin')
+            
+            // Update MongoDB with initial session data
+            const updateData: any = {
+              session: {
+                isActive: true,
+                lastActivity: new Date(),
+                loginTime: new Date()
+              }
+            }
+            
+            if (redirectPath) {
+              updateData.session.redirectAfterLogin = redirectPath
+            }
+            
+            // Update session in MongoDB
+            fetch('/api/users', {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                email: formData.email,
+                ...updateData
+              })
+            }).catch(err => console.error('Error updating session:', err))
+            
+            // Clear redirect and navigate
             if (redirectPath) {
               sessionStorage.removeItem('redirectAfterLogin')
               router.push(redirectPath)

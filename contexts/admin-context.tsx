@@ -270,9 +270,22 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const adminLogin = async (password: string) => {
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true)
-      // ✅ FIXED: Save admin session to sessionStorage
-      sessionStorage.setItem('isAdminLogged', 'true')
-      sessionStorage.setItem('adminLoginTime', Date.now().toString())
+      // Save admin session to MongoDB
+      try {
+        await fetch('/api/users', {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            email: userEmail || ADMIN_EMAIL,
+            session: {
+              isActive: true,
+              loginTime: new Date()
+            }
+          })
+        })
+      } catch (error) {
+        console.error('Error saving admin session:', error)
+      }
       return true
     }
     return false
@@ -280,19 +293,43 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const adminLogout = async () => {
     setIsAdmin(false)
-    // ✅ FIXED: Clear admin session from sessionStorage
-    sessionStorage.removeItem('isAdminLogged')
-    sessionStorage.removeItem('adminLoginTime')
+    // Clear admin session from MongoDB
+    try {
+      await fetch('/api/users', {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userEmail || ADMIN_EMAIL,
+          session: {
+            isActive: false,
+            loginTime: null
+          }
+        })
+      })
+    } catch (error) {
+      console.error('Error clearing admin session:', error)
+    }
     await saveAdminData()
   }
 
-  // ✅ FIXED: Check admin session on page load
+  // Check admin session on page load from MongoDB
   useEffect(() => {
-    const isAdminLogged = sessionStorage.getItem('isAdminLogged') === 'true'
-    if (isAdminLogged) {
-      setIsAdmin(true)
+    const checkAdminSession = async () => {
+      try {
+        const email = userEmail || ADMIN_EMAIL
+        const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
+        if (res.ok) {
+          const data = await res.json()
+          const isActive = data.session?.isActive === true
+          setIsAdmin(isActive)
+        }
+      } catch (error) {
+        console.error('Error checking admin session:', error)
+      }
     }
-  }, [])
+    
+    checkAdminSession()
+  }, [userEmail])
 
   return (
     <AdminContext.Provider value={{

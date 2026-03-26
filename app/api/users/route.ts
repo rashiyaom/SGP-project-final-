@@ -94,7 +94,13 @@ export async function POST(req: NextRequest) {
         filters: [],
         contactMessages: []
       },
-      isAdmin: false
+      isAdmin: false,
+      session: {
+        isActive: true,
+        lastActivity: new Date(),
+        loginTime: new Date(),
+        redirectAfterLogin: null
+      }
     })
 
     const userWithoutPassword = user.toObject()
@@ -146,6 +152,55 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: user }, { status: 200 })
   } catch (error) {
     console.error('Update user error:', error)
+    return NextResponse.json(
+      { success: false, error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+
+export async function PATCH(req: NextRequest) {
+  try {
+    await dbConnect()
+
+    const body = await req.json()
+    const { email, session, profile } = body
+
+    if (!email) {
+      return NextResponse.json(
+        { success: false, error: 'Email is required' },
+        { status: 400 }
+      )
+    }
+
+    // Build update object
+    const updateData: any = {}
+    
+    if (session !== undefined) {
+      updateData.session = session
+    }
+    
+    if (profile !== undefined) {
+      updateData.profile = profile
+    }
+
+    // Update user
+    const user = await User.findOneAndUpdate(
+      { email },
+      updateData,
+      { new: true, runValidators: true }
+    ).select('-password')
+
+    if (!user) {
+      return NextResponse.json(
+        { success: false, error: 'User not found' },
+        { status: 404 }
+      )
+    }
+
+    return NextResponse.json({ success: true, data: user }, { status: 200 })
+  } catch (error) {
+    console.error('Update session error:', error)
     return NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
