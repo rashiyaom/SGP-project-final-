@@ -12,7 +12,7 @@ const AdminProtectedRoute = ({ children }: { children: React.ReactNode }) => {
   useEffect(() => {
     if (!loading) {
       if (!user || !isAdmin) {
-        router.push('/auth/login');
+        router.push('/admin/login');
       }
     }
   }, [user, isAdmin, loading, router]);
