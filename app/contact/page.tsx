@@ -503,22 +503,67 @@ export default function ContactPage() {
               </motion.button>
             </div>
 
-            {/* Right - Visual */}
+            {/* Right - Premium Availability Card */}
             <motion.div
               initial={{ opacity: 0, scale: 0.95 }}
               whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="bg-gradient-to-br from-[#d4af37]/20 to-[#bfa14a]/10 rounded-2xl p-8 border border-[#d4af37]/30"
+              className="relative group"
             >
-              <div className="aspect-square bg-background rounded-xl overflow-hidden relative">
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="text-center">
-                    <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#bfa14a] rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Calendar size={40} className="text-white" />
+              {/* Premium Background Effects */}
+              <div className="absolute -inset-0.5 bg-gradient-to-br from-[#d4af37] via-[#bfa14a] to-[#d4af37] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
+              
+              <div className="relative bg-gradient-to-br from-background/95 to-background backdrop-blur-sm rounded-3xl p-0.5 border border-[#d4af37]/40">
+                <div className="bg-background rounded-3xl p-12">
+                  {/* Decorative top accent */}
+                  <div className="flex justify-center mb-8">
+                    <div className="w-1 h-8 bg-gradient-to-b from-[#d4af37] to-[#d4af37]/20 rounded-full" />
+                  </div>
+
+                  {/* Icon - Premium style */}
+                  <div className="flex justify-center mb-6">
+                    <motion.div
+                      animate={{ rotate: 360 }}
+                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
+                      className="absolute w-32 h-32 bg-gradient-to-br from-[#d4af37]/10 to-[#bfa14a]/5 rounded-full blur-2xl"
+                    />
+                    <div className="relative w-24 h-24 bg-gradient-to-br from-[#d4af37] via-[#e5c158] to-[#d4af37] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#d4af37]/20">
+                      <Calendar size={44} className="text-background/90" strokeWidth={1.5} />
                     </div>
-                    <h4 className="font-semibold text-foreground mb-2">Available Now</h4>
-                    <p className="text-sm text-muted-foreground">Next 30 days open for bookings</p>
+                  </div>
+
+                  {/* Content */}
+                  <div className="text-center space-y-4">
+                    <div>
+                      <h4 className="font-serif text-2xl text-foreground mb-1">Available Now</h4>
+                      <div className="h-0.5 w-12 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] mx-auto my-3" />
+                    </div>
+                    
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      Next <span className="font-semibold text-[#d4af37]">30 days</span> open for exclusive bookings
+                    </p>
+
+                    {/* Bullet points */}
+                    <div className="space-y-2 py-4">
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
+                        <span>Premium consultation slots available</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
+                        <span>Same-day scheduling options</span>
+                      </div>
+                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
+                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
+                        <span>Flexible timing for your convenience</span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Decorative bottom accent */}
+                  <div className="flex justify-center mt-8">
+                    <div className="w-1 h-8 bg-gradient-to-t from-[#d4af37] to-[#d4af37]/20 rounded-full" />
                   </div>
                 </div>
               </div>
