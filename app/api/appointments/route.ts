@@ -244,5 +244,7 @@ export async function DELETE(req: NextRequest) {
       { success: false, message: error.message },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
