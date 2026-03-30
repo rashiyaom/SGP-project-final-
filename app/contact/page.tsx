@@ -15,8 +15,12 @@ import {
   CheckCircle2,
   Sparkles,
   ChevronDown,
+  Calendar,
+  Video,
 } from 'lucide-react'
 import { useAdmin } from '@/contexts/admin-context'
+import { useAuth } from '@/contexts/auth-context'
+import BookingModal from '@/components/booking-modal'
 import { VALIDATION } from '@/lib/constants'
 
 // Validation functions
@@ -41,6 +45,8 @@ const faqs = [
 
 export default function ContactPage() {
   const { addContactMessage } = useAdmin()
+  const { user } = useAuth()
+  const [isBookingModalOpen, setIsBookingModalOpen] = useState(false)
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -429,6 +435,98 @@ export default function ContactPage() {
         </div>
       </section>
 
+      {/* ===== BOOK A MEETING SECTION ===== */}
+      <section className="border-t border-border/60 bg-muted/20">
+        <div className="max-w-4xl mx-auto px-6 sm:px-12 py-16 sm:py-24">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            transition={{ duration: 0.6 }}
+            className="grid md:grid-cols-2 gap-8 items-center"
+          >
+            {/* Left - Content */}
+            <div>
+              <div className="flex items-center gap-2 mb-4">
+                <div className="w-8 h-px bg-foreground/30" />
+                <p className="text-xs text-muted-foreground uppercase tracking-[0.2em] font-medium">Book Your Experience</p>
+              </div>
+              <h2 className="font-serif text-3xl sm:text-4xl text-foreground mb-4">
+                Meet with our <span className="italic text-muted-foreground/70">experts</span>
+              </h2>
+              <p className="text-muted-foreground mb-6 leading-relaxed">
+                Whether you prefer an online consultation or an in-person visit to our showroom, our design experts are ready to help you create your perfect space.
+              </p>
+              
+              {/* Options */}
+              <div className="space-y-4 mb-8">
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-[#d4af37]/20 rounded-lg flex items-center justify-center">
+                    <Video size={20} className="text-[#d4af37]" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Video Call Consultation</h4>
+                    <p className="text-sm text-muted-foreground">Connect from anywhere for personalized design advice</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-[#d4af37]/20 rounded-lg flex items-center justify-center">
+                    <MapPin size={20} className="text-[#d4af37]" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Showroom Visit</h4>
+                    <p className="text-sm text-muted-foreground">Experience 500+ tiles and get hands-on guidance</p>
+                  </div>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex-shrink-0 w-10 h-10 bg-[#d4af37]/20 rounded-lg flex items-center justify-center">
+                    <Clock size={20} className="text-[#d4af37]" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-foreground">Flexible Scheduling</h4>
+                    <p className="text-sm text-muted-foreground">Pick your preferred date and time from available slots</p>
+                  </div>
+                </div>
+              </div>
+
+              {/* CTA Button */}
+              <motion.button
+                whileHover={{ scale: 1.02 }}
+                whileTap={{ scale: 0.98 }}
+                onClick={() => setIsBookingModalOpen(true)}
+                className="flex items-center gap-2 px-6 py-3.5 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] text-white rounded-xl font-medium hover:shadow-lg transition-all"
+              >
+                <Calendar size={18} />
+                Schedule Your Visit
+              </motion.button>
+            </div>
+
+            {/* Right - Visual */}
+            <motion.div
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
+              viewport={{ once: true }}
+              transition={{ duration: 0.6, delay: 0.2 }}
+              className="bg-gradient-to-br from-[#d4af37]/20 to-[#bfa14a]/10 rounded-2xl p-8 border border-[#d4af37]/30"
+            >
+              <div className="aspect-square bg-background rounded-xl overflow-hidden relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#bfa14a] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar size={40} className="text-white" />
+                    </div>
+                    <h4 className="font-semibold text-foreground mb-2">Available Now</h4>
+                    <p className="text-sm text-muted-foreground">Next 30 days open for bookings</p>
+                  </div>
+                </div>
+              </div>
+            </motion.div>
+          </motion.div>
+        </div>
+      </section>
+
       {/* ===== FAQ SECTION ===== */}
       <section className="border-t border-border/60">
         <div className="max-w-3xl mx-auto px-6 sm:px-12 py-16 sm:py-24">
@@ -501,6 +599,16 @@ export default function ContactPage() {
           </a>
         </div>
       </section>
+
+      {/* ===== BOOKING MODAL ===== */}
+      <BookingModal
+        isOpen={isBookingModalOpen}
+        onClose={() => setIsBookingModalOpen(false)}
+        userId={user?._id}
+        userName={user?.name}
+        userEmail={user?.email}
+        source="contact"
+      />
 
       <Footer />
     </main>

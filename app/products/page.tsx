@@ -4,6 +4,8 @@ import { Header } from '@/components/header'
 import { Footer } from '@/components/footer'
 import { ProductGrid } from '@/components/product-grid'
 import { ProductFilters } from '@/components/product-filters'
+import BookingButton from '@/components/booking-button'
+import { useAuth } from '@/contexts/auth-context'
 import { useState, useEffect, useCallback, Suspense } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { X, SlidersHorizontal, Search, Sparkles, ArrowRight, Layers, Gem, Bath, Wrench } from 'lucide-react'
@@ -59,6 +61,7 @@ function ProductsSkeleton() {
 function ProductsPageInner() {
   const searchParams = useSearchParams()
   const router = useRouter()
+  const { user } = useAuth()
   const collectionParam = searchParams.get('collection') as CollectionType
   const qParam = searchParams.get('q') ?? ''
 
@@ -462,6 +465,14 @@ function ProductsPageInner() {
           </div>
         </div>
       </section>
+
+      {/* Booking Button */}
+      <BookingButton
+        userId={user?._id}
+        userName={user?.name}
+        userEmail={user?.email}
+        source="products"
+      />
 
       <Footer />
     </main>
