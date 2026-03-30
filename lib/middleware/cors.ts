@@ -30,11 +30,11 @@ const DEFAULT_CORS_OPTIONS: CorsOptions = {
 /**
  * Add CORS headers to response
  */
-export function addCorsHeaders(
-  response: NextResponse,
+export function addCorsHeaders<T>(
+  response: NextResponse<T>,
   origin?: string,
   options: CorsOptions = {}
-): NextResponse {
+): NextResponse<T> {
   const corsOptions = { ...DEFAULT_CORS_OPTIONS, ...options }
 
   // Check if origin is allowed
