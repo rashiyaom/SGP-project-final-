@@ -4,12 +4,13 @@ import ContactMessage from '@/lib/models/ContactMessage'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
-    const message = await ContactMessage.findById(params.id)
+    const message = await ContactMessage.findById(id)
 
     if (!message) {
       return NextResponse.json(
@@ -27,14 +28,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
     const body = await request.json()
 
-    const message = await ContactMessage.findByIdAndUpdate(params.id, body, {
+    const message = await ContactMessage.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     })
@@ -55,12 +57,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
-    const message = await ContactMessage.findByIdAndDelete(params.id)
+    const message = await ContactMessage.findByIdAndDelete(id)
 
     if (!message) {
       return NextResponse.json(

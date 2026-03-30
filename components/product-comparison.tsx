@@ -55,7 +55,7 @@ export function ProductComparison({ productId }: { productId: string }) {
             <div className="p-4 border-b border-border">
               <h3 className="font-medium text-foreground text-sm">{product.name}</h3>
               <p className="text-lg font-semibold text-foreground mt-1">
-                ₹{product.price.toLocaleString()}
+                ₹{(product.price || 0).toLocaleString()}
               </p>
             </div>
 

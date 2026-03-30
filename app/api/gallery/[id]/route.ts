@@ -4,12 +4,13 @@ import GalleryItem from '@/lib/models/GalleryItem'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
-    const item = await GalleryItem.findById(params.id)
+    const item = await GalleryItem.findById(id)
 
     if (!item) {
       return NextResponse.json(
@@ -27,14 +28,15 @@ export async function GET(
 
 export async function PUT(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
     const body = await request.json()
 
-    const item = await GalleryItem.findByIdAndUpdate(params.id, body, {
+    const item = await GalleryItem.findByIdAndUpdate(id, body, {
       new: true,
       runValidators: true,
     })
@@ -55,12 +57,13 @@ export async function PUT(
 
 export async function DELETE(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { id } = await params
     await dbConnect()
 
-    const item = await GalleryItem.findByIdAndDelete(params.id)
+    const item = await GalleryItem.findByIdAndDelete(id)
 
     if (!item) {
       return NextResponse.json(

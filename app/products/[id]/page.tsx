@@ -275,8 +275,8 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-2xl font-semibold text-foreground">₹{product.price.toLocaleString()}</span>
-                <span className="text-muted-foreground line-through">₹{product.originalPrice.toLocaleString()}</span>
+                <span className="text-2xl font-semibold text-foreground">₹{(product.price || 0).toLocaleString()}</span>
+                <span className="text-muted-foreground line-through">₹{(product.originalPrice || 0).toLocaleString()}</span>
               </div>
 
               {/* Finish Options */}

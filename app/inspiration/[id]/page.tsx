@@ -148,11 +148,11 @@ function ProductCard({ product }: { product: Product }) {
             <div>
               <div className="flex items-center gap-2">
                 <span className="text-base font-bold text-stone-800 dark:text-stone-100">
-                  ₹{product.price.toLocaleString()}
+                  ₹{(product.price || 0).toLocaleString()}
                 </span>
                 {product.originalPrice && (
                   <span className="text-xs text-stone-400 line-through">
-                    ₹{product.originalPrice.toLocaleString()}
+                    ₹{(product.originalPrice || 0).toLocaleString()}
                   </span>
                 )}
               </div>

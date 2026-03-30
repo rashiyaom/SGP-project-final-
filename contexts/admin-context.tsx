@@ -7,7 +7,7 @@ export interface Product {
   id: string
   _id?: string
   name: string
-  price?: number
+  price: number  // ✅ Required for display
   pricingType: 'fixed' | 'inquire'
   originalPrice?: number
   category: 'Ceramic Tiles' | 'Marble' | 'Bathroom & Sanitary Ware' | 'Accessories'

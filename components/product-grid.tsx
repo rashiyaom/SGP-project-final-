@@ -79,11 +79,11 @@ export function ProductGrid({
 
   // Apply sorting
   if (sortBy === 'price-low') {
-    displayProducts.sort((a, b) => a.price - b.price)
+    displayProducts.sort((a, b) => (a.price || 0) - (b.price || 0))
   } else if (sortBy === 'price-high') {
-    displayProducts.sort((a, b) => b.price - a.price)
+    displayProducts.sort((a, b) => (b.price || 0) - (a.price || 0))
   } else if (sortBy === 'rating') {
-    displayProducts.sort((a, b) => b.rating - a.rating)
+    displayProducts.sort((a, b) => (b.rating || 0) - (a.rating || 0))
   }
 
   return (
@@ -198,11 +198,11 @@ function ProductCard({ product }: { product: Product }) {
           {/* Price */}
           <div className="flex items-baseline gap-1 min-w-0">
             <span className="font-semibold text-foreground text-xs sm:text-sm truncate">
-              ₹{product.price.toLocaleString()}
+              ₹{(product.price || 0).toLocaleString()}
             </span>
             {product.originalPrice && (
               <span className="text-[9px] sm:text-xs text-muted-foreground line-through truncate">
-                ₹{product.originalPrice.toLocaleString()}
+                ₹{(product.originalPrice || 0).toLocaleString()}
               </span>
             )}
           </div>
