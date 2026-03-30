@@ -140,7 +140,7 @@ function ProfilePageInner() {
   // ─── Init from auth + MongoDB ──────────────────────
   useEffect(() => {
     setMounted(true)
-    if (!isAuthenticated) { router.push('/auth/login'); return }
+    if (!isAuthenticated) { router.push('/admin/login'); return }
 
     // Load profile from MongoDB
     const userEmail = sessionStorage.getItem('userEmail')

@@ -86,7 +86,4 @@ const UserSchema = new mongoose.Schema(
   }
 )
 
-// Create index on email for faster lookups
-UserSchema.index({ email: 1 })
-
 export default mongoose.models.User || mongoose.model('User', UserSchema)

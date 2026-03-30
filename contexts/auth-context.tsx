@@ -114,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     sessionStorage.removeItem('userName')
     sessionStorage.removeItem('lastActivity')
     sessionStorage.removeItem('userId')
-    router.push('/auth/login')
+    router.push('/admin/login')
     console.warn('Session expired due to inactivity')
   }
 
@@ -219,7 +219,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       } catch (error) {
         console.error('Error storing redirect:', error)
       }
-      router.push('/auth/login')
+      router.push('/admin/login')
     } else {
       callback()
       updateLastActivity()

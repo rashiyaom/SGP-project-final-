@@ -5,15 +5,16 @@ import React, { createContext, useContext, useState, useEffect, useCallback } fr
 // ===== TYPES =====
 export interface Product {
   id: string
+  _id?: string
   name: string
   price?: number
-  pricingType: 'fixed' | 'inquire' // 'fixed' = has price, 'inquire' = price varies
+  pricingType: 'fixed' | 'inquire'
   originalPrice?: number
   category: 'Ceramic Tiles' | 'Marble' | 'Bathroom & Sanitary Ware' | 'Accessories'
   rating: number
   inStock: boolean
-  images: string[] // Support multiple images per product
-  image: string // Fallback to first image for backward compatibility
+  images: string[]
+  image: string
   description?: string
   filters?: Record<string, string[]>
   sku?: string
@@ -22,6 +23,7 @@ export interface Product {
 
 export interface GalleryItem {
   id: string
+  _id?: string
   title: string
   category: string
   image: string
@@ -41,6 +43,7 @@ export interface CustomFilter {
 
 export interface ContactMessage {
   id: string
+  _id?: string
   name: string
   email: string
   phone: string
@@ -63,7 +66,7 @@ interface AdminContextType {
   updateGalleryItem: (id: string, item: Partial<GalleryItem>) => Promise<void>
   deleteGalleryItem: (id: string) => Promise<void>
 
-  // Custom Filters
+  // Custom Filters (stored in sessionStorage — lightweight, non-critical)
   customFilters: CustomFilter[]
   addCustomFilter: (filter: Omit<CustomFilter, 'id'>) => Promise<void>
   updateCustomFilter: (id: string, filter: Partial<CustomFilter>) => Promise<void>
@@ -80,15 +83,39 @@ interface AdminContextType {
   isAdmin: boolean
   adminLogin: (password: string) => Promise<boolean>
   adminLogout: () => Promise<void>
-  
+
+  // Upload
+  uploadImage: (file: File, folder?: string) => Promise<string>
+
   // Loading states
   isLoading: boolean
   error: string | null
+  refreshProducts: () => Promise<void>
+  refreshMessages: () => Promise<void>
+  refreshGallery: () => Promise<void>
 }
 
 const ADMIN_PASSWORD = 'admin123'
+const FILTERS_STORAGE_KEY = 'admin_custom_filters'
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
+
+// Helper to normalize MongoDB docs (map _id → id)
+function normalizeProduct(p: any): Product {
+  return { ...p, id: p._id?.toString() || p.id }
+}
+function normalizeGallery(g: any): GalleryItem {
+  return { ...g, id: g._id?.toString() || g.id }
+}
+function normalizeMessage(m: any): ContactMessage {
+  return {
+    ...m,
+    id: m._id?.toString() || m.id,
+    date: m.createdAt || m.date || new Date().toISOString(),
+    phone: m.phone || '',
+    read: m.read ?? false,
+  }
+}
 
 export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [products, setProducts] = useState<Product[]>([])
@@ -98,141 +125,158 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
   const [isAdmin, setIsAdmin] = useState(false)
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const [userEmail, setUserEmail] = useState<string | null>(null)
-  const ADMIN_EMAIL = 'admin@omkar.com' // ✅ FIXED: Use dedicated admin email for storing admin data
 
-  // Get user email from sessionStorage (set during login)
+  // ─── On mount: restore session + load data ───────────────────────────────
   useEffect(() => {
-    const email = sessionStorage.getItem('userEmail')
-    setUserEmail(email || ADMIN_EMAIL) // ✅ FIXED: Use admin email if no user logged in
-    
-    // Initialize admin user on app startup
-    fetch('/api/admin/init', { method: 'POST' }).catch(err => {
-      console.error('Failed to initialize admin user:', err)
-    })
-    
-    if (email || sessionStorage.getItem('isAdminLogged')) {
-      loadAdminData(email || ADMIN_EMAIL)
+    const adminLoggedIn = sessionStorage.getItem('isAdminLogged') === 'true'
+    if (adminLoggedIn) {
+      setIsAdmin(true)
+    }
+
+    // Always load products & gallery for the public-facing site
+    loadProducts()
+    loadGallery()
+
+    // Load filters from sessionStorage (lightweight, non-critical)
+    const stored = sessionStorage.getItem(FILTERS_STORAGE_KEY)
+    if (stored) {
+      try { setCustomFilters(JSON.parse(stored)) } catch {}
+    }
+
+    // Load messages only if admin
+    if (adminLoggedIn) {
+      loadMessages()
     }
   }, [])
 
-  // Load admin data from MongoDB
-  const loadAdminData = async (email: string) => {
+  // ─── Persist filters to sessionStorage whenever they change ───────────────
+  useEffect(() => {
+    sessionStorage.setItem(FILTERS_STORAGE_KEY, JSON.stringify(customFilters))
+  }, [customFilters])
+
+  // ─── PRODUCTS ─────────────────────────────────────────────────────────────
+  const loadProducts = useCallback(async () => {
     try {
       setIsLoading(true)
-      const res = await fetch(`/api/users/admin?email=${encodeURIComponent(email)}`)
-      if (res.ok) {
-        const data = await res.json()
-        const adminData = data.data || {}
-        setProducts(adminData.products || [])
-        setGallery(adminData.gallery || [])
-        setCustomFilters(adminData.filters || [])
-        setContactMessages(adminData.contactMessages || [])
-      }
+      const res = await fetch('/api/products?limit=200')
+      if (!res.ok) throw new Error('Failed to fetch products')
+      const data = await res.json()
+      setProducts((data.data || []).map(normalizeProduct))
       setError(null)
     } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to load admin data'
-      console.error('Error loading admin data:', err)
-      setError(errorMsg)
+      setError(err instanceof Error ? err.message : 'Failed to load products')
     } finally {
       setIsLoading(false)
     }
-  }
-
-  // Save admin data to MongoDB
-  const saveAdminData = async () => {
-    if (!userEmail) return
-
-    try {
-      await fetch('/api/users/admin', {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: userEmail,
-          adminData: {
-            products,
-            gallery,
-            filters: customFilters,
-            contactMessages
-          }
-        })
-      })
-      setError(null)
-    } catch (err) {
-      const errorMsg = err instanceof Error ? err.message : 'Failed to save admin data'
-      console.error('Error saving admin data:', err)
-      setError(errorMsg)
-    }
-  }
-
-  // Auto-save whenever data changes with debounce
-  useEffect(() => {
-    if (userEmail && (products.length > 0 || gallery.length > 0 || customFilters.length > 0 || contactMessages.length > 0)) {
-      // ✅ FIXED: Save immediately when products are modified
-      const timer = setTimeout(() => {
-        saveAdminData()
-      }, 500) // Small delay to batch rapid changes
-      
-      return () => clearTimeout(timer)
-    }
-  }, [products, gallery, customFilters, contactMessages, userEmail])
-
-  // ===== PRODUCT CRUD =====
-  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+  }, [])
 
   const addProduct = async (product: Omit<Product, 'id'>) => {
-    // ✅ FIXED: Validate required fields before adding
-    if (!product.name || product.name.trim() === '') {
-      setError('Product name is required')
-      throw new Error('Product name is required')
-    }
-    if (!product.category || product.category.trim() === '') {
-      setError('Product category is required')
-      throw new Error('Product category is required')
-    }
-    if (product.pricingType === 'fixed' && (!product.price || product.price <= 0)) {
-      setError('Product price must be greater than 0')
+    if (!product.name?.trim()) throw new Error('Product name is required')
+    if (!product.category?.trim()) throw new Error('Product category is required')
+    if (product.pricingType === 'fixed' && (!product.price || product.price <= 0))
       throw new Error('Product price must be greater than 0')
-    }
-    if (!product.image && (!product.images || product.images.length === 0)) {
-      setError('Product must have at least one image')
+    if (!product.image && (!product.images || product.images.length === 0))
       throw new Error('Product must have at least one image')
+
+    const res = await fetch('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        ...product,
+        image: product.image || product.images?.[0] || '',
+        images: product.images?.length ? product.images : [product.image],
+      }),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to create product')
     }
-    
-    const newProduct: Product = { ...product, id: generateId() }
-    setProducts(prev => [...prev, newProduct])
+    const data = await res.json()
+    setProducts(prev => [normalizeProduct(data.data), ...prev])
   }
 
   const updateProduct = async (id: string, updates: Partial<Product>) => {
-    setProducts(prev => prev.map(p => p.id === id ? { ...p, ...updates } : p))
+    const res = await fetch(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to update product')
+    }
+    const data = await res.json()
+    setProducts(prev => prev.map(p => p.id === id ? normalizeProduct(data.data) : p))
   }
 
   const deleteProduct = async (id: string) => {
+    const res = await fetch(`/api/products/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to delete product')
+    }
     setProducts(prev => prev.filter(p => p.id !== id))
   }
 
-  const getProductsByCategory = (category: string) => {
-    return products.filter(p => p.category === category)
-  }
+  const getProductsByCategory = (category: string) =>
+    products.filter(p => p.category === category)
 
-  // ===== GALLERY CRUD =====
+  const refreshProducts = loadProducts
+
+  // ─── GALLERY ──────────────────────────────────────────────────────────────
+  const loadGallery = useCallback(async () => {
+    try {
+      const res = await fetch('/api/gallery?limit=200')
+      if (!res.ok) return
+      const data = await res.json()
+      setGallery((data.data || []).map(normalizeGallery))
+    } catch {}
+  }, [])
+
   const addGalleryItem = async (item: Omit<GalleryItem, 'id'>) => {
-    const newItem: GalleryItem = { ...item, id: generateId() }
-    setGallery(prev => [...prev, newItem])
+    const res = await fetch('/api/gallery', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(item),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to create gallery item')
+    }
+    const data = await res.json()
+    setGallery(prev => [normalizeGallery(data.data), ...prev])
   }
 
   const updateGalleryItem = async (id: string, updates: Partial<GalleryItem>) => {
-    setGallery(prev => prev.map(g => g.id === id ? { ...g, ...updates } : g))
+    const res = await fetch(`/api/gallery/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(updates),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to update gallery item')
+    }
+    const data = await res.json()
+    setGallery(prev => prev.map(g => g.id === id ? normalizeGallery(data.data) : g))
   }
 
   const deleteGalleryItem = async (id: string) => {
+    const res = await fetch(`/api/gallery/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to delete gallery item')
+    }
     setGallery(prev => prev.filter(g => g.id !== id))
   }
 
-  // ===== CUSTOM FILTERS CRUD =====
+  const refreshGallery = loadGallery
+
+  // ─── CUSTOM FILTERS (sessionStorage-backed) ───────────────────────────────
+  const generateId = () => Date.now().toString(36) + Math.random().toString(36).substr(2, 5)
+
   const addCustomFilter = async (filter: Omit<CustomFilter, 'id'>) => {
-    const newFilter: CustomFilter = { ...filter, id: generateId() }
-    setCustomFilters(prev => [...prev, newFilter])
+    setCustomFilters(prev => [...prev, { ...filter, id: generateId() }])
   }
 
   const updateCustomFilter = async (id: string, updates: Partial<CustomFilter>) => {
@@ -243,49 +287,85 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
     setCustomFilters(prev => prev.filter(f => f.id !== id))
   }
 
-  const getFiltersForCategory = (category: Product['category']) => {
-    return customFilters.filter(f => f.category === category || f.category === 'all')
-  }
+  const getFiltersForCategory = (category: Product['category']) =>
+    customFilters.filter(f => f.category === category || f.category === 'all')
 
-  // ===== CONTACT MESSAGES CRUD =====
+  // ─── MESSAGES ─────────────────────────────────────────────────────────────
+  const loadMessages = useCallback(async () => {
+    try {
+      const res = await fetch('/api/messages?limit=200')
+      if (!res.ok) return
+      const data = await res.json()
+      setContactMessages((data.data || []).map(normalizeMessage))
+    } catch {}
+  }, [])
+
   const addContactMessage = async (msg: Omit<ContactMessage, 'id' | 'date' | 'read'>) => {
-    const newMsg: ContactMessage = {
-      ...msg,
-      id: generateId(),
-      date: new Date().toISOString(),
-      read: false,
+    const res = await fetch('/api/messages', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg),
+    })
+    if (!res.ok) {
+      const err = await res.json()
+      throw new Error(err.error || 'Failed to send message')
     }
-    setContactMessages(prev => [newMsg, ...prev])
+    const data = await res.json()
+    setContactMessages(prev => [normalizeMessage(data.data), ...prev])
   }
 
   const markMessageRead = async (id: string) => {
+    await fetch(`/api/messages/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ read: true }),
+    })
     setContactMessages(prev => prev.map(m => m.id === id ? { ...m, read: true } : m))
   }
 
   const deleteContactMessage = async (id: string) => {
+    await fetch(`/api/messages/${id}`, { method: 'DELETE' })
     setContactMessages(prev => prev.filter(m => m.id !== id))
   }
 
-  // ===== ADMIN AUTH =====
-  const adminLogin = async (password: string) => {
+  const refreshMessages = loadMessages
+
+  // ─── IMAGE UPLOAD (Cloudinary) ────────────────────────────────────────────
+  const uploadImage = async (file: File, folder = 'omkar-ceramics'): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = async (e) => {
+        try {
+          const base64 = (e.target?.result as string)?.split(',')[1]
+          if (!base64) throw new Error('Failed to read file')
+
+          const res = await fetch('/api/upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ base64, folder }),
+          })
+          if (!res.ok) {
+            const err = await res.json()
+            throw new Error(err.error || 'Upload failed')
+          }
+          const data = await res.json()
+          resolve(data.data.url)
+        } catch (err) {
+          reject(err)
+        }
+      }
+      reader.onerror = () => reject(new Error('Failed to read file'))
+      reader.readAsDataURL(file)
+    })
+  }
+
+  // ─── ADMIN AUTH ───────────────────────────────────────────────────────────
+  const adminLogin = async (password: string): Promise<boolean> => {
     if (password === ADMIN_PASSWORD) {
       setIsAdmin(true)
-      // Save admin session to MongoDB
-      try {
-        await fetch('/api/users', {
-          method: 'PATCH',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            email: userEmail || ADMIN_EMAIL,
-            session: {
-              isActive: true,
-              loginTime: new Date()
-            }
-          })
-        })
-      } catch (error) {
-        console.error('Error saving admin session:', error)
-      }
+      sessionStorage.setItem('isAdminLogged', 'true')
+      // Load admin-only data
+      await loadMessages()
       return true
     }
     return false
@@ -293,43 +373,9 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   const adminLogout = async () => {
     setIsAdmin(false)
-    // Clear admin session from MongoDB
-    try {
-      await fetch('/api/users', {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          email: userEmail || ADMIN_EMAIL,
-          session: {
-            isActive: false,
-            loginTime: null
-          }
-        })
-      })
-    } catch (error) {
-      console.error('Error clearing admin session:', error)
-    }
-    await saveAdminData()
+    sessionStorage.removeItem('isAdminLogged')
+    setContactMessages([])
   }
-
-  // Check admin session on page load from MongoDB
-  useEffect(() => {
-    const checkAdminSession = async () => {
-      try {
-        const email = userEmail || ADMIN_EMAIL
-        const res = await fetch(`/api/users?email=${encodeURIComponent(email)}`)
-        if (res.ok) {
-          const data = await res.json()
-          const isActive = data.session?.isActive === true
-          setIsAdmin(isActive)
-        }
-      } catch (error) {
-        console.error('Error checking admin session:', error)
-      }
-    }
-    
-    checkAdminSession()
-  }, [userEmail])
 
   return (
     <AdminContext.Provider value={{
@@ -354,8 +400,12 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
       isAdmin,
       adminLogin,
       adminLogout,
+      uploadImage,
       isLoading,
-      error
+      error,
+      refreshProducts,
+      refreshMessages,
+      refreshGallery,
     }}>
       {children}
     </AdminContext.Provider>

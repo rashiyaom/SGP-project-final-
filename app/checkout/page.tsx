@@ -60,7 +60,7 @@ export default function CheckoutPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       sessionStorage.setItem('redirectAfterLogin', '/checkout')
-      router.push('/auth/login')
+      router.push('/admin/login')
     }
   }, [isAuthenticated, router])
 

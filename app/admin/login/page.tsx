@@ -6,11 +6,10 @@ import { Lock } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 
 export default function AdminLoginPage() {
-  const [email, setEmail] = useState('')
+  const [email, setEmail] = useState('admin@omkar.com')
   const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
   const [loading, setLoading] = useState(false)
-  const [shake, setShake] = useState(false)
+  const [error, setError] = useState('')
   const router = useRouter()
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -19,28 +18,32 @@ export default function AdminLoginPage() {
     setLoading(true)
 
     try {
-      // Login via API
-      const response = await fetch(`/api/users?email=${encodeURIComponent(email)}&password=${encodeURIComponent(password)}`)
+      // Authenticate with email and password
+      const response = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email, password, isAdmin: true })
+      })
+      
       const data = await response.json()
 
-      if (data.success) {
+      if (data.success && data.data.isAdmin) {
         // Store credentials
         sessionStorage.setItem('isAuthenticated', 'true')
         sessionStorage.setItem('userEmail', email)
         sessionStorage.setItem('userName', data.data.name)
         sessionStorage.setItem('userId', data.data._id)
 
-        // Redirect to admin dashboard
-        router.push('/admin/dashboard')
+        // Redirect to admin page
+        router.push('/admin')
+      } else if (data.success && !data.data.isAdmin) {
+        setError('This account is not an admin account')
       } else {
-        setError(data.error || 'Login failed')
-        setShake(true)
-        setTimeout(() => setShake(false), 500)
+        setError(data.message || 'Invalid email or password')
       }
     } catch (err) {
       setError('An error occurred. Please try again.')
-      setShake(true)
-      setTimeout(() => setShake(false), 500)
+      console.error(err)
     } finally {
       setLoading(false)
     }
@@ -59,29 +62,34 @@ export default function AdminLoginPage() {
             <Lock className="w-8 h-8 text-white" />
           </div>
           <h1 className="font-serif text-3xl text-foreground mb-2">Admin Panel</h1>
-          <p className="text-muted-foreground text-sm">Login to manage products and settings</p>
+          <p className="text-muted-foreground text-sm">Secure login required</p>
         </div>
 
         {/* Form */}
         <motion.form
           onSubmit={handleSubmit}
-          animate={shake ? { x: [0, -10, 10, -10, 10, 0] } : {}}
-          transition={{ duration: 0.4 }}
           className="space-y-4"
         >
+          {error && (
+            <div className="bg-red-50 border border-red-200 text-red-600 px-4 py-3 rounded-lg text-sm">
+              {error}
+            </div>
+          )}
+          
           {/* Email Input */}
           <div>
             <label className="text-xs font-medium text-muted-foreground uppercase tracking-wider mb-1.5 block">
-              Email Address
+              Admin Email
             </label>
             <input
               type="email"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
-              placeholder="admin@omkar.com"
+              placeholder="admin@example.com"
               disabled={loading}
               className="w-full h-12 px-4 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all disabled:opacity-50"
               autoFocus
+              required
             />
           </div>
 
@@ -94,22 +102,12 @@ export default function AdminLoginPage() {
               type="password"
               value={password}
               onChange={(e) => setPassword(e.target.value)}
-              placeholder="Enter password"
+              placeholder="••••••••"
               disabled={loading}
               className="w-full h-12 px-4 bg-muted/50 border border-border rounded-xl text-foreground placeholder:text-muted-foreground focus:outline-none focus:ring-2 focus:ring-foreground/20 transition-all disabled:opacity-50"
+              required
             />
           </div>
-
-          {/* Error Message */}
-          {error && (
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              className="p-3 bg-red-500/10 border border-red-500/20 rounded-lg text-red-600 text-sm text-center"
-            >
-              {error}
-            </motion.div>
-          )}
 
           {/* Submit Button */}
           <button
@@ -117,7 +115,7 @@ export default function AdminLoginPage() {
             disabled={loading}
             className="w-full h-12 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] text-white font-semibold rounded-xl hover:shadow-lg transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {loading ? 'Logging in...' : 'Login'}
+            {loading ? 'Accessing...' : 'Access Admin Panel'}
           </button>
         </motion.form>
 

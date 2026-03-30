@@ -1,8 +1,8 @@
 'use client'
 
-import React, { useState, useCallback, useRef } from 'react'
+import React, { useState, useRef } from 'react'
 import { motion, AnimatePresence } from 'framer-motion'
-import { X, Plus, Trash2, Upload, Check, AlertCircle, Grid3x3, Zap } from 'lucide-react'
+import { X, Plus, Trash2, Upload, Check, Loader2, Zap } from 'lucide-react'
 import { useAdmin, type Product } from '@/contexts/admin-context'
 
 interface FullscreenProductFormProps {
@@ -47,8 +47,8 @@ export default function FullscreenProductForm({
   onSave,
   onClose,
 }: FullscreenProductFormProps) {
-  const { customFilters } = useAdmin()
-  const fileInputRef = useRef<HTMLInputElement>(null)
+  const { customFilters, uploadImage } = useAdmin()
+  const fileInputRefs = useRef<(HTMLInputElement | null)[]>([])
 
   const [form, setForm] = useState({
     name: product?.name || '',
@@ -58,7 +58,7 @@ export default function FullscreenProductForm({
     category: (product?.category || 'Ceramic Tiles') as Product['category'],
     rating: product?.rating || 4.5,
     inStock: product?.inStock ?? true,
-    images: product?.images || [''],
+    images: product?.images?.length ? product.images : [''],
     description: product?.description || '',
     filters: product?.filters || {} as Record<string, string[]>,
     sku: product?.sku || '',
@@ -67,6 +67,23 @@ export default function FullscreenProductForm({
 
   const [activeTab, setActiveTab] = useState<'basic' | 'media' | 'pricing' | 'advanced'>('basic')
   const [showPresets, setShowPresets] = useState(false)
+  const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
+
+  const handleFileUpload = async (idx: number, file: File) => {
+    if (!file || !file.type.startsWith('image/')) {
+      alert('Please select a valid image file')
+      return
+    }
+    try {
+      setUploadingIdx(idx)
+      const url = await uploadImage(file, 'omkar-ceramics/products')
+      updateImage(idx, url)
+    } catch (err) {
+      alert('Upload failed: ' + (err instanceof Error ? err.message : 'Unknown error'))
+    } finally {
+      setUploadingIdx(null)
+    }
+  }
 
   const categoryFilters = customFilters.filter(
     (f) => f.category === form.category || f.category === 'all'
@@ -348,29 +365,54 @@ export default function FullscreenProductForm({
                     </button>
                   </div>
 
-                  <div className="space-y-3">
+                  <div className="space-y-4">
                     {form.images.map((image, idx) => (
                       <div key={idx} className="flex gap-3 items-start">
-                        <div className="flex-1">
+                        <div className="flex-1 space-y-2">
+                          {/* URL Input */}
                           <input
                             type="url"
                             value={image}
                             onChange={(e) => updateImage(idx, e.target.value)}
-                            placeholder="Paste image URL here..."
-                            className="w-full h-12 px-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37]/20"
+                            placeholder="Paste image URL or upload a file below..."
+                            className="w-full h-11 px-4 bg-white dark:bg-stone-800 border border-stone-200 dark:border-stone-700 rounded-xl text-stone-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-[#d4af37]/20"
                           />
+                          {/* Upload Button */}
+                          <div className="flex items-center gap-2">
+                            <input
+                              type="file"
+                              accept="image/*"
+                              className="hidden"
+                              ref={el => { fileInputRefs.current[idx] = el }}
+                              onChange={e => {
+                                const file = e.target.files?.[0]
+                                if (file) handleFileUpload(idx, file)
+                                e.target.value = ''
+                              }}
+                            />
+                            <button
+                              type="button"
+                              disabled={uploadingIdx !== null}
+                              onClick={() => fileInputRefs.current[idx]?.click()}
+                              className="flex items-center gap-2 px-3 py-1.5 bg-stone-100 dark:bg-stone-700 border border-stone-300 dark:border-stone-600 text-stone-700 dark:text-stone-200 text-xs font-medium rounded-lg hover:bg-stone-200 dark:hover:bg-stone-600 transition-colors disabled:opacity-50"
+                            >
+                              {uploadingIdx === idx ? (
+                                <><Loader2 size={13} className="animate-spin" /> Uploading...</>
+                              ) : (
+                                <><Upload size={13} /> Upload to Cloudinary</>
+                              )}
+                            </button>
+                            {idx === 0 && <span className="text-xs text-[#d4af37] font-semibold">★ Primary</span>}
+                          </div>
+                          {/* Preview */}
                           {image && (
-                            <div className="mt-2 relative w-20 h-20 rounded-lg overflow-hidden border border-stone-200 dark:border-stone-700">
+                            <div className="relative w-20 h-20 rounded-lg overflow-hidden border border-stone-200 dark:border-stone-700">
                               <img
                                 src={image}
                                 alt={`Product ${idx + 1}`}
                                 className="w-full h-full object-cover"
+                                onError={e => (e.currentTarget.style.display = 'none')}
                               />
-                              {idx === 0 && (
-                                <div className="absolute top-1 right-1 bg-[#d4af37] text-white text-xs px-2 py-1 rounded">
-                                  Primary
-                                </div>
-                              )}
                             </div>
                           )}
                         </div>

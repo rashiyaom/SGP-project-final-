@@ -1,10 +1,5 @@
 // /app/admin/layout.tsx
-import AdminProtectedRoute from '@/components/admin-protected-route';
-
-export default function AdminLayout({
-  children,
-}: {
-  children: React.ReactNode;
-}) {
-  return <AdminProtectedRoute>{children}</AdminProtectedRoute>;
+// Admin layout — auth is handled inside /app/admin/page.tsx via useAdmin context
+export default function AdminLayout({ children }: { children: React.ReactNode }) {
+  return <>{children}</>
 }

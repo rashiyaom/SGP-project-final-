@@ -797,6 +797,7 @@ export default function AdminPage() {
     isAdmin,
     adminLogin,
     adminLogout,
+    refreshMessages,
   } = useAdmin()
 
   const router = useRouter()
@@ -964,6 +965,7 @@ export default function AdminPage() {
                   onClick={() => {
                     setActiveTab(tab.id)
                     setSearchQuery('')
+                    if (tab.id === 'messages') refreshMessages()
                   }}
                   className={`relative flex items-center gap-2 px-3.5 py-2.5 rounded-xl text-sm font-medium whitespace-nowrap transition-all ${
                     isActive

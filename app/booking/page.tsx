@@ -25,7 +25,7 @@ export default function BookingPage() {
   useEffect(() => {
     if (!isAuthenticated) {
       sessionStorage.setItem('redirectAfterLogin', '/booking')
-      router.push('/auth/login')
+      router.push('/admin/login')
     }
   }, [isAuthenticated, router])
 
