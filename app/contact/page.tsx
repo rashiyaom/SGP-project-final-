@@ -503,67 +503,46 @@ export default function ContactPage() {
               </motion.button>
             </div>
 
-            {/* Right - Premium Availability Card */}
+            {/* Right - Minimal Aesthetic Card */}
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              whileInView={{ opacity: 1, scale: 1 }}
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="relative group"
+              className="flex flex-col justify-center"
             >
-              {/* Premium Background Effects */}
-              <div className="absolute -inset-0.5 bg-gradient-to-br from-[#d4af37] via-[#bfa14a] to-[#d4af37] rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 blur" />
-              
-              <div className="relative bg-gradient-to-br from-background/95 to-background backdrop-blur-sm rounded-3xl p-0.5 border border-[#d4af37]/40">
-                <div className="bg-background rounded-3xl p-12">
-                  {/* Decorative top accent */}
-                  <div className="flex justify-center mb-8">
-                    <div className="w-1 h-8 bg-gradient-to-b from-[#d4af37] to-[#d4af37]/20 rounded-full" />
+              <div className="space-y-6">
+                {/* Minimal header */}
+                <div className="space-y-2">
+                  <div className="h-0.5 w-12 bg-[#d4af37]" />
+                  <h3 className="font-serif text-3xl text-foreground">Availability</h3>
+                </div>
+
+                {/* Calendar icon - simple and minimal */}
+                <div className="flex items-baseline gap-4">
+                  <Calendar size={32} className="text-[#d4af37] flex-shrink-0" strokeWidth={1} />
+                  <div>
+                    <p className="text-sm text-muted-foreground uppercase tracking-wide">Next 30 days</p>
+                    <p className="text-lg text-foreground font-light">Open for bookings</p>
                   </div>
+                </div>
 
-                  {/* Icon - Premium style */}
-                  <div className="flex justify-center mb-6">
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-                      className="absolute w-32 h-32 bg-gradient-to-br from-[#d4af37]/10 to-[#bfa14a]/5 rounded-full blur-2xl"
-                    />
-                    <div className="relative w-24 h-24 bg-gradient-to-br from-[#d4af37] via-[#e5c158] to-[#d4af37] rounded-2xl flex items-center justify-center shadow-2xl shadow-[#d4af37]/20">
-                      <Calendar size={44} className="text-background/90" strokeWidth={1.5} />
-                    </div>
+                {/* Minimal divider */}
+                <div className="w-12 h-px bg-border" />
+
+                {/* Key info - simple list */}
+                <div className="space-y-3">
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">Online consultations</p>
                   </div>
-
-                  {/* Content */}
-                  <div className="text-center space-y-4">
-                    <div>
-                      <h4 className="font-serif text-2xl text-foreground mb-1">Available Now</h4>
-                      <div className="h-0.5 w-12 bg-gradient-to-r from-[#d4af37] to-[#bfa14a] mx-auto my-3" />
-                    </div>
-                    
-                    <p className="text-sm text-muted-foreground leading-relaxed">
-                      Next <span className="font-semibold text-[#d4af37]">30 days</span> open for exclusive bookings
-                    </p>
-
-                    {/* Bullet points */}
-                    <div className="space-y-2 py-4">
-                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
-                        <span>Premium consultation slots available</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
-                        <span>Same-day scheduling options</span>
-                      </div>
-                      <div className="flex items-center justify-center gap-2 text-xs text-muted-foreground">
-                        <div className="w-1.5 h-1.5 bg-[#d4af37] rounded-full" />
-                        <span>Flexible timing for your convenience</span>
-                      </div>
-                    </div>
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">Showroom visits</p>
                   </div>
-
-                  {/* Decorative bottom accent */}
-                  <div className="flex justify-center mt-8">
-                    <div className="w-1 h-8 bg-gradient-to-t from-[#d4af37] to-[#d4af37]/20 rounded-full" />
+                  <div className="flex items-start gap-3">
+                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
+                    <p className="text-sm text-muted-foreground">Flexible scheduling</p>
                   </div>
                 </div>
               </div>
