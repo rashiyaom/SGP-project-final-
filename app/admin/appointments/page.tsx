@@ -47,12 +47,12 @@ export default function AdminAppointmentsPage() {
   const [adminNotes, setAdminNotes] = useState('')
 
   useEffect(() => {
-    if (!isAuthenticated || !user?.isAdmin) {
+    if (!isAuthenticated || !isAdmin) {
       router.push('/admin/login')
       return
     }
     fetchAppointments()
-  }, [isAuthenticated, user])
+  }, [isAuthenticated, isAdmin, router])
 
   const fetchAppointments = async () => {
     try {
