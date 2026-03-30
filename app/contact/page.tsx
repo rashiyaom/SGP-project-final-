@@ -503,46 +503,22 @@ export default function ContactPage() {
               </motion.button>
             </div>
 
-            {/* Right - Minimal Aesthetic Card */}
+            {/* Right - Visual */}
             <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
+              initial={{ opacity: 0, scale: 0.95 }}
+              whileInView={{ opacity: 1, scale: 1 }}
               viewport={{ once: true }}
               transition={{ duration: 0.6, delay: 0.2 }}
-              className="flex flex-col justify-center"
+              className="bg-gradient-to-br from-[#d4af37]/20 to-[#bfa14a]/10 rounded-2xl p-8 border border-[#d4af37]/30"
             >
-              <div className="space-y-6">
-                {/* Minimal header */}
-                <div className="space-y-2">
-                  <div className="h-0.5 w-12 bg-[#d4af37]" />
-                  <h3 className="font-serif text-3xl text-foreground">Availability</h3>
-                </div>
-
-                {/* Calendar icon - simple and minimal */}
-                <div className="flex items-baseline gap-4">
-                  <Calendar size={32} className="text-[#d4af37] flex-shrink-0" strokeWidth={1} />
-                  <div>
-                    <p className="text-sm text-muted-foreground uppercase tracking-wide">Next 30 days</p>
-                    <p className="text-lg text-foreground font-light">Open for bookings</p>
-                  </div>
-                </div>
-
-                {/* Minimal divider */}
-                <div className="w-12 h-px bg-border" />
-
-                {/* Key info - simple list */}
-                <div className="space-y-3">
-                  <div className="flex items-start gap-3">
-                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">Online consultations</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">Showroom visits</p>
-                  </div>
-                  <div className="flex items-start gap-3">
-                    <div className="w-1 h-1 bg-[#d4af37] mt-2 flex-shrink-0" />
-                    <p className="text-sm text-muted-foreground">Flexible scheduling</p>
+              <div className="aspect-square bg-background rounded-xl overflow-hidden relative">
+                <div className="absolute inset-0 flex items-center justify-center">
+                  <div className="text-center">
+                    <div className="w-20 h-20 bg-gradient-to-br from-[#d4af37] to-[#bfa14a] rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Calendar size={40} className="text-white" />
+                    </div>
+                    <h4 className="font-semibold text-foreground mb-2">Available Now</h4>
+                    <p className="text-sm text-muted-foreground">Next 30 days open for bookings</p>
                   </div>
                 </div>
               </div>
