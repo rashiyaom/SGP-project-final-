@@ -2,6 +2,13 @@ import dbConnect from '@/lib/db/connect'
 import User from '@/lib/models/User'
 import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
+import { addCorsHeaders, handleCorsOptions } from '@/lib/middleware/cors'
+import { logger } from '@/lib/logger'
+
+// Handle CORS preflight requests
+export async function OPTIONS(req: NextRequest) {
+  return handleCorsOptions(req)
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -51,24 +58,33 @@ export async function GET(req: NextRequest) {
       }
       
       if (!isPasswordValid) {
-        return NextResponse.json(
+        logger.error('Invalid password attempt', { email }, undefined, email)
+        let response = NextResponse.json(
           { success: false, error: 'Invalid email or password' },
           { status: 401 }
         )
+        response = addCorsHeaders(response)
+        return response
       }
       // Return user without password
       const userObj = user.toObject()
       delete userObj.password
-      return NextResponse.json({ success: true, data: userObj }, { status: 200 })
+      let response = NextResponse.json({ success: true, data: userObj }, { status: 200 })
+      response = addCorsHeaders(response)
+      return response
     }
 
-    return NextResponse.json({ success: true, data: user }, { status: 200 })
-  } catch (error) {
-    console.error('Get user error:', error)
-    return NextResponse.json(
+    let response = NextResponse.json({ success: true, data: user }, { status: 200 })
+    response = addCorsHeaders(response)
+    return response
+  } catch (error: any) {
+    logger.error('Failed to fetch user', { error: error.message }, error as Error)
+    let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 
@@ -80,19 +96,24 @@ export async function POST(req: NextRequest) {
     const { email, name, password } = body
 
     if (!email || !name || !password) {
-      return NextResponse.json(
+      let response = NextResponse.json(
         { success: false, error: 'Missing required fields' },
         { status: 400 }
       )
+      response = addCorsHeaders(response)
+      return response
     }
 
     // Check if user already exists
     const existingUser = await User.findOne({ email })
     if (existingUser) {
-      return NextResponse.json(
+      logger.warn('User already exists', { email })
+      let response = NextResponse.json(
         { success: false, error: 'User already exists' },
         { status: 409 }
       )
+      response = addCorsHeaders(response)
+      return response
     }
 
     // Hash password before storing
@@ -125,19 +146,24 @@ export async function POST(req: NextRequest) {
     const userWithoutPassword = user.toObject()
     delete userWithoutPassword.password
 
-    return NextResponse.json({ success: true, data: userWithoutPassword }, { status: 201 })
+    logger.info('User created successfully', { email })
+    let response = NextResponse.json({ success: true, data: userWithoutPassword }, { status: 201 })
+    response = addCorsHeaders(response)
+    return response
   } catch (error: any) {
-    console.error('Create user error:', error)
+    logger.error('Failed to create user', { error: error.message }, error as Error)
     // Log detailed error info for debugging
-    console.error('Error details:', {
+    logger.debug('Error details:', {
       message: error?.message,
       code: error?.code,
       name: error?.name
     })
-    return NextResponse.json(
+    let response = NextResponse.json(
       { success: false, error: error?.message || 'Internal server error' },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 

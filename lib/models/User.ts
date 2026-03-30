@@ -86,4 +86,10 @@ const UserSchema = new mongoose.Schema(
   }
 )
 
+// Add indexes for performance
+UserSchema.index({ email: 1 }) // Email already unique, but explicit index helps
+UserSchema.index({ isAdmin: 1 })
+UserSchema.index({ createdAt: -1 })
+UserSchema.index({ 'session.isActive': 1 })
+
 export default mongoose.models.User || mongoose.model('User', UserSchema)

@@ -95,5 +95,11 @@ ProductSchema.pre('save', function (next) {
   next()
 })
 
+// Add indexes for performance
+ProductSchema.index({ category: 1 })
+ProductSchema.index({ createdAt: -1 })
+ProductSchema.index({ name: 'text' })
+ProductSchema.index({ inStock: 1 })
+
 export default mongoose.models.Product ||
   mongoose.model<IProduct>('Product', ProductSchema)

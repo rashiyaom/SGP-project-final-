@@ -1,7 +1,14 @@
 import dbConnect from '@/lib/db/connect'
 import Appointment from '@/lib/models/Appointment'
 import { requireAuth } from '@/lib/middleware/auth'
+import { addCorsHeaders, handleCorsOptions } from '@/lib/middleware/cors'
+import { logger } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
+
+// Handle CORS preflight requests
+export async function OPTIONS(req: NextRequest) {
+  return handleCorsOptions(req)
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -35,16 +42,22 @@ export async function GET(req: NextRequest) {
 
     const appointments = await Appointment.find(query).sort({ date: -1 })
 
-    return NextResponse.json({
+    let response = NextResponse.json({
       success: true,
       data: appointments,
       count: appointments.length
     })
+    response = addCorsHeaders(response)
+    return response
   } catch (error: any) {
-    return NextResponse.json(
+    logger.error('Failed to fetch appointments', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 
@@ -109,15 +122,21 @@ export async function POST(req: NextRequest) {
 
     await appointment.save()
 
-    return Response.json(
+    let response = NextResponse.json(
       { success: true, data: appointment, message: 'Appointment created successfully' },
       { status: 201 }
     )
+    response = addCorsHeaders(response)
+    return response
   } catch (error: any) {
-    return Response.json(
+    logger.error('Failed to create appointment', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 
@@ -170,10 +189,14 @@ export async function PATCH(req: NextRequest) {
       message: 'Appointment updated successfully'
     })
   } catch (error: any) {
-    return NextResponse.json(
+    logger.error('Failed to update appointment', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 
@@ -208,12 +231,16 @@ export async function DELETE(req: NextRequest) {
 
     await Appointment.findByIdAndDelete(appointmentId)
 
-    return NextResponse.json({
+    let response = NextResponse.json({
       success: true,
       message: 'Appointment deleted successfully'
     })
+    response = addCorsHeaders(response)
+    return response
   } catch (error: any) {
-    return NextResponse.json(
+    logger.error('Failed to delete appointment', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
     )

@@ -2,6 +2,13 @@ import dbConnect from '@/lib/db/connect'
 import User from '@/lib/models/User'
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/middleware/auth'
+import { addCorsHeaders, handleCorsOptions } from '@/lib/middleware/cors'
+import { logger } from '@/lib/logger'
+
+// Handle CORS preflight requests
+export async function OPTIONS(req: NextRequest) {
+  return handleCorsOptions(req)
+}
 
 export async function GET(req: NextRequest) {
   try {
@@ -44,12 +51,15 @@ export async function GET(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: user.dreams || [] }, { status: 200 })
-  } catch (error) {
-    console.error('Get dreams error:', error)
-    return NextResponse.json(
+  } catch (error: any) {
+    logger.error('Failed to fetch dreams', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
 
@@ -98,11 +108,14 @@ export async function PUT(req: NextRequest) {
     }
 
     return NextResponse.json({ success: true, data: user.dreams }, { status: 200 })
-  } catch (error) {
-    console.error('Update dreams error:', error)
-    return NextResponse.json(
+  } catch (error: any) {
+    logger.error('Failed to update dreams', { error: error.message }, error as Error, 
+      req.headers.get('x-user-email') || undefined)
+    let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
     )
+    response = addCorsHeaders(response)
+    return response
   }
 }
