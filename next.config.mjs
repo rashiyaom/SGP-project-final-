@@ -10,8 +10,35 @@ const nextConfig = {
   images: {
     unoptimized: true,
   },
-  turbopack: {
-    root: dirname(fileURLToPath(import.meta.url)),
+  // ⚠️ Turbopack disabled due to memory issues - switch back after optimization
+  // turbopack: {
+  //   root: dirname(fileURLToPath(import.meta.url)),
+  // },
+  // ✅ Memory optimizations for development
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.optimization = {
+        ...config.optimization,
+        splitChunks: {
+          chunks: 'all',
+          cacheGroups: {
+            default: false,
+            vendors: false,
+            radui: {
+              test: /[\\/]node_modules[\\/]@radix-ui[\\/]/,
+              name: 'radui',
+              priority: 10,
+            },
+            common: {
+              minChunks: 2,
+              priority: 5,
+              reuseExistingChunk: true,
+            },
+          },
+        },
+      }
+    }
+    return config
   },
   // ✅ SECURITY: Add security headers
   async headers() {

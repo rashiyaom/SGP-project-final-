@@ -8,6 +8,17 @@
     "button-type": "off",
     "axe/name-role-value": "off",
     "axe/text-alternatives": "off",
-    "typescript-config/consistent-casing": "off"
+    "typescript-config/consistent-casing": "off",
+    "compat-api/css": [
+      "default",
+      {
+        "ignore": [
+          "user-select",
+          "orphans",
+          "widows",
+          "min-height: auto"
+        ]
+      }
+    ]
   }
 }

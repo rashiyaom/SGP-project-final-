@@ -36,3 +36,13 @@ test-connection.mongodb.js
 .DS_Store
 .AppleDouble
 .LSOverride
+
+# Large non-essential files
+*.html
+.vscode/
+.idea/
+*.cache
+.cache/
+
+# Temporary build files
+tsconfig.tsbuildinfo
