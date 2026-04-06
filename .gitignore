@@ -24,8 +24,9 @@ yarn-error.log*
 next-env.d.ts
 
 # ====== MARKDOWN FILES - DO NOT COMMIT =======
-# Ignore ALL markdown files in root directory
+# Ignore markdown files but allow HTML documentation
 *.md
+!SRS_Document.html
 
 # ====== TEMPORARY TEST FILES =======
 playground*.mongodb.js
@@ -36,13 +37,3 @@ test-connection.mongodb.js
 .DS_Store
 .AppleDouble
 .LSOverride
-
-# Large non-essential files
-*.html
-.vscode/
-.idea/
-*.cache
-.cache/
-
-# Temporary build files
-tsconfig.tsbuildinfo

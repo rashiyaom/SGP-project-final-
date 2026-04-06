@@ -1,0 +1,1970 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SGP Platform - Software Requirements Specification</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --primary: #1f2937;
+            --secondary: #6366f1;
+            --accent: #ec4899;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --gray-50: #f9fafb;
+            --gray-100: #f3f4f6;
+            --gray-200: #e5e7eb;
+            --gray-300: #d1d5db;
+            --gray-400: #9ca3af;
+            --gray-500: #6b7280;
+            --gray-600: #4b5563;
+            --gray-700: #374151;
+            --gray-800: #1f2937;
+            --gray-900: #111827;
+            --text-dark: #111827;
+            --text-light: #6b7280;
+            --bg-light: #ffffff;
+            --bg-dark: #f9fafb;
+        }
+
+        html.dark {
+            --text-dark: #f9fafb;
+            --text-light: #d1d5db;
+            --bg-light: #111827;
+            --bg-dark: #1f2937;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen', 'Ubuntu', 'Cantarell', sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-dark);
+            line-height: 1.6;
+            transition: background 0.3s, color 0.3s;
+        }
+
+        .container {
+            display: flex;
+            min-height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            position: fixed;
+            left: 0;
+            top: 0;
+            width: 280px;
+            height: 100vh;
+            background: var(--bg-light);
+            border-right: 1px solid var(--gray-200);
+            overflow-y: auto;
+            padding: 2rem 0;
+            z-index: 1000;
+        }
+
+        html.dark .sidebar {
+            background: var(--gray-900);
+            border-right-color: var(--gray-800);
+        }
+
+        .sidebar-header {
+            padding: 0 2rem 2rem;
+            border-bottom: 1px solid var(--gray-200);
+            margin-bottom: 1.5rem;
+        }
+
+        html.dark .sidebar-header {
+            border-bottom-color: var(--gray-800);
+        }
+
+        .sidebar-title {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 0.5rem;
+        }
+
+        .sidebar-version {
+            font-size: 0.875rem;
+            color: var(--text-light);
+        }
+
+        .sidebar-nav {
+            list-style: none;
+        }
+
+        .sidebar-nav li {
+            margin: 0;
+        }
+
+        .sidebar-nav a {
+            display: block;
+            padding: 0.75rem 2rem;
+            color: var(--text-dark);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: all 0.2s;
+            border-left: 3px solid transparent;
+        }
+
+        .sidebar-nav a:hover {
+            background: var(--bg-dark);
+            border-left-color: var(--secondary);
+            color: var(--secondary);
+        }
+
+        .sidebar-nav a.active {
+            background: var(--secondary);
+            background: rgba(99, 102, 241, 0.1);
+            border-left-color: var(--secondary);
+            color: var(--secondary);
+            font-weight: 600;
+        }
+
+        /* Main Content */
+        .main {
+            margin-left: 280px;
+            flex: 1;
+        }
+
+        .header {
+            background: linear-gradient(135deg, var(--secondary) 0%, var(--accent) 100%);
+            color: white;
+            padding: 4rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            right: -10%;
+            width: 500px;
+            height: 500px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+        }
+
+        .header-content {
+            position: relative;
+            z-index: 1;
+        }
+
+        .header h1 {
+            font-size: 3rem;
+            font-weight: 800;
+            margin-bottom: 0.5rem;
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .content {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+
+        /* Section Styles */
+        .section {
+            margin-bottom: 4rem;
+            page-break-inside: avoid;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--secondary);
+            margin-bottom: 1.5rem;
+            padding-bottom: 0.5rem;
+            border-bottom: 3px solid var(--secondary);
+        }
+
+        .subsection-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+            margin-top: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        .subsubsection-title {
+            font-size: 1.15rem;
+            font-weight: 600;
+            color: var(--gray-700);
+            margin-top: 1.5rem;
+            margin-bottom: 0.75rem;
+        }
+
+        html.dark .subsubsection-title {
+            color: var(--gray-300);
+        }
+
+        /* Text Styles */
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+            line-height: 1.8;
+        }
+
+        ul, ol {
+            margin-left: 2rem;
+            margin-bottom: 1rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.8;
+        }
+
+        .requirement {
+            background: var(--bg-dark);
+            border-left: 4px solid var(--secondary);
+            padding: 1rem 1.5rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        html.dark .requirement {
+            background: var(--gray-900);
+        }
+
+        .requirement-id {
+            font-weight: 700;
+            color: var(--secondary);
+            font-family: 'Monaco', 'Menlo', monospace;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            background: var(--bg-light);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+        }
+
+        html.dark table {
+            background: var(--gray-900);
+        }
+
+        thead {
+            background: var(--secondary);
+            color: white;
+        }
+
+        th, td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--gray-200);
+        }
+
+        html.dark th, html.dark td {
+            border-bottom-color: var(--gray-800);
+        }
+
+        tbody tr:hover {
+            background: var(--bg-dark);
+        }
+
+        html.dark tbody tr:hover {
+            background: var(--gray-800);
+        }
+
+        /* Code Block */
+        code {
+            background: var(--gray-100);
+            padding: 0.2rem 0.5rem;
+            border-radius: 0.3rem;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+            color: var(--accent);
+        }
+
+        html.dark code {
+            background: var(--gray-900);
+            color: #ec4899;
+        }
+
+        pre {
+            background: var(--gray-900);
+            color: #e5e7eb;
+            padding: 1.5rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            margin: 1.5rem 0;
+            line-height: 1.4;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.9rem;
+        }
+
+        /* Diagram Container */
+        .diagram {
+            background: var(--bg-light);
+            border: 2px solid var(--gray-200);
+            border-radius: 0.5rem;
+            padding: 2rem;
+            margin: 2rem 0;
+            text-align: center;
+            overflow-x: auto;
+        }
+
+        html.dark .diagram {
+            background: var(--gray-900);
+            border-color: var(--gray-800);
+        }
+
+        .mermaid {
+            display: flex;
+            justify-content: center;
+        }
+
+        /* Info Boxes */
+        .info-box {
+            background: rgba(99, 102, 241, 0.1);
+            border-left: 4px solid var(--secondary);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        .warning-box {
+            background: rgba(245, 158, 11, 0.1);
+            border-left: 4px solid var(--warning);
+            padding: 1.25rem;
+            margin: 1.5rem 0;
+            border-radius: 0.5rem;
+        }
+
+        /* Buttons */
+        .btn-group {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 2rem;
+            flex-wrap: wrap;
+        }
+
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 0.5rem;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: var(--secondary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+        }
+
+        .btn-secondary {
+            background: var(--gray-200);
+            color: var(--text-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--gray-300);
+        }
+
+        html.dark .btn-secondary {
+            background: var(--gray-700);
+            color: var(--text-light);
+        }
+
+        html.dark .btn-secondary:hover {
+            background: var(--gray-600);
+        }
+
+        /* Theme Toggle */
+        .theme-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: var(--secondary);
+            color: white;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s;
+            z-index: 999;
+        }
+
+        .theme-toggle:hover {
+            transform: scale(1.1);
+            box-shadow: 0 6px 20px rgba(99, 102, 241, 0.4);
+        }
+
+        /* Print Styles */
+        @media print {
+            .sidebar, .theme-toggle, .btn-group {
+                display: none !important;
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .section {
+                page-break-inside: avoid;
+            }
+
+            .section-title {
+                page-break-after: avoid;
+            }
+
+            .diagram {
+                page-break-inside: avoid;
+            }
+
+            body {
+                font-size: 12pt;
+                line-height: 1.5;
+            }
+
+            .header {
+                page-break-after: always;
+            }
+        }
+
+        /* Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+            height: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: var(--gray-100);
+        }
+
+        html.dark ::-webkit-scrollbar-track {
+            background: var(--gray-900);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--gray-300);
+            border-radius: 4px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-400);
+        }
+
+        html.dark ::-webkit-scrollbar-thumb {
+            background: var(--gray-700);
+        }
+
+        html.dark ::-webkit-scrollbar-thumb:hover {
+            background: var(--gray-600);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .sidebar {
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .sidebar.open {
+                transform: translateX(0);
+            }
+
+            .main {
+                margin-left: 0;
+            }
+
+            .header h1 {
+                font-size: 2rem;
+            }
+
+            .content {
+                padding: 2rem 1rem;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Sidebar Navigation -->
+        <nav class="sidebar">
+            <div class="sidebar-header">
+                <div class="sidebar-title">SGP Platform</div>
+                <div class="sidebar-version">SRS v1.0</div>
+            </div>
+            <ul class="sidebar-nav" id="sidebar-nav">
+                <li><a href="#introduction" class="nav-link">1. Introduction</a></li>
+                <li><a href="#overall-description" class="nav-link">2. Overall Description</a></li>
+                <li><a href="#system-features" class="nav-link">3. System Features</a></li>
+                <li><a href="#external-interfaces" class="nav-link">4. External Interfaces</a></li>
+                <li><a href="#functional-requirements" class="nav-link">5. Functional Requirements</a></li>
+                <li><a href="#non-functional" class="nav-link">6. Non-Functional Requirements</a></li>
+                <li><a href="#architecture" class="nav-link">7. Architecture</a></li>
+                <li><a href="#database" class="nav-link">8. Database Design</a></li>
+                <li><a href="#use-cases" class="nav-link">9. Use Cases</a></li>
+                <li><a href="#api-endpoints" class="nav-link">10. API Endpoints</a></li>
+                <li><a href="#data-flow" class="nav-link">11. Data Flow</a></li>
+                <li><a href="#future-enhancements" class="nav-link">12. Future Enhancements</a></li>
+            </ul>
+        </nav>
+
+        <!-- Main Content -->
+        <main class="main">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-content">
+                    <h1>SGP Platform</h1>
+                    <p>Software Requirements Specification (SRS) v1.0</p>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Control Buttons -->
+                <div class="btn-group">
+                    <button class="btn-primary" onclick="window.print()">📥 Download as PDF</button>
+                    <button class="btn-secondary" onclick="scrollToTop()">⬆ Back to Top</button>
+                </div>
+
+                <!-- 1. Introduction -->
+                <section class="section" id="introduction">
+                    <h2 class="section-title">1. Introduction</h2>
+
+                    <div class="subsection-title">1.1 Purpose</div>
+                    <p>This Software Requirements Specification (SRS) document describes the functional and non-functional requirements for the SGP Platform, a comprehensive e-commerce and interior design management system. It serves as the authoritative reference for developers, stakeholders, and quality assurance teams throughout the development lifecycle.</p>
+
+                    <div class="subsection-title">1.2 Scope</div>
+                    <p>The SGP Platform is a full-stack Next.js web application designed to facilitate:</p>
+                    <ul>
+                        <li>Product catalog management and e-commerce transactions</li>
+                        <li>Premium interior design booking and consultation services</li>
+                        <li>AI-powered room matching and design recommendations</li>
+                        <li>User authentication and profile management</li>
+                        <li>Shopping cart and order management</li>
+                        <li>Administrative dashboard for system management</li>
+                        <li>Message and communication system</li>
+                        <li>Gallery and inspiration content management</li>
+                    </ul>
+
+                    <div class="subsection-title">1.3 Definitions and Acronyms</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Term</th>
+                                <th>Definition</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>SPA</td>
+                                <td>Single Page Application</td>
+                            </tr>
+                            <tr>
+                                <td>API</td>
+                                <td>Application Programming Interface</td>
+                            </tr>
+                            <tr>
+                                <td>REST</td>
+                                <td>Representational State Transfer</td>
+                            </tr>
+                            <tr>
+                                <td>JWT</td>
+                                <td>JSON Web Token</td>
+                            </tr>
+                            <tr>
+                                <td>UI/UX</td>
+                                <td>User Interface / User Experience</td>
+                            </tr>
+                            <tr>
+                                <td>NoSQL</td>
+                                <td>Non-relational database</td>
+                            </tr>
+                            <tr>
+                                <td>CDN</td>
+                                <td>Content Delivery Network</td>
+                            </tr>
+                            <tr>
+                                <td>AI</td>
+                                <td>Artificial Intelligence</td>
+                            </tr>
+                            <tr>
+                                <td>CSP</td>
+                                <td>Content Security Policy</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">1.4 References</div>
+                    <ul>
+                        <li>IEEE Standard 830-1998: IEEE Guide to Software Requirements Specifications</li>
+                        <li>Next.js Documentation: https://nextjs.org/docs</li>
+                        <li>MongoDB Documentation: https://docs.mongodb.com</li>
+                        <li>React Documentation: https://react.dev</li>
+                        <li>RESTful API Best Practices</li>
+                    </ul>
+                </section>
+
+                <!-- 2. Overall Description -->
+                <section class="section" id="overall-description">
+                    <h2 class="section-title">2. Overall Description</h2>
+
+                    <div class="subsection-title">2.1 Product Perspective</div>
+                    <p>SGP Platform is an independent, modern web application that operates as a Software-as-a-Service (SaaS) solution. It integrates with multiple third-party services including:</p>
+                    <ul>
+                        <li><strong>MongoDB</strong>: Primary data persistence layer</li>
+                        <li><strong>Cloudinary</strong>: Image hosting and optimization</li>
+                        <li><strong>Nodemailer</strong>: Email communication service</li>
+                        <li><strong>Stripe/PayPal</strong>: Payment processing (future implementation)</li>
+                        <li><strong>WhatsApp Business API</strong>: Business communications</li>
+                        <li><strong>Sentry</strong>: Error tracking and monitoring</li>
+                    </ul>
+
+                    <div class="subsection-title">2.2 User Classes and Characteristics</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>User Class</th>
+                                <th>Characteristics</th>
+                                <th>Responsibilities</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td><strong>Customer</strong></td>
+                                <td>End users browsing and purchasing products or booking services</td>
+                                <td>Browse catalog, add to cart, manage wishlist, book appointments, view orders</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Admin</strong></td>
+                                <td>System administrators managing content and user data</td>
+                                <td>Manage products, appointments, users, orders, generate reports</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Designer</strong></td>
+                                <td>Interior design specialists providing consultation</td>
+                                <td>View appointments, provide design consultations, manage portfolio (future)</td>
+                            </tr>
+                            <tr>
+                                <td><strong>Guest</strong></td>
+                                <td>Unauthenticated users browsing the platform</td>
+                                <td>View products, explore inspirations, contact support</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">2.3 Operating Environment</div>
+                    <div class="info-box">
+                        <strong>Frontend:</strong>
+                        <ul>
+                            <li>Next.js 16.1.6 with React 19.2</li>
+                            <li>TypeScript for type safety</li>
+                            <li>Tailwind CSS for styling</li>
+                            <li>Radix UI component library</li>
+                        </ul>
+                        <strong>Backend:</strong>
+                        <ul>
+                            <li>Node.js runtime environment</li>
+                            <li>Next.js API routes for serverless functions</li>
+                            <li>MongoDB 8.23 for data persistence</li>
+                            <li>Mongoose ODM for schema management</li>
+                        </ul>
+                        <strong>Infrastructure:</strong>
+                        <ul>
+                            <li>Deployment: Vercel or AWS</li>
+                            <li>Database Hosting: MongoDB Atlas</li>
+                            <li>CDN: Cloudinary for media</li>
+                            <li>Monitoring: Sentry for error tracking</li>
+                        </ul>
+                    </div>
+
+                    <div class="subsection-title">2.4 Design and Implementation Constraints</div>
+                    <ul>
+                        <li><strong>Authentication:</strong> NextAuth.js for session management with JWT-based tokens</li>
+                        <li><strong>Security:</strong> HTTPS only, CORS protection, rate limiting, CSP headers</li>
+                        <li><strong>Performance:</strong> Lazy loading, image optimization, code splitting</li>
+                        <li><strong>Scalability:</strong> Stateless design for horizontal scaling</li>
+                        <li><strong>Compliance:</strong> GDPR data protection, payment PCI-DSS compliance (future)</li>
+                    </ul>
+
+                    <div class="subsection-title">2.5 Assumptions and Dependencies</div>
+                    <ul>
+                        <li>Users have modern web browsers with JavaScript enabled</li>
+                        <li>Internet connectivity is available for all transactions</li>
+                        <li>Third-party services (MongoDB, Cloudinary) remain available</li>
+                        <li>Email service is operational for notifications</li>
+                        <li>Payment gateway integration will be implemented before production</li>
+                    </ul>
+                </section>
+
+                <!-- 3. System Features -->
+                <section class="section" id="system-features">
+                    <h2 class="section-title">3. System Features</h2>
+
+                    <div class="subsection-title">3.1 Authentication & Authorization</div>
+                    <p>The system implements a comprehensive authentication system with role-based access control:</p>
+                    <ul>
+                        <li>User registration with email verification</li>
+                        <li>Secure password hashing using bcryptjs</li>
+                        <li>Session-based authentication with NextAuth.js</li>
+                        <li>Role-based access control (Customer, Admin, Designer)</li>
+                        <li>Token refresh mechanism for session persistence</li>
+                        <li>Logout functionality with session invalidation</li>
+                    </ul>
+
+                    <div class="subsection-title">3.2 Product Management</div>
+                    <ul>
+                        <li>Dynamic product catalog with filtering and search</li>
+                        <li>Detailed product pages with image galleries</li>
+                        <li>Product categorization and tagging system</li>
+                        <li>Admin interface for CRUD operations on products</li>
+                        <li>Inventory tracking (future implementation)</li>
+                        <li>Product recommendations engine (future)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.3 E-Commerce</div>
+                    <ul>
+                        <li>Shopping cart with session persistence</li>
+                        <li>Wishlist functionality for saved items</li>
+                        <li>Checkout process with order summary</li>
+                        <li>Order tracking and status updates</li>
+                        <li>Invoice generation and email delivery</li>
+                        <li>Payment integration (Stripe/PayPal - future)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.4 Booking & Appointments</div>
+                    <ul>
+                        <li>Premium booking system for design consultations</li>
+                        <li>Calendar-based appointment scheduling</li>
+                        <li>Booking status tracking and updates</li>
+                        <li>Designer availability management</li>
+                        <li>Automated appointment reminders via WhatsApp</li>
+                        <li>Admin approval workflow for bookings</li>
+                    </ul>
+
+                    <div class="subsection-title">3.5 AI-Powered Features</div>
+                    <ul>
+                        <li>AI Room Match tool for design recommendations</li>
+                        <li>Image analysis for interior design matching</li>
+                        <li>Personalized product suggestions</li>
+                        <li>Style preference detection (future)</li>
+                        <li>Budget optimization recommendations (future)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.6 Content Management</div>
+                    <ul>
+                        <li>Inspiration gallery with curated design images</li>
+                        <li>Mood board creation for users</li>
+                        <li>Collection management system</li>
+                        <li>Style guides and design trends</li>
+                        <li>Before/after transformation showcase</li>
+                    </ul>
+
+                    <div class="subsection-title">3.7 Communication</div>
+                    <ul>
+                        <li>In-platform messaging system</li>
+                        <li>Email notifications for orders and appointments</li>
+                        <li>WhatsApp integration for business communications</li>
+                        <li>Contact form with admin notification</li>
+                        <li>Support ticket system (future)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.8 Administrative Functions</div>
+                    <ul>
+                        <li>Comprehensive admin dashboard with analytics</li>
+                        <li>User management and role assignment</li>
+                        <li>Order and appointment management</li>
+                        <li>Content moderation and approval workflows</li>
+                        <li>System configuration and settings</li>
+                        <li>Report generation and data export (Excel/PDF)</li>
+                    </ul>
+
+                    <div class="subsection-title">3.9 User Profile Management</div>
+                    <ul>
+                        <li>User profile creation and editing</li>
+                        <li>Profile picture upload with Cloudinary</li>
+                        <li>Address book management</li>
+                        <li>Order history and tracking</li>
+                        <li>Appointment history view</li>
+                        <li>Wishlist and saved items management</li>
+                    </ul>
+
+                    <div class="subsection-title">3.10 Utilities</div>
+                    <ul>
+                        <li>Interactive design calculator</li>
+                        <li>Room measurement tools</li>
+                        <li>Material cost estimator</li>
+                        <li>Design timeline planner</li>
+                    </ul>
+                </section>
+
+                <!-- 4. External Interface Requirements -->
+                <section class="section" id="external-interfaces">
+                    <h2 class="section-title">4. External Interface Requirements</h2>
+
+                    <div class="subsection-title">4.1 User Interface Requirements</div>
+                    <p>The application implements a modern, responsive UI with the following characteristics:</p>
+                    <ul>
+                        <li><strong>Responsive Design:</strong> Mobile-first approach supporting all screen sizes (320px - 4K)</li>
+                        <li><strong>Accessibility:</strong> WCAG 2.1 AA compliance with keyboard navigation and screen reader support</li>
+                        <li><strong>Theming:</strong> Light and dark mode support using CSS variables and next-themes</li>
+                        <li><strong>Component Library:</strong> Radix UI for consistent, accessible components</li>
+                        <li><strong>Animation:</strong> Framer Motion for smooth, performant animations</li>
+                        <li><strong>Layout:</strong> Responsive grid and flexbox layouts using Tailwind CSS</li>
+                    </ul>
+
+                    <div class="subsection-title">4.2 Hardware Interface Requirements</div>
+                    <ul>
+                        <li>No specialized hardware required</li>
+                        <li>Supports standard input devices: keyboard, mouse, touchscreen</li>
+                        <li>Supports high-resolution displays up to 5K</li>
+                        <li>Camera access for AI room matching feature (requires user permission)</li>
+                    </ul>
+
+                    <div class="subsection-title">4.3 Software Interface Requirements</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Service</th>
+                                <th>Version</th>
+                                <th>Purpose</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>MongoDB</td>
+                                <td>4.0+</td>
+                                <td>Primary data store</td>
+                            </tr>
+                            <tr>
+                                <td>Cloudinary</td>
+                                <td>Latest</td>
+                                <td>Image hosting and transformation</td>
+                            </tr>
+                            <tr>
+                                <td>Nodemailer</td>
+                                <td>6.0+</td>
+                                <td>Email service</td>
+                            </tr>
+                            <tr>
+                                <td>WhatsApp Business API</td>
+                                <td>Latest</td>
+                                <td>Business messaging</td>
+                            </tr>
+                            <tr>
+                                <td>Sentry</td>
+                                <td>Latest</td>
+                                <td>Error tracking</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">4.4 Communication Interface Requirements</div>
+                    <ul>
+                        <li><strong>HTTP/HTTPS:</strong> RESTful API endpoints over secure HTTPS connections</li>
+                        <li><strong>CORS:</strong> Cross-Origin Resource Sharing enabled for specified domains</li>
+                        <li><strong>Rate Limiting:</strong> API endpoints protected with rate limiting (100 requests/minute per IP)</li>
+                        <li><strong>Authentication:</strong> Bearer token authentication with JWT</li>
+                        <li><strong>Content-Type:</strong> JSON for all API communication</li>
+                        <li><strong>Security Headers:</strong> CSP, X-Frame-Options, X-Content-Type-Options</li>
+                    </ul>
+                </section>
+
+                <!-- 5. Functional Requirements -->
+                <section class="section" id="functional-requirements">
+                    <h2 class="section-title">5. Functional Requirements</h2>
+
+                    <div class="subsection-title">5.1 User Authentication Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.1:</span> System shall provide user registration with email validation
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.2:</span> System shall enforce strong password requirements (min 8 characters, mixed case, numbers, symbols)
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.3:</span> System shall hash passwords using bcryptjs before storage
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.4:</span> System shall provide login with email and password
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.5:</span> System shall maintain user sessions with automatic timeout after 30 minutes of inactivity
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.6:</span> System shall provide password reset functionality via email
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-1.7:</span> System shall enforce role-based access control (Customer, Admin, Designer)
+                    </div>
+
+                    <div class="subsection-title">5.2 Product Management Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-2.1:</span> System shall allow admins to create products with name, description, price, and images
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-2.2:</span> System shall support product categorization and filtering
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-2.3:</span> System shall display product details including specifications and dimensions
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-2.4:</span> System shall maintain product inventory (future: real-time availability)
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-2.5:</span> System shall provide product search functionality
+                    </div>
+
+                    <div class="subsection-title">5.3 Shopping Cart Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-3.1:</span> System shall allow users to add/remove products from cart
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-3.2:</span> System shall persist cart data across sessions
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-3.3:</span> System shall calculate subtotal, taxes, and total dynamically
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-3.4:</span> System shall support discount codes and coupon application
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-3.5:</span> System shall provide cart abandonment recovery via email
+                    </div>
+
+                    <div class="subsection-title">5.4 Order Management Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-4.1:</span> System shall create orders from checkout process
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-4.2:</span> System shall track order status (Pending, Confirmed, Shipped, Delivered)
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-4.3:</span> System shall send order confirmation email to customer
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-4.4:</span> System shall generate and email invoices
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-4.5:</span> System shall maintain order history accessible to users
+                    </div>
+
+                    <div class="subsection-title">5.5 Booking Management Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-5.1:</span> System shall allow customers to book premium design consultations
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-5.2:</span> System shall prevent double-booking of appointments
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-5.3:</span> System shall send appointment reminders via WhatsApp
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-5.4:</span> System shall allow admins to approve/reject bookings
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-5.5:</span> System shall track booking status and history
+                    </div>
+
+                    <div class="subsection-title">5.6 Wishlist Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-6.1:</span> System shall allow users to add/remove items from wishlist
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-6.2:</span> System shall persist wishlist data per user account
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-6.3:</span> System shall allow sharing of wishlists with other users
+                    </div>
+
+                    <div class="subsection-title">5.7 Admin Dashboard Requirements</div>
+
+                    <div class="requirement">
+                        <span class="requirement-id">FR-7.1:</span> System shall provide admin dashboard with key metrics (orders, revenue, users)
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-7.2:</span> System shall display sales analytics with charts and graphs
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-7.3:</span> System shall allow data export to Excel/PDF formats
+                    </div>
+                    <div class="requirement">
+                        <span class="requirement-id">FR-7.4:</span> System shall provide user management interface
+                    </div>
+                </section>
+
+                <!-- 6. Non-Functional Requirements -->
+                <section class="section" id="non-functional">
+                    <h2 class="section-title">6. Non-Functional Requirements</h2>
+
+                    <div class="subsection-title">6.1 Performance Requirements</div>
+                    <ul>
+                        <li><strong>Page Load Time:</strong> Maximum 3 seconds on 3G network (FCP)</li>
+                        <li><strong>API Response Time:</strong> 95th percentile under 200ms for read operations, 500ms for write operations</li>
+                        <li><strong>Database Query Performance:</strong> All queries must complete within 100ms on indexed columns</li>
+                        <li><strong>Concurrent Users:</strong> Support minimum 1000 concurrent users without degradation</li>
+                        <li><strong>Throughput:</strong> Minimum 100 requests/second per instance</li>
+                        <li><strong>Image Optimization:</strong> All images served at appropriate sizes and formats (WebP when supported)</li>
+                    </ul>
+
+                    <div class="subsection-title">6.2 Security Requirements</div>
+                    <ul>
+                        <li><strong>Encryption:</strong> All data in transit encrypted with TLS 1.3</li>
+                        <li><strong>Authentication:</strong> Multi-layer authentication with JWT and session tokens</li>
+                        <li><strong>Authorization:</strong> Strict role-based access control at all endpoints</li>
+                        <li><strong>SQL Injection Prevention:</strong> Parameterized queries and ORM usage</li>
+                        <li><strong>XSS Prevention:</strong> Content Security Policy headers and input sanitization</li>
+                        <li><strong>CSRF Protection:</strong> CSRF tokens for state-changing operations</li>
+                        <li><strong>Rate Limiting:</strong> API rate limiting to prevent abuse</li>
+                        <li><strong>Data Privacy:</strong> GDPR compliance with user data deletion and export capabilities</li>
+                        <li><strong>Password Security:</strong> Bcrypt hashing with salt rounds ≥ 10</li>
+                        <li><strong>Secure Headers:</strong> X-Content-Type-Options, X-Frame-Options, X-XSS-Protection</li>
+                    </ul>
+
+                    <div class="subsection-title">6.3 Availability & Reliability</div>
+                    <ul>
+                        <li><strong>Uptime SLA:</strong> 99.5% availability (target 4.35 hours/month max downtime)</li>
+                        <li><strong>Recovery Time Objective (RTO):</strong> 15 minutes maximum</li>
+                        <li><strong>Recovery Point Objective (RPO):</strong> 1 hour maximum data loss acceptable</li>
+                        <li><strong>Backup Strategy:</strong> Daily incremental backups with weekly full backups</li>
+                        <li><strong>Failover:</strong> Automatic failover to backup infrastructure within 5 minutes</li>
+                        <li><strong>Monitoring:</strong> Real-time monitoring with alerting for critical issues</li>
+                    </ul>
+
+                    <div class="subsection-title">6.4 Scalability Requirements</div>
+                    <ul>
+                        <li><strong>Horizontal Scaling:</strong> Stateless architecture supporting horizontal scaling</li>
+                        <li><strong>Database Scaling:</strong> MongoDB replica sets for read scaling</li>
+                        <li><strong>CDN Integration:</strong> Static assets served from CDN for global performance</li>
+                        <li><strong>Caching Strategy:</strong> Multi-layer caching (browser, CDN, application, database)</li>
+                        <li><strong>Load Balancing:</strong> Automatic load distribution across servers</li>
+                    </ul>
+
+                    <div class="subsection-title">6.5 Usability Requirements</div>
+                    <ul>
+                        <li><strong>Interface Clarity:</strong> Intuitive navigation with clear visual hierarchy</li>
+                        <li><strong>Accessibility:</strong> WCAG 2.1 AA compliance for users with disabilities</li>
+                        <li><strong>Mobile Responsiveness:</strong> Full functionality on devices from 320px width</li>
+                        <li><strong>Error Handling:</strong> Clear error messages with actionable solutions</li>
+                        <li><strong>Help & Documentation:</strong> In-app help, FAQs, and user guides</li>
+                        <li><strong>Dark Mode:</strong> Optional dark theme for comfortable viewing</li>
+                    </ul>
+
+                    <div class="subsection-title">6.6 Maintainability Requirements</div>
+                    <ul>
+                        <li><strong>Code Documentation:</strong> JSDoc comments for all functions and complex logic</li>
+                        <li><strong>Testing Coverage:</strong> Minimum 80% code coverage with unit and integration tests</li>
+                        <li><strong>Version Control:</strong> Git with semantic versioning for releases</li>
+                        <li><strong>CI/CD Pipeline:</strong> Automated build, test, and deployment</li>
+                        <li><strong>Logging:</strong> Comprehensive logging with multiple levels (debug, info, warn, error)</li>
+                        <li><strong>Monitoring:</strong> Application performance monitoring and error tracking</li>
+                    </ul>
+
+                    <div class="subsection-title">6.7 Compliance Requirements</div>
+                    <ul>
+                        <li>GDPR compliance for user data handling</li>
+                        <li>PCI-DSS compliance for payment data (future implementation)</li>
+                        <li>WCAG 2.1 for accessibility</li>
+                        <li>Terms of Service and Privacy Policy compliance</li>
+                    </ul>
+                </section>
+
+                <!-- 7. Architecture -->
+                <section class="section" id="architecture">
+                    <h2 class="section-title">7. Architecture</h2>
+
+                    <div class="subsection-title">7.1 System Architecture Diagram</div>
+                    <div class="diagram">
+                        <div class="mermaid">
+graph TB
+    Client[Client Browser]
+    CDN[Cloudinary CDN]
+    NextApp[Next.js App<br/>Frontend + API Routes]
+    MongoDB[(MongoDB<br/>Database)]
+    Services[Third-party Services<br/>Stripe, WhatsApp, Email]
+    Cache[Redis Cache<br/>Session Store]
+    Monitor[Sentry<br/>Monitoring]
+
+    Client -->|HTTP/HTTPS| NextApp
+    NextApp -->|Images| CDN
+    NextApp -->|Query| MongoDB
+    NextApp -->|Integration| Services
+    NextApp -->|Session| Cache
+    NextApp -->|Errors| Monitor
+    Client -->|Static Assets| CDN
+
+    style Client fill:#6366f1,color:#fff
+    style NextApp fill:#10b981,color:#fff
+    style MongoDB fill:#f59e0b,color:#fff
+    style Services fill:#ec4899,color:#fff
+    style CDN fill:#8b5cf6,color:#fff
+    style Cache fill:#06b6d4,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">7.2 Application Layers</div>
+                    <div class="info-box">
+                        <strong>Presentation Layer:</strong> Next.js React components, CSS-in-JS with Tailwind, Radix UI components
+                        <br><br>
+                        <strong>Business Logic Layer:</strong> React hooks, context APIs, utility functions, validation logic
+                        <br><br>
+                        <strong>API Layer:</strong> Next.js API routes with authentication middleware, request validation, error handling
+                        <br><br>
+                        <strong>Data Access Layer:</strong> Mongoose models with schema validation, database indexing, query optimization
+                        <br><br>
+                        <strong>Integration Layer:</strong> Third-party service integrations (Cloudinary, Email, WhatsApp, Payment)
+                    </div>
+
+                    <div class="subsection-title">7.3 Technology Stack</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Layer</th>
+                                <th>Technology</th>
+                                <th>Version</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>Frontend Framework</td>
+                                <td>Next.js</td>
+                                <td>16.1.6</td>
+                            </tr>
+                            <tr>
+                                <td>React Library</td>
+                                <td>React</td>
+                                <td>19.2.0</td>
+                            </tr>
+                            <tr>
+                                <td>Language</td>
+                                <td>TypeScript</td>
+                                <td>Latest</td>
+                            </tr>
+                            <tr>
+                                <td>Styling</td>
+                                <td>Tailwind CSS</td>
+                                <td>Latest</td>
+                            </tr>
+                            <tr>
+                                <td>UI Components</td>
+                                <td>Radix UI</td>
+                                <td>Latest</td>
+                            </tr>
+                            <tr>
+                                <td>Animation</td>
+                                <td>Framer Motion</td>
+                                <td>12.29.2</td>
+                            </tr>
+                            <tr>
+                                <td>Database</td>
+                                <td>MongoDB</td>
+                                <td>4.0+</td>
+                            </tr>
+                            <tr>
+                                <td>ODM</td>
+                                <td>Mongoose</td>
+                                <td>8.23.0</td>
+                            </tr>
+                            <tr>
+                                <td>Authentication</td>
+                                <td>NextAuth.js</td>
+                                <td>Latest</td>
+                            </tr>
+                            <tr>
+                                <td>Image Hosting</td>
+                                <td>Cloudinary</td>
+                                <td>Latest</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">7.4 Design Patterns</div>
+                    <ul>
+                        <li><strong>MVC Pattern:</strong> Separation of concerns with Models (MongoDB schemas), Views (React components), Controllers (API routes)</li>
+                        <li><strong>Context API Pattern:</strong> Global state management for auth, cart, and dreams contexts</li>
+                        <li><strong>Middleware Pattern:</strong> Authentication, CORS, rate limiting, request logging middleware</li>
+                        <li><strong>Factory Pattern:</strong> Dynamic component creation based on data types</li>
+                        <li><strong>Observer Pattern:</strong> Event-driven architecture for real-time updates</li>
+                        <li><strong>Repository Pattern:</strong> Data access abstraction through Mongoose models</li>
+                    </ul>
+                </section>
+
+                <!-- 8. Database Design -->
+                <section class="section" id="database">
+                    <h2 class="section-title">8. Database Design</h2>
+
+                    <div class="subsection-title">8.1 Entity Relationship Diagram</div>
+                    <div class="diagram">
+                        <div class="mermaid">
+erDiagram
+    USER ||--o{ ORDER : places
+    USER ||--o{ APPOINTMENT : books
+    USER ||--o{ REVIEW : writes
+    USER ||--o{ WISHLIST : maintains
+    PRODUCT ||--o{ ORDER_ITEM : contains
+    PRODUCT ||--o{ REVIEW : receives
+    PRODUCT ||--o{ WISHLIST : "added to"
+    ORDER ||--o{ ORDER_ITEM : contains
+    APPOINTMENT ||--o{ DESIGNER : assigned
+    COLLECTION ||--o{ PRODUCT : includes
+
+    USER {
+        string _id
+        string email
+        string name
+        string password
+        string role
+        string avatar
+        string phone
+        timestamp createdAt
+        timestamp updatedAt
+    }
+
+    PRODUCT {
+        string _id
+        string name
+        text description
+        number price
+        number stock
+        array images
+        string category
+        array tags
+        number rating
+        timestamp createdAt
+    }
+
+    ORDER {
+        string _id
+        string userId
+        array items
+        number total
+        string status
+        string paymentMethod
+        timestamp createdAt
+    }
+
+    APPOINTMENT {
+        string _id
+        string userId
+        string designerId
+        timestamp date
+        string status
+        text notes
+        number price
+        timestamp createdAt
+    }
+
+    WISHLIST {
+        string _id
+        string userId
+        array productIds
+        timestamp createdAt
+    }
+
+    REVIEW {
+        string _id
+        string productId
+        string userId
+        number rating
+        text comment
+        timestamp createdAt
+    }
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">8.2 Core Collections Schema</div>
+
+                    <div class="subsubsection-title">8.2.1 Users Collection</div>
+                    <pre><code>{
+  _id: ObjectId,
+  email: String (unique),
+  name: String,
+  password: String (hashed),
+  role: String (enum: ['customer', 'admin', 'designer']),
+  avatar: String (URL),
+  phone: String,
+  address: {
+    street: String,
+    city: String,
+    state: String,
+    zipcode: String,
+    country: String
+  },
+  preferences: {
+    notifications: Boolean,
+    newsletter: Boolean,
+    darkMode: Boolean
+  },
+  createdAt: Timestamp,
+  updatedAt: Timestamp,
+  lastLogin: Timestamp
+}</code></pre>
+
+                    <div class="subsubsection-title">8.2.2 Products Collection</div>
+                    <pre><code>{
+  _id: ObjectId,
+  name: String,
+  description: String,
+  price: Number,
+  discount: Number,
+  stock: Number,
+  images: [String] (Cloudinary URLs),
+  category: String (ObjectId reference),
+  tags: [String],
+  specifications: {
+    dimensions: {
+      width: Number,
+      height: Number,
+      depth: Number
+    },
+    material: String,
+    color: String,
+    weight: Number
+  },
+  rating: {
+    average: Number,
+    count: Number
+  },
+  isActive: Boolean,
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}</code></pre>
+
+                    <div class="subsubsection-title">8.2.3 Orders Collection</div>
+                    <pre><code>{
+  _id: ObjectId,
+  userId: ObjectId (reference to User),
+  items: [{
+    productId: ObjectId,
+    quantity: Number,
+    price: Number,
+    subtotal: Number
+  }],
+  subtotal: Number,
+  tax: Number,
+  discount: Number,
+  total: Number,
+  status: String (enum: ['pending', 'confirmed', 'shipped', 'delivered', 'cancelled']),
+  paymentMethod: String,
+  paymentStatus: String,
+  shippingAddress: {
+    street: String,
+    city: String,
+    state: String,
+    zipcode: String,
+    country: String
+  },
+  trackingNumber: String,
+  notes: String,
+  createdAt: Timestamp,
+  updatedAt: Timestamp,
+  shippedAt: Timestamp,
+  deliveredAt: Timestamp
+}</code></pre>
+
+                    <div class="subsubsection-title">8.2.4 Appointments Collection</div>
+                    <pre><code>{
+  _id: ObjectId,
+  userId: ObjectId (reference to User),
+  designerId: ObjectId (reference to Designer User),
+  appointmentDate: Timestamp,
+  duration: Number (minutes),
+  status: String (enum: ['pending', 'approved', 'rejected', 'completed', 'cancelled']),
+  serviceType: String,
+  roomType: String,
+  budget: Number,
+  notes: String,
+  attachments: [String] (image URLs),
+  reminderSent: Boolean,
+  createdAt: Timestamp,
+  updatedAt: Timestamp
+}</code></pre>
+
+                    <div class="subsection-title">8.3 Indexes</div>
+                    <ul>
+                        <li>Users: unique index on email, index on phone</li>
+                        <li>Products: index on category, name (text search), tags</li>
+                        <li>Orders: index on userId, status, createdAt</li>
+                        <li>Appointments: compound index on userId and appointmentDate</li>
+                    </ul>
+                </section>
+
+                <!-- 9. Use Cases -->
+                <section class="section" id="use-cases">
+                    <h2 class="section-title">9. Use Cases</h2>
+
+                    <div class="subsection-title">9.1 Use Case Diagram</div>
+                    <div class="diagram">
+                        <div class="mermaid">
+graph TB
+    Customer[Customer]
+    Admin[Admin]
+    Designer[Designer]
+    System[SGP Platform]
+
+    Customer -->|UC-1| Browse[Browse Products]
+    Customer -->|UC-2| AddCart[Add to Cart]
+    Customer -->|UC-3| Checkout[Checkout & Order]
+    Customer -->|UC-4| BookService[Book Service]
+    Customer -->|UC-5| ViewHistory[View Order History]
+
+    Admin -->|UC-6| ManageProducts[Manage Products]
+    Admin -->|UC-7| ManageOrders[Manage Orders]
+    Admin -->|UC-8| ManageUsers[Manage Users]
+    Admin -->|UC-9| ViewReports[View Analytics]
+
+    Designer -->|UC-10| ViewAppointments[View Appointments]
+    Designer -->|UC-11| UpdateProfile[Update Portfolio]
+
+    style Customer fill:#6366f1,color:#fff
+    style Admin fill:#ec4899,color:#fff
+    style Designer fill:#10b981,color:#fff
+    style System fill:#f59e0b,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">9.2 Key Use Cases</div>
+
+                    <div class="info-box">
+                        <strong>Use Case UC-1: Browse Products</strong>
+                        <br>
+                        <strong>Actor:</strong> Customer
+                        <br>
+                        <strong>Precondition:</strong> Customer is on product page
+                        <br>
+                        <strong>Main Flow:</strong>
+                        <ol>
+                            <li>System displays product catalog</li>
+                            <li>Customer filters by category, price range</li>
+                            <li>Customer sorts by popularity, price</li>
+                            <li>Customer views product details</li>
+                            <li>System shows product images, specifications, reviews</li>
+                        </ol>
+                        <strong>Postcondition:</strong> Customer has product information
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Use Case UC-3: Checkout & Order</strong>
+                        <br>
+                        <strong>Actor:</strong> Customer
+                        <br>
+                        <strong>Precondition:</strong> Customer has items in cart, authenticated
+                        <br>
+                        <strong>Main Flow:</strong>
+                        <ol>
+                            <li>Customer proceeds to checkout</li>
+                            <li>System displays order summary</li>
+                            <li>Customer enters/confirms shipping address</li>
+                            <li>Customer selects payment method</li>
+                            <li>System processes payment (future)</li>
+                            <li>System creates order and sends confirmation email</li>
+                            <li>System clears customer's cart</li>
+                        </ol>
+                        <strong>Postcondition:</strong> Order created, customer receives confirmation
+                    </div>
+
+                    <div class="info-box">
+                        <strong>Use Case UC-4: Book Service</strong>
+                        <br>
+                        <strong>Actor:</strong> Customer
+                        <br>
+                        <strong>Precondition:</strong> Customer is authenticated
+                        <br>
+                        <strong>Main Flow:</strong>
+                        <ol>
+                            <li>Customer navigates to booking page</li>
+                            <li>System displays available designers</li>
+                            <li>Customer selects date and time</li>
+                            <li>System checks availability</li>
+                            <li>Customer provides service details (room type, budget)</li>
+                            <li>System creates booking request</li>
+                            <li>Admin reviews and approves booking</li>
+                            <li>System sends confirmation to customer</li>
+                        </ol>
+                        <strong>Postcondition:</strong> Appointment scheduled, reminders configured
+                    </div>
+                </section>
+
+                <!-- 10. API Endpoints -->
+                <section class="section" id="api-endpoints">
+                    <h2 class="section-title">10. API Endpoints</h2>
+
+                    <div class="subsection-title">10.1 Authentication Endpoints</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Auth Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>/api/auth/register</td>
+                                <td>POST</td>
+                                <td>Register new user</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>/api/auth/login</td>
+                                <td>POST</td>
+                                <td>Authenticate user</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>/api/auth/logout</td>
+                                <td>POST</td>
+                                <td>Logout user</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/auth/profile</td>
+                                <td>GET</td>
+                                <td>Get current user profile</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">10.2 Product Endpoints</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Auth Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>/api/products</td>
+                                <td>GET</td>
+                                <td>List all products with filters</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>/api/products</td>
+                                <td>POST</td>
+                                <td>Create new product (Admin only)</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/products/[id]</td>
+                                <td>GET</td>
+                                <td>Get product details</td>
+                                <td>No</td>
+                            </tr>
+                            <tr>
+                                <td>/api/products/[id]</td>
+                                <td>PUT</td>
+                                <td>Update product (Admin only)</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/products/[id]</td>
+                                <td>DELETE</td>
+                                <td>Delete product (Admin only)</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">10.3 Order Endpoints</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Auth Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>/api/orders</td>
+                                <td>POST</td>
+                                <td>Create new order</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/orders</td>
+                                <td>GET</td>
+                                <td>List user's orders</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/orders/[id]</td>
+                                <td>GET</td>
+                                <td>Get order details</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/orders/[id]</td>
+                                <td>PUT</td>
+                                <td>Update order status (Admin)</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/orders/status/[id]</td>
+                                <td>GET</td>
+                                <td>Track order status</td>
+                                <td>No</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">10.4 Appointment Endpoints</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Auth Required</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>/api/appointments</td>
+                                <td>POST</td>
+                                <td>Create appointment booking</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/appointments</td>
+                                <td>GET</td>
+                                <td>List user's appointments</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/appointments/[id]</td>
+                                <td>GET</td>
+                                <td>Get appointment details</td>
+                                <td>Yes</td>
+                            </tr>
+                            <tr>
+                                <td>/api/appointments/[id]</td>
+                                <td>PUT</td>
+                                <td>Update appointment (Admin/Owner)</td>
+                                <td>Yes</td>
+                            </tr>
+                        </tbody>
+                    </table>
+
+                    <div class="subsection-title">10.5 Health & Monitoring</div>
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Endpoint</th>
+                                <th>Method</th>
+                                <th>Description</th>
+                                <th>Response</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr>
+                                <td>/api/health</td>
+                                <td>GET</td>
+                                <td>Health check endpoint</td>
+                                <td>{ status, timestamp, uptime, environment }</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </section>
+
+                <!-- 11. Data Flow -->
+                <section class="section" id="data-flow">
+                    <h2 class="section-title">11. Data Flow Diagrams</h2>
+
+                    <div class="subsection-title">11.1 Order Processing Data Flow</div>
+                    <div class="diagram">
+                        <div class="mermaid">
+graph TD
+    Customer[Customer]
+    UI[UI/Frontend]
+    API[API Endpoint]
+    Validation[Validate Order]
+    Payment[Process Payment]
+    DB[(Database)]
+    Email[Email Service]
+    WhatsApp[WhatsApp Service]
+
+    Customer -->|Submit Order| UI
+    UI -->|POST /api/orders| API
+    API -->|Validate Items| Validation
+    Validation -->|Check Stock| DB
+    Validation -->|Calculate Total| API
+    API -->|Process Payment| Payment
+    Payment -->|Save Order| DB
+    DB -->|Order Created| Email
+    Email -->|Send Confirmation| Customer
+    DB -->|Appointment Created| WhatsApp
+    WhatsApp -->|Send Reminder| Customer
+
+    style Customer fill:#6366f1,color:#fff
+    style API fill:#10b981,color:#fff
+    style DB fill:#f59e0b,color:#fff
+                        </div>
+                    </div>
+
+                    <div class="subsection-title">11.1.1 Detailed Order Flow</div>
+                    <div class="info-box">
+                        <strong>Step 1: Cart Submission</strong><br>
+                        Customer submits cart from frontend
+                        <br><br>
+                        <strong>Step 2: Validation</strong><br>
+                        - Verify authentication
+                        - Validate cart items exist in database
+                        - Check inventory availability
+                        - Calculate taxes and totals
+                        <br><br>
+                        <strong>Step 3: Payment Processing</strong><br>
+                        - Create payment request (future Stripe integration)
+                        - Process payment securely
+                        - Capture payment ID
+                        <br><br>
+                        <strong>Step 4: Order Creation</strong><br>
+                        - Create order document in MongoDB
+                        - Update product inventory
+                        - Clear user's cart
+                        <br><br>
+                        <strong>Step 5: Notifications</strong><br>
+                        - Send order confirmation email
+                        - Send WhatsApp notification (if applicable)
+                        <br><br>
+                        <strong>Step 6: Response</strong><br>
+                        - Return order details to frontend
+                        - Redirect to order confirmation page
+                    </div>
+
+                    <div class="subsection-title">11.2 User Authentication Flow</div>
+                    <div class="diagram">
+                        <div class="mermaid">
+sequenceDiagram
+    participant User
+    participant Frontend
+    participant NextAuth
+    participant Backend
+    participant Database
+
+    User->>Frontend: Enter credentials
+    Frontend->>NextAuth: Request login
+    NextAuth->>Backend: Validate credentials
+    Backend->>Database: Query user
+    Database-->>Backend: User found
+    Backend->>Backend: Verify password hash
+    Backend-->>NextAuth: Authentication successful
+    NextAuth->>NextAuth: Create session/JWT
+    NextAuth-->>Frontend: Return token
+    Frontend->>Frontend: Store token
+    Frontend-->>User: Redirect to dashboard
+
+    style User fill:#6366f1,color:#fff
+    style Backend fill:#10b981,color:#fff
+    style Database fill:#f59e0b,color:#fff
+                        </div>
+                    </div>
+                </section>
+
+                <!-- 12. Future Enhancements -->
+                <section class="section" id="future-enhancements">
+                    <h2 class="section-title">12. Future Enhancements</h2>
+
+                    <div class="subsection-title">12.1 Phase 2 Features (3-6 months)</div>
+                    <ul>
+                        <li><strong>Payment Integration:</strong> Full Stripe and PayPal integration for e-commerce transactions</li>
+                        <li><strong>Real-time Inventory:</strong> Live stock synchronization and low-stock alerts</li>
+                        <li><strong>Advanced Search:</strong> Elasticsearch integration for full-text search and faceted navigation</li>
+                        <li><strong>Product Recommendations:</strong> Machine learning-based personalized recommendations</li>
+                        <li><strong>AR/VR Preview:</strong> Augmented reality for product visualization in customer's space</li>
+                        <li><strong>Video Consultations:</strong> Integrated video call feature for design consultations</li>
+                        <li><strong>Subscription Model:</strong> Recurring subscriptions for interior design packages</li>
+                    </ul>
+
+                    <div class="subsection-title">12.2 Phase 3 Features (6-12 months)</div>
+                    <ul>
+                        <li><strong>Multi-language Support:</strong> Internationalization (i18n) for multiple languages</li>
+                        <li><strong>Mobile Native Apps:</strong> React Native apps for iOS and Android</li>
+                        <li><strong>Social Commerce:</strong> Social media integration for direct shopping</li>
+                        <li><strong>Marketplace Model:</strong> Multi-seller support with commission management</li>
+                        <li><strong>Advanced Analytics:</strong> Predictive analytics and business intelligence</li>
+                        <li><strong>Gamification:</strong> Loyalty points, badges, and rewards system</li>
+                        <li><strong>Live Shopping:</strong> Live streaming shopping events</li>
+                    </ul>
+
+                    <div class="subsection-title">12.3 Infrastructure Improvements</div>
+                    <ul>
+                        <li>Implement GraphQL API alongside REST for optimized queries</li>
+                        <li>Redis caching layer for improved performance</li>
+                        <li>Message queue (RabbitMQ/Kafka) for asynchronous processing</li>
+                        <li>Microservices architecture for scalability</li>
+                        <li>Kubernetes containerization for orchestration</li>
+                        <li>Advanced CDN strategy with edge computing</li>
+                        <li>Database sharding for massive scale</li>
+                    </ul>
+
+                    <div class="subsection-title">12.4 AI & Machine Learning</div>
+                    <ul>
+                        <li>Computer vision for automatic interior design style detection</li>
+                        <li>Chatbot for 24/7 customer support</li>
+                        <li>Predictive pricing algorithms</li>
+                        <li>Demand forecasting for inventory</li>
+                        <li>Anomaly detection for fraud prevention</li>
+                    </ul>
+
+                    <div class="subsection-title">12.5 Security Enhancements</div>
+                    <ul>
+                        <li>Two-factor authentication (2FA)</li>
+                        <li>Biometric authentication</li>
+                        <li>Advanced fraud detection system</li>
+                        <li>Encryption at rest for sensitive data</li>
+                        <li>Regular penetration testing</li>
+                        <li>Bug bounty program</li>
+                    </ul>
+
+                    <div class="subsection-title">12.6 Performance Optimizations</div>
+                    <ul>
+                        <li>Server-side rendering (SSR) for better SEO</li>
+                        <li>Incremental Static Regeneration (ISR) for content pages</li>
+                        <li>Service workers for offline functionality</li>
+                        <li>Progressive Web App (PWA) capabilities</li>
+                        <li>Web Assembly (WASM) for compute-intensive operations</li>
+                    </ul>
+
+                    <div class="subsection-title">12.7 Business Features</div>
+                    <ul>
+                        <li>Multi-vendor marketplace</li>
+                        <li>Wholesale/B2B portal</li>
+                        <li>Subscription and recurring billing</li>
+                        <li>Advanced reporting and business intelligence</li>
+                        <li>ERP integration</li>
+                        <li>Supply chain management</li>
+                    </ul>
+                </section>
+
+                <!-- Conclusion -->
+                <section class="section">
+                    <h2 class="section-title">Conclusion</h2>
+                    <p>This Software Requirements Specification document provides a comprehensive overview of the SGP Platform system design, functional and non-functional requirements, architecture, and future roadmap. The platform is designed with modern web technologies, security best practices, and scalability in mind to support growth and user satisfaction.</p>
+                    <p>All stakeholders are encouraged to review this document thoroughly and provide feedback for continuous improvement. This SRS serves as the foundation for all development, testing, and deployment activities.</p>
+                    <p style="margin-top: 2rem; text-align: center; color: var(--text-light);">
+                        <strong>Document Version:</strong> 1.0 | <strong>Last Updated:</strong> April 2026 | <strong>Status:</strong> Active
+                    </p>
+                </section>
+
+            </div>
+        </main>
+    </div>
+
+    <!-- Theme Toggle Button -->
+    <button class="theme-toggle" onclick="toggleTheme()" title="Toggle dark mode">🌙</button>
+
+    <script>
+        // Theme Toggle
+        function toggleTheme() {
+            const html = document.documentElement;
+            const isDark = html.classList.contains('dark');
+            if (isDark) {
+                html.classList.remove('dark');
+                localStorage.setItem('theme', 'light');
+            } else {
+                html.classList.add('dark');
+                localStorage.setItem('theme', 'dark');
+            }
+        }
+
+        // Load saved theme
+        function loadTheme() {
+            const savedTheme = localStorage.getItem('theme');
+            if (savedTheme === 'dark' || (!savedTheme && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+                document.documentElement.classList.add('dark');
+            }
+        }
+
+        // Sidebar Navigation
+        function initSidebar() {
+            const navLinks = document.querySelectorAll('.sidebar-nav a');
+            navLinks.forEach(link => {
+                link.addEventListener('click', () => {
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    link.classList.add('active');
+                });
+            });
+
+            // Highlight current section on scroll
+            window.addEventListener('scroll', () => {
+                const sections = document.querySelectorAll('section[id]');
+                sections.forEach(section => {
+                    const rect = section.getBoundingClientRect();
+                    if (rect.top <= 100 && rect.bottom >= 100) {
+                        const id = section.getAttribute('id');
+                        navLinks.forEach(link => {
+                            link.classList.remove('active');
+                            if (link.getAttribute('href') === `#${id}`) {
+                                link.classList.add('active');
+                            }
+                        });
+                    }
+                });
+            });
+        }
+
+        // Scroll to Top
+        function scrollToTop() {
+            window.scrollTo({ top: 0, behavior: 'smooth' });
+        }
+
+        // Initialize Mermaid
+        mermaid.initialize({ startOnLoad: true, theme: 'default' });
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadTheme();
+            initSidebar();
+        });
+
+        // Mobile menu toggle (if needed)
+        function toggleMobileMenu() {
+            const sidebar = document.querySelector('.sidebar');
+            sidebar.classList.toggle('open');
+        }
+    </script>
+</body>
+</html>
