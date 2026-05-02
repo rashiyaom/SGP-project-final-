@@ -24,6 +24,7 @@ interface CartContextType {
 }
 
 const CartContext = createContext<CartContextType | undefined>(undefined)
+const GUEST_CART_STORAGE_KEY = 'guestCartItems'
 
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([])
@@ -37,8 +38,21 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setUserEmail(email)
     if (email) {
       loadCart(email)
+    } else {
+      loadGuestCart()
     }
   }, [])
+
+  const loadGuestCart = () => {
+    try {
+      const stored = localStorage.getItem(GUEST_CART_STORAGE_KEY)
+      if (stored) {
+        setItems(JSON.parse(stored))
+      }
+    } catch (err) {
+      console.error('Error loading guest cart:', err)
+    }
+  }
 
   const loadCart = async (email: string) => {
     try {
@@ -59,7 +73,14 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
   }
 
   const saveCart = async (cartItems: CartItem[]) => {
-    if (!userEmail) return
+    if (!userEmail) {
+      try {
+        localStorage.setItem(GUEST_CART_STORAGE_KEY, JSON.stringify(cartItems))
+      } catch (err) {
+        console.error('Error saving guest cart:', err)
+      }
+      return
+    }
 
     try {
       await fetch('/api/users/cart', {
@@ -140,6 +161,12 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
         })
       } catch (err) {
         console.error('Error clearing cart:', err)
+      }
+    } else {
+      try {
+        localStorage.removeItem(GUEST_CART_STORAGE_KEY)
+      } catch (err) {
+        console.error('Error clearing guest cart:', err)
       }
     }
   }

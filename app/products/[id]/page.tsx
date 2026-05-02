@@ -5,7 +5,7 @@ import { Footer } from '@/components/footer'
 import { Product360View } from '@/components/product-360-view'
 import { ProductComparison } from '@/components/product-comparison'
 import { Toast } from '@/components/toast'
-import { useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import { Heart, ShoppingCart, ArrowRight, Star, ChevronLeft, ChevronRight, RotateCcw, View } from 'lucide-react'
 import Link from 'next/link'
 import { useCart } from '@/contexts/cart-context'
@@ -13,58 +13,17 @@ import { useAuth } from '@/contexts/auth-context'
 import { useDreams } from '@/contexts/dreams-context'
 import { useParams } from 'next/navigation'
 
-// Product images based on category
-const productImages: Record<string, string[]> = {
-  '1': [
-    'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600585154340-be6161a56a0c?q=80&w=800&auto=format&fit=crop',
-  ],
-  default: [
-    'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600607687644-aac4c3eac7f4?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600566752355-35792bedcfea?q=80&w=800&auto=format&fit=crop',
-    'https://images.unsplash.com/photo-1600210492486-724fe5c67fb0?q=80&w=800&auto=format&fit=crop',
-  ],
-}
-
-const relatedProducts = [
-  { id: '2', name: 'Ceramic White Pearl', price: 1200, image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=600&auto=format&fit=crop' },
-  { id: '3', name: 'Cream Travertine', price: 2200, image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=600&auto=format&fit=crop' },
-  { id: '4', name: 'Polished Quartz', price: 3200, image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=600&auto=format&fit=crop' },
-]
-
-// Product database
-const productDatabase: Record<string, any> = {
-  '1': {
-    name: 'Marble Elegance 60x60',
-    price: 2500,
-    originalPrice: 2980,
-    category: 'MARBLE TILES',
-    image: 'https://images.unsplash.com/photo-1618221195710-dd6b41faaea6?q=80&w=800&auto=format&fit=crop',
-  },
-  '2': {
-    name: 'Ceramic White Pearl',
-    price: 1200,
-    originalPrice: 1500,
-    category: 'CERAMIC TILES',
-    image: 'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop',
-  },
-  '3': {
-    name: 'Cream Travertine',
-    price: 2200,
-    originalPrice: 2600,
-    category: 'MARBLE TILES',
-    image: 'https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?q=80&w=800&auto=format&fit=crop',
-  },
-  '4': {
-    name: 'Polished Quartz',
-    price: 3200,
-    originalPrice: 3800,
-    category: 'QUARTZ TILES',
-    image: 'https://images.unsplash.com/photo-1600566753190-17f0baa2a6c3?q=80&w=800&auto=format&fit=crop',
-  },
+type ProductRecord = {
+  id: string
+  name: string
+  price?: number
+  originalPrice?: number
+  category: string
+  rating?: number
+  inStock?: boolean
+  images?: string[]
+  image?: string
+  description?: string
 }
 
 export default function ProductDetailPage() {
@@ -81,56 +40,132 @@ export default function ProductDetailPage() {
   const [show360, setShow360] = useState(false)
   const [addedToCart, setAddedToCart] = useState(false)
   const [showToast, setShowToast] = useState(false)
+  const [product, setProduct] = useState<ProductRecord | null>(null)
+  const [isLoading, setIsLoading] = useState(true)
+  const [loadError, setLoadError] = useState<string | null>(null)
 
-  const images = productImages[productId] || productImages.default
-  const productData = productDatabase[productId] || productDatabase['1']
+  useEffect(() => {
+    let alive = true
 
-  const product = {
-    id: productId,
-    name: productData.name,
-    price: productData.price,
-    originalPrice: productData.originalPrice,
-    category: productData.category,
-    rating: 4.2,
-    reviews: 34,
-    inStock: true,
-    stockCount: 3,
-    recommended: 93,
-    description: 'A design that has truly stood the test of time, the Marble Elegance is one of the most recognised premium tiles of the decade. Originally crafted in Italy, this marble tile\'s most prominent feature is its curved natural veining. Pioneering at the time, our artisans overcame the difficulty of forming a single polished marble piece with precision cuts, by creating a fluid shape using a singular curve.',
-    specs: [
-      { label: 'HEIGHT', value: '600MM' },
-      { label: 'WIDTH', value: '600MM' },
-      { label: 'DEPTH', value: '12MM' },
-      { label: 'COVERAGE', value: '0.36 SQ.M' },
-      { label: 'FINISH', value: 'POLISHED' },
-      { label: 'WEIGHT', value: '7KG' },
-    ],
-    finishes: ['#2C2C2C', '#8B7355', '#D4C4B0'],
-    frames: ['#F5F5F5', '#1A1A1A'],
-  }
+    const loadProduct = async () => {
+      try {
+        setIsLoading(true)
+        setLoadError(null)
+        const response = await fetch(`/api/products/${productId}`)
+        if (!response.ok) {
+          throw new Error('Product not found')
+        }
+
+        const result = await response.json()
+        const data = result.data || result
+        if (!alive) return
+
+        setProduct({
+          id: data._id?.toString?.() || data.id || productId,
+          name: data.name || 'Product',
+          price: data.price,
+          originalPrice: data.originalPrice,
+          category: data.category || 'Product',
+          rating: data.rating ?? 4.2,
+          inStock: data.inStock ?? true,
+          images: Array.isArray(data.images) && data.images.length > 0
+            ? data.images
+            : data.image
+              ? [data.image]
+              : [],
+          image: data.image || '',
+          description: data.description || '',
+        })
+      } catch (error) {
+        if (!alive) return
+        setLoadError(error instanceof Error ? error.message : 'Failed to load product')
+      } finally {
+        if (alive) setIsLoading(false)
+      }
+    }
+
+    loadProduct()
+
+    return () => {
+      alive = false
+    }
+  }, [productId])
+
+  const images = useMemo(() => {
+    if (product?.images && product.images.length > 0) return product.images
+    if (product?.image) return [product.image]
+    return []
+  }, [product])
+
+  const displayImages = images.length > 0 ? images : [
+    'https://images.unsplash.com/photo-1615971677499-5467cbab01c0?q=80&w=800&auto=format&fit=crop',
+  ]
+
+  const productName = product?.name || 'Product'
+  const productCategory = product?.category || 'Product'
+  const productPrice = product?.price || 0
+  const productOriginalPrice = product?.originalPrice || 0
+  const productDescription = product?.description || 'No description available yet.'
+  const productRating = product?.rating ?? 4.2
+  const productInStock = product?.inStock ?? true
+  const productImage = displayImages[0]
+
+  const relatedProducts = []
 
   const nextImage = () => {
-    setSelectedImageIndex((prev) => (prev + 1) % images.length)
+    setSelectedImageIndex((prev) => (prev + 1) % displayImages.length)
   }
 
   const prevImage = () => {
-    setSelectedImageIndex((prev) => (prev - 1 + images.length) % images.length)
+    setSelectedImageIndex((prev) => (prev - 1 + displayImages.length) % displayImages.length)
   }
 
   const handleAddToCart = () => {
-    requireAuth(() => {
-      addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        quantity: quantity,
-        image: images[0],
-        category: product.category,
-      })
-      setAddedToCart(true)
-      setShowToast(true)
-      setTimeout(() => setAddedToCart(false), 2000)
+    if (!product) return
+
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price || 0,
+      quantity,
+      image: productImage,
+      category: product.category,
     })
+    setAddedToCart(true)
+    setShowToast(true)
+    setTimeout(() => setAddedToCart(false), 2000)
+  }
+
+  if (isLoading) {
+    return (
+      <main className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <section className="flex-1 py-8">
+          <div className="max-w-7xl mx-auto px-6 sm:px-12">
+            <p className="text-muted-foreground">Loading product...</p>
+          </div>
+        </section>
+        <Footer />
+      </main>
+    )
+  }
+
+  if (loadError || !product) {
+    return (
+      <main className="min-h-screen bg-background flex flex-col">
+        <Header />
+        <section className="flex-1 py-8">
+          <div className="max-w-7xl mx-auto px-6 sm:px-12 space-y-4">
+            <h1 className="font-serif text-3xl text-foreground">Product not found</h1>
+            <p className="text-muted-foreground">{loadError || 'This product may have been deleted or the link is invalid.'}</p>
+            <Link href="/products" className="inline-flex items-center gap-2 text-foreground underline">
+              Back to catalog
+            </Link>
+          </div>
+        </section>
+        <Footer />
+      </main>
+    )
   }
 
   return (
@@ -157,13 +192,13 @@ export default function ProductDetailPage() {
               CATALOG
             </Link>
             <span className="text-muted-foreground">-</span>
-            <span className="text-foreground">{product.name.toUpperCase()}</span>
+            <span className="text-foreground">{productName.toUpperCase()}</span>
           </nav>
 
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12">
             {/* Left: Thumbnails */}
             <div className="hidden lg:flex flex-col gap-3 col-span-1">
-              {images.map((img, index) => (
+              {displayImages.map((img, index) => (
                 <button
                   key={index}
                   onClick={() => setSelectedImageIndex(index)}
@@ -183,8 +218,8 @@ export default function ProductDetailPage() {
                   <Product360View productId={product.id} />
                 ) : (
                   <img 
-                    src={images[selectedImageIndex] || "/placeholder.svg"} 
-                    alt={product.name}
+                    src={displayImages[selectedImageIndex] || "/placeholder.svg"} 
+                    alt={productName}
                     className="w-full h-full object-cover"
                   />
                 )}
@@ -232,7 +267,7 @@ export default function ProductDetailPage() {
 
               {/* Mobile Thumbnails */}
               <div className="flex lg:hidden gap-3 mt-4 overflow-x-auto pb-2">
-                {images.map((img, index) => (
+                {displayImages.map((img, index) => (
                   <button
                     key={index}
                     onClick={() => setSelectedImageIndex(index)}
@@ -250,24 +285,24 @@ export default function ProductDetailPage() {
             <div className="lg:col-span-6 flex flex-col">
               {/* Category & Rating Row */}
               <div className="flex items-start justify-between mb-2">
-                <p className="text-xs text-muted-foreground tracking-wider">{product.category}</p>
+                <p className="text-xs text-muted-foreground tracking-wider">{productCategory}</p>
                 <div className="flex items-center gap-1.5">
                   <div className="flex">
                     {[...Array(5)].map((_, i) => (
                       <Star 
                         key={i} 
-                        className={`w-3.5 h-3.5 ${i < Math.floor(product.rating) ? 'fill-foreground text-foreground' : 'text-muted-foreground'}`}
+                        className={`w-3.5 h-3.5 ${i < Math.floor(productRating) ? 'fill-foreground text-foreground' : 'text-muted-foreground'}`}
                       />
                     ))}
                   </div>
-                  <span className="text-xs text-muted-foreground">{product.rating}</span>
-                  <span className="text-xs text-muted-foreground">{product.reviews} reviews</span>
+                  <span className="text-xs text-muted-foreground">{productRating}</span>
+                  <span className="text-xs text-muted-foreground">34 reviews</span>
                 </div>
               </div>
 
               {/* Title with Heart */}
               <div className="flex items-center gap-3 mb-4">
-                <h1 className="font-serif text-3xl sm:text-4xl text-foreground">{product.name}</h1>
+                <h1 className="font-serif text-3xl sm:text-4xl text-foreground">{productName}</h1>
                 <button className="text-muted-foreground hover:text-foreground transition-colors">
                   <Heart className="w-5 h-5" />
                 </button>
@@ -275,46 +310,18 @@ export default function ProductDetailPage() {
 
               {/* Price */}
               <div className="flex items-baseline gap-3 mb-6">
-                <span className="text-2xl font-semibold text-foreground">₹{(product.price || 0).toLocaleString()}</span>
-                <span className="text-muted-foreground line-through">₹{(product.originalPrice || 0).toLocaleString()}</span>
-              </div>
-
-              {/* Finish Options */}
-              <div className="grid grid-cols-3 gap-6 mb-6">
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">FINISH</p>
-                  <div className="flex gap-2">
-                    {product.finishes.map((color, i) => (
-                      <button 
-                        key={i}
-                        className={`w-6 h-6 rounded-full border-2 ${i === 0 ? 'border-foreground' : 'border-transparent'}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground uppercase tracking-wider mb-3">FRAME</p>
-                  <div className="flex gap-2">
-                    {product.frames.map((color, i) => (
-                      <button 
-                        key={i}
-                        className={`w-6 h-6 rounded-full border-2 ${i === 0 ? 'border-foreground' : 'border-transparent'}`}
-                        style={{ backgroundColor: color }}
-                      />
-                    ))}
-                  </div>
-                </div>
+                <span className="text-2xl font-semibold text-foreground">₹{productPrice.toLocaleString()}</span>
+                <span className="text-muted-foreground line-through">₹{productOriginalPrice.toLocaleString()}</span>
               </div>
 
               {/* Stock Warning */}
               <div className="mb-2">
                 <p className="text-xs font-medium text-foreground">
-                  LAST {product.stockCount} LEFT - <span className="text-muted-foreground">MAKE IT YOURS!</span>
+                  {productInStock ? 'IN STOCK -' : 'OUT OF STOCK -'} <span className="text-muted-foreground">MAKE IT YOURS!</span>
                 </p>
               </div>
               <p className="text-xs text-muted-foreground mb-6">
-                {product.recommended}% OF BUYERS HAVE RECOMMENDED THIS
+                This product is available to add to cart.
               </p>
 
               {/* Quantity & Add to Cart */}
@@ -355,18 +362,18 @@ export default function ProductDetailPage() {
                     } else {
                       addDream({
                         id: productId,
-                        title: product.name,
-                        category: product.category,
-                        description: product.name,
-                        image: productData.image || '/placeholder.svg',
+                        title: productName,
+                        category: productCategory,
+                        description: productName,
+                        image: productImage || '/placeholder.svg',
                         style: '',
                         colorPalette: '',
                         tileSize: '',
                         type: 'product',
-                        price: product.price,
-                        originalPrice: product.originalPrice,
-                        rating: product.rating,
-                        inStock: product.inStock,
+                        price: productPrice,
+                        originalPrice: productOriginalPrice,
+                        rating: productRating,
+                        inStock: productInStock,
                       })
                     }
                   }}
@@ -385,7 +392,7 @@ export default function ProductDetailPage() {
               <div className="border-t border-border pt-8">
                 <h2 className="font-serif text-2xl text-foreground mb-4">Description</h2>
                 <p className="text-sm text-muted-foreground leading-relaxed mb-4">
-                  {product.description}
+                  {productDescription}
                 </p>
                 <p className="text-xs text-muted-foreground">No assembly required.</p>
               </div>
@@ -400,7 +407,7 @@ export default function ProductDetailPage() {
               <div className="flex items-center justify-center gap-8">
                 <div className="relative w-48 h-48 border border-dashed border-muted-foreground/30 rounded-lg flex items-center justify-center">
                   <img 
-                    src={images[0] || "/placeholder.svg"} 
+                    src={displayImages[0] || "/placeholder.svg"} 
                     alt="Dimension view"
                     className="w-32 h-32 object-cover rounded"
                   />
@@ -419,12 +426,18 @@ export default function ProductDetailPage() {
                   <span className="text-xs text-muted-foreground uppercase tracking-wider">{product.name.toUpperCase()}</span>
                 </div>
                 <div className="space-y-0">
-                  {product.specs.map((spec, i) => (
-                    <div key={i} className="flex justify-between items-center py-3 border-b border-border">
-                      <span className="text-sm text-muted-foreground">{spec.label}</span>
-                      <span className="text-sm text-foreground">{spec.value}</span>
-                    </div>
-                  ))}
+                  <div className="flex justify-between items-center py-3 border-b border-border">
+                    <span className="text-sm text-muted-foreground">Category</span>
+                    <span className="text-sm text-foreground">{productCategory}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-border">
+                    <span className="text-sm text-muted-foreground">Status</span>
+                    <span className="text-sm text-foreground">{productInStock ? 'In Stock' : 'Out of Stock'}</span>
+                  </div>
+                  <div className="flex justify-between items-center py-3 border-b border-border">
+                    <span className="text-sm text-muted-foreground">Images</span>
+                    <span className="text-sm text-foreground">{displayImages.length} image{displayImages.length !== 1 ? 's' : ''}</span>
+                  </div>
                 </div>
               </div>
             </div>

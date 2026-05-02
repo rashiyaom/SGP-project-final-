@@ -1,0 +1,1991 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Software Requirements Specification (SRS)</title>
+    <script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+    <style>
+        /* ========== RESET & BASE ========== */
+        *,
+        *::before,
+        *::after {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        :root {
+            --black: #000000;
+            --gray-1: #1a1a1a;
+            --gray-2: #333333;
+            --gray-3: #555555;
+            --gray-4: #888888;
+            --gray-5: #aaaaaa;
+            --gray-6: #cccccc;
+            --gray-7: #e0e0e0;
+            --gray-8: #f0f0f0;
+            --gray-9: #f7f7f7;
+            --white: #ffffff;
+            --font-sans: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        html {
+            font-size: 16px;
+            scroll-behavior: smooth;
+        }
+
+        body {
+            font-family: var(--font-sans);
+            background: var(--gray-8);
+            color: var(--black);
+            line-height: 1.7;
+        }
+
+        /* ========== PRINT MEDIA ========== */
+        @media print {
+            * {
+                -webkit-print-color-adjust: exact !important;
+                print-color-adjust: exact !important;
+            }
+
+            /* Reserve extra bottom space so the fixed footer doesn't overlap content */
+            body {
+                background: white;
+                font-size: 11pt;
+                line-height: 1.6;
+                color: #000;
+                counter-reset: page-counter;
+                padding-bottom: 1.2cm;
+            }
+
+            .no-print {
+                display: none !important;
+            }
+
+            .page-break {
+                page-break-after: always;
+                page-break-inside: avoid;
+                counter-increment: page-counter;
+            }
+
+            .chapter {
+                page-break-before: always;
+            }
+
+            h1,
+            h2,
+            h3,
+            h4 {
+                page-break-after: avoid;
+            }
+
+            table,
+            .diagram,
+            pre,
+            figure {
+                page-break-inside: avoid;
+            }
+
+            .section-heading {
+                page-break-after: avoid;
+            }
+
+            #toc {
+                border: none !important;
+                box-sizing: border-box !important;
+                min-height: calc(100vh - 2.7cm) !important;
+            }
+
+            .diagram {
+                border: 1.5pt solid #000 !important;
+                padding: 10pt !important;
+                margin: 8pt 0 !important;
+                page-break-inside: avoid !important;
+            }
+
+            .mermaid svg {
+                max-width: 100% !important;
+                max-height: 18cm !important;
+                height: auto !important;
+                display: block;
+                margin: 0 auto;
+                page-break-inside: avoid !important;
+            }
+
+            /* Print Padding & Margins */
+            .document {
+                box-shadow: none !important;
+                max-width: none !important;
+                width: 100% !important;
+                margin: 0 !important;
+                padding: 0 !important;
+            }
+
+            .generic-page,
+            .chapter,
+            .cover-page,
+            .cover-inner {
+                padding: 0 !important;
+                min-height: auto !important;
+                border: none !important;
+            }
+
+            .page-title {
+                margin-top: 0;
+                padding-top: 0;
+            }
+
+            .chapter-header {
+                margin-top: 0;
+                padding-top: 0;
+                margin-bottom: 2rem !important;
+            }
+
+            .signatures {
+                margin-top: 2rem !important;
+            }
+
+            .signature-line {
+                margin-top: 2rem !important;
+            }
+
+            /* increase bottom page margin to reserve space for footer in printed output */
+            @page {
+                size: A4;
+                margin: 2.54cm 2.54cm 3.2cm;
+            }
+        }
+
+        /* ========== DOCUMENT WRAPPER ========== */
+        .document {
+            background: white;
+            max-width: 920px;
+            margin: 0 auto;
+            box-shadow: 0 0 40px rgba(0, 0, 0, 0.15);
+            padding-bottom: 2rem;
+        }
+
+        /* ========== COVER PAGE ========== */
+        .cover-page {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            background: var(--black);
+            color: var(--white);
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+        }
+
+        .cover-top-bar {
+            height: 6px;
+            background: var(--white);
+        }
+
+        .cover-inner {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            padding: 4rem 5rem;
+        }
+
+        .cover-logo-box {
+            width: 80px;
+            height: 80px;
+            border: 3px solid var(--white);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            font-weight: 900;
+            margin-bottom: 2rem;
+        }
+
+        .cover-title {
+            font-size: 2.8rem;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 1.5rem;
+        }
+
+        .cover-subtitle {
+            font-size: 1.2rem;
+            color: var(--gray-5);
+            font-weight: 300;
+            margin-bottom: 3rem;
+            max-width: 600px;
+        }
+
+        .cover-details {
+            margin-top: 2rem;
+            text-align: center;
+            font-size: 1.1rem;
+            line-height: 1.8;
+            color: var(--gray-4);
+        }
+
+        .cover-details strong {
+            color: var(--white);
+        }
+
+        /* ========== GENERIC PAGES ========== */
+        .generic-page {
+            padding: 5rem 5rem 4rem;
+            min-height: 100vh;
+            border-bottom: 3px solid var(--gray-7);
+        }
+
+        .page-title {
+            font-size: 2.2rem;
+            font-weight: 800;
+            color: var(--black);
+            margin-bottom: 0.5rem;
+            letter-spacing: -0.3px;
+            text-align: center;
+        }
+
+        .page-title-rule {
+            display: none;
+        }
+
+        /* ========== TOC STYLES ========== */
+        .toc-header {
+            font-size: 0.75rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--black);
+            margin-bottom: 2rem;
+            font-weight: 600;
+        }
+
+        .toc-section-label {
+            font-size: 1rem;
+            font-weight: 400;
+            color: var(--black);
+            padding: 0.9rem 0 0.45rem;
+            margin-bottom: 0.35rem;
+            text-transform: uppercase;
+        }
+
+        .toc-entry {
+            display: flex;
+            align-items: baseline;
+            padding: 0.35rem 0;
+            font-size: 0.95rem;
+            color: var(--black);
+        }
+
+        .toc-entry-text {
+            display: block;
+            font-size: 0.95rem;
+            color: var(--black);
+            white-space: nowrap;
+        }
+
+        .toc-entry-text a {
+            color: inherit;
+            text-decoration: none;
+        }
+
+        .toc-entry-text a:hover {
+            text-decoration: underline;
+        }
+
+        .toc-dots {
+            flex: 1;
+            border-bottom: 1px dotted var(--gray-5);
+            margin: 0 0.5rem;
+            position: relative;
+            bottom: 0.25rem;
+        }
+
+        .toc-page {
+            font-size: 0.95rem;
+            color: var(--black);
+            text-align: right;
+            min-width: 1.5rem;
+            font-weight: 600;
+        }
+
+        .toc-entry-sub {
+            padding-left: 2.3rem;
+        }
+
+        .toc-footer {
+            margin-top: auto;
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--gray-3);
+        }
+
+        #toc {
+            border: none;
+            padding: 1.5rem 2.25rem 1.75rem;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            box-sizing: border-box;
+        }
+
+        #toc,
+        #toc * {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        #toc .page-title {
+            font-family: 'Segoe UI', 'Helvetica Neue', Arial, sans-serif;
+        }
+
+        #toc .toc-header {
+            font-family: 'Times New Roman', Times, serif;
+        }
+
+        /* ========== CHAPTER ========== */
+        .chapter {
+            padding: 4rem 5rem 3rem;
+            border-bottom: 1px solid var(--gray-6);
+        }
+
+        .chapter-header {
+            margin-bottom: 2.5rem;
+            text-align: left;
+        }
+
+        .chapter-eyebrow {
+            font-size: 0.85rem;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            color: var(--gray-5);
+            font-weight: 500;
+            margin-bottom: 0.5rem;
+        }
+
+        .chapter-title {
+            font-size: 2.2rem;
+            font-weight: 300;
+            color: var(--black);
+            line-height: 1.2;
+            padding-bottom: 1rem;
+            margin-bottom: 0.75rem;
+            border-bottom: 1px solid var(--gray-8);
+        }
+
+        /* ========== HEADINGS & CONTENT ========== */
+        .section-heading {
+            font-size: 1.5rem;
+            font-weight: 800;
+            color: var(--black);
+            margin-top: 2.5rem;
+            margin-bottom: 1rem;
+            padding-bottom: 0;
+            border-bottom: none;
+        }
+
+        p {
+            margin-bottom: 1rem;
+            text-align: justify;
+            line-height: 1.8;
+            color: var(--gray-2);
+            font-size: 0.97rem;
+        }
+
+        ul,
+        ol {
+            margin-left: 1.75rem;
+            margin-bottom: 1.25rem;
+        }
+
+        li {
+            margin-bottom: 0.5rem;
+            line-height: 1.7;
+            color: var(--gray-2);
+            font-size: 0.97rem;
+        }
+
+        li strong {
+            color: var(--black);
+        }
+
+        /* ========== TABLES & DIAGRAMS ========== */
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            margin: 1.5rem 0;
+            font-size: 0.92rem;
+            border: 1px solid var(--gray-6);
+        }
+
+        thead {
+            background: var(--gray-9);
+        }
+
+        th {
+            padding: 0.9rem 1rem;
+            text-align: left;
+            font-weight: 700;
+            color: var(--black);
+            border: 1px solid var(--gray-6);
+        }
+
+        td {
+            padding: 0.8rem 1rem;
+            border: 1px solid var(--gray-6);
+            color: var(--gray-2);
+            vertical-align: top;
+        }
+
+        .diagram {
+            border: 1px solid var(--gray-6);
+            padding: 2rem;
+            margin: 1.75rem 0;
+            background: var(--white);
+            overflow-x: auto;
+            text-align: center;
+        }
+
+        /* ========== SIGNATURES ========== */
+        .signatures {
+            margin-top: 4rem;
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            row-gap: 2rem;
+        }
+
+        .signature-block {
+            text-align: center;
+            width: 40%;
+        }
+
+        .signature-line {
+            border-top: 1px solid var(--black);
+            margin-top: 4rem;
+            padding-top: 0.5rem;
+            font-weight: bold;
+        }
+
+        /* ========== IMAGE PLACEHOLDERS ========== */
+        .image-placeholder-container {
+            margin: 2rem auto;
+            text-align: center;
+            max-width: 100%;
+            page-break-inside: avoid;
+        }
+
+        .image-placeholder-title {
+            font-weight: bold;
+            margin-bottom: 0.75rem;
+            color: var(--black);
+            font-size: 1.05rem;
+        }
+
+        .image-uploader {
+            border: 2px dashed var(--gray-4);
+            background: var(--gray-8);
+            padding: 3rem;
+            cursor: pointer;
+            border-radius: 8px;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+        }
+
+        .image-uploader:hover {
+            background: var(--gray-7);
+            border-color: var(--black);
+        }
+
+        .image-uploader span {
+            font-weight: bold;
+            color: var(--gray-2);
+            font-size: 1.1rem;
+        }
+
+        .image-uploader small {
+            color: var(--gray-4);
+            font-size: 0.85rem;
+        }
+
+        .uploaded-image {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid var(--gray-6);
+            border-radius: 4px;
+            cursor: pointer;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.05);
+            display: none;
+            margin: 0 auto;
+        }
+
+        @media print {
+            .image-uploader {
+                display: none !important;
+            }
+        }
+
+        /* ========== FLOATING BUTTONS ========== */
+        .floating-actions {
+            position: fixed;
+            top: 1.5rem;
+            right: 1.5rem;
+            display: flex;
+            gap: 1rem;
+            z-index: 1000;
+        }
+
+        .action-btn {
+            background: var(--black);
+            color: var(--white);
+            border: none;
+            padding: 0.75rem 1.5rem;
+            font-size: 0.85rem;
+            font-weight: 700;
+            cursor: pointer;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+            transition: all 0.2s;
+        }
+
+        .action-btn:hover {
+            background: var(--gray-1);
+        }
+
+        .action-btn.secondary {
+            background: var(--white);
+            color: var(--black);
+            border: 2px solid var(--black);
+        }
+
+        .action-btn.secondary:hover {
+            background: var(--gray-9);
+        }
+
+        @media print {
+            .floating-actions {
+                display: none !important;
+            }
+
+        }
+    </style>
+</head>
+
+<body>
+    <div class="floating-actions no-print">
+        <button class="action-btn secondary" onclick="saveHTML()">Save HTML</button>
+        <button class="action-btn" onclick="window.print()">Print / PDF</button>
+    </div>
+
+    <div class="document">
+        <!-- 🟢 TABLE OF CONTENTS (NOW PAGE 1) -->
+        <div class="generic-page page-break" id="toc">
+
+            <div class="page-title">Table of Contents</div>
+
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#toc">Table of Contents</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">1</span>
+            </div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#abstract">Abstract</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">2</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 1 : Introduction</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#background">Background & Problem Statement</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">3</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#problem-definition">Problem Definition</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">3</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#motivation">Motivation</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">4</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#objectives">Objectives</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">4</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#scope">Scope</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">4</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 2 : Literature Review</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#existing-systems">Existing Systems</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">5</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#comparative-analysis">Comparative Analysis</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">5</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#proposed-system">Proposed System</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">6</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 3 : System Analysis</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#system-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">7</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><strong>Functional Requirements</strong></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">7</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#user-auth">User Authentication</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">7</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#catalog-ecommerce">Product Catalog & E-Commerce</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">8</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#order-mgmt">Order Management</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">8</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#gallery-mgmt">Gallery & Inspiration Board</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">9</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#appointment-booking">Appointment Booking</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">9</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#public-website">Public Website Content</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">10</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#admin-dashboard">Admin Dashboard</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">10</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><strong>Non-Functional Requirements</strong></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">11</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-performance">Performance</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">11</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-security">Security</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">11</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-usability">Usability</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">12</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-reliability">Reliability</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">12</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-availability">Availability</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">12</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#nfr-scalability">Scalability</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">12</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 4 : Technology Stack</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#tech-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">13</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#tech-frontend">Frontend Technologies</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">13</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#tech-backend">Backend Technologies</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">14</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#tech-database">Database</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">14</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#tech-tools">Development Tools</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">15</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#tech-deployment">Deployment</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">15</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 5 : System Design</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#design-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">16</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#design-usecase">Use Case Diagram</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">17</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#design-architecture">System Architecture</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">18</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#design-er">Database Design (ER Diagram)</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">19</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#design-uiux">UI/UX Design</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">20</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 6 : Testing</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#testing-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">21</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#testing-unit">Unit Testing</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">21</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#testing-integration">Integration Testing</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">22</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#testing-system">System Testing</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">22</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#testing-cases">Test Cases & Results</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">23</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#testing-summary">Summary</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">23</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 6 A : Implementation</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#impl-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">24</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#impl-setup">Environment Setup</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">24</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#impl-backend">Backend Implementation</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">25</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#impl-frontend">Frontend Implementation</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">26</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#impl-deployment">Deployment Implementation</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">27</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 7 : Results</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#results-modules">Modules Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">28</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#results-features">Features Developed</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">28</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#results-screenshots">Screenshots</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">29</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#results-functionality">Functionality Explanation</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">32</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#results-benchmarks">Performance Benchmarks</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">33</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#results-summary">Summary</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">34</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 8 : Challenges</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#challenges-overview">Overview</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">35</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#challenges-technical">Technical Challenges</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">35</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#challenges-design">Design Challenges</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">36</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#challenges-integration">Integration Challenges</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">36</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Chapter 9 : Conclusion & Future Scope</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#conclusion">Conclusion</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">37</span>
+            </div>
+            <div class="toc-entry toc-entry-sub">
+                <span class="toc-entry-text"><a href="#future-scope">Future Scope</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">37</span>
+            </div>
+
+            <div class="toc-section-label toc-spaced">Endmatter</div>
+            <div class="toc-entry">
+                <span class="toc-entry-text"><a href="#appendices">Appendices</a></span>
+                <span class="toc-dots"></span>
+                <span class="toc-page">38</span>
+            </div>iv>
+
+
+        </div>
+
+        <!-- 🟢 Abstract -->
+        <div class="generic-page page-break" id="abstract">
+            <div class="page-title" style="text-transform: uppercase;">Abstract</div>
+            <div class="page-title-rule"></div>
+            <p>
+                Omkar Ceramics is a modern interior design and e-commerce platform developed to streamline the browsing,
+                selection, and consultation process for ceramic, marble, and sanitary ware products. The website
+                replaces fragmented offline workflows with a unified digital experience where customers can explore
+                collections, compare products, save inspirations, and book design consultations from a single interface.
+            </p>
+            <p>
+                The application is built with Next.js, React, MongoDB, and Cloudinary to deliver a responsive public
+                website and a secure administrative dashboard. It includes dynamic product filtering, cart and checkout
+                flows, wishlist and mood-board features, appointment booking, order tracking, gallery management, and
+                customer inquiry handling. Together, these modules provide a scalable digital solution for the interior
+                design workflow.
+            </p>
+        </div>
+
+        <!-- 🟢 Chapter 1: Introduction -->
+        <div class="chapter page-break" id="chapter-1">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 1</div>
+                <div class="chapter-title">Introduction</div>
+            </div>
+
+            <h3 class="section-heading" id="background">1.1 Background & Problem Statement</h3>
+            <p>The interior design and building materials sector depends heavily on product visibility, consultation
+                support, and reliable communication. In many cases, customers still need to visit showrooms physically
+                to compare tiles, marble, sanitary ware, and accessories, which makes browsing slow and decision-making
+                difficult. Important details such as product availability, pricing, inspiration references, and
+                consultation scheduling are often handled across disconnected channels, reducing convenience for both
+                the customer and the business.</p>
+            <p>Omkar Ceramics addresses this gap by providing a single digital platform that supports product discovery,
+                visual inspiration, order management, and consultation booking. The website is intended to simplify the
+                buying journey while also giving administrators a structured way to manage products, gallery content,
+                orders, and user interactions.</p>
+
+            <h3 class="section-heading" id="problem-definition">1.2 Problem Definition</h3>
+            <p>There is a clear need for a cohesive platform that combines e-commerce functions with service-oriented
+                workflows such as consultation booking and inquiry tracking. Existing fragmented processes make it
+                difficult for businesses to manage product inventory, handle customer questions, and coordinate
+                appointments efficiently. From the customer side, moving from inspiration to product selection,
+                checkout, and consultation often involves too many manual steps and repeated communication.</p>
+
+            <h3 class="section-heading" id="motivation">1.3 Motivation</h3>
+            <p>The motivation behind this project is to create a digital-first experience that bridges the gap between
+                inspiration and implementation. A modern website can present product collections in a more organized
+                way, allow customers to save ideas and compare options, and help them move directly into purchase or
+                consultation actions. On the business side, the platform reduces manual effort by centralizing product
+                management, customer communication, order tracking, and booking workflows in one place.</p>
+
+            <h3 class="section-heading" id="objectives">1.4 Objectives</h3>
+            <p>The primary objectives of the Omkar Ceramics platform are to improve the customer journey and support the
+                operational needs of the business.</p>
+            <ul>
+                <li><strong>Unified product browsing:</strong> Present ceramic, marble, sanitary ware, and accessory
+                    collections in a clean and searchable catalog.</li>
+                <li><strong>Streamlined customer actions:</strong> Support wishlist saving, cart management, checkout,
+                    and order tracking in one flow.</li>
+                <li><strong>Integrated consultation support:</strong> Enable online and offline appointment booking with
+                    clear status handling and notifications.</li>
+                <li><strong>Centralized administration:</strong> Provide a secure dashboard for product, gallery, order,
+                    and inquiry management.</li>
+            </ul>
+
+            <h3 class="section-heading" id="scope">1.5 Scope</h3>
+            <p>The scope of the system covers the complete customer and administrator journey on the Omkar Ceramics
+                website. For users, this includes account access, product discovery, inspiration browsing, wishlist and
+                cart features, checkout, and appointment booking. For administrators, the scope includes managing
+                products, collections, gallery items, orders, messages, and other site.</p>
+        </div>
+
+        <!-- 🟢 Chapter 2: Literature Review -->
+        <div class="chapter page-break" id="chapter-2">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 2</div>
+                <div class="chapter-title">Literature Review</div>
+            </div>
+
+            <h3 class="section-heading" id="existing-systems">12. Existing Systems</h3>
+            <p>Current software solutions in the retail and interior design space typically fall into two rigid
+                categories. First, generic e-commerce platforms (such as Shopify, Magento, or WooCommerce) excel at
+                standard retail inventory management but natively lack the complex, integrated service booking workflows
+                required for architectural consultations. These platforms require extensive, brittle plugin ecosystems
+                to support dual pricing models (e.g., fixed vs. inquire) and custom metadata filtering. Second, pure
+                service-booking platforms (like Calendly or Acuity) handle scheduling efficiently but offer zero
+                capability for rendering a high-fidelity, highly categorized product catalog or managing a persistent
+                user shopping cart alongside an inspiration gallery.</p>
+
+            <h3 class="section-heading" id="comparative-analysis">13. Comparative Analysis</h3>
+            <p>Unlike off-the-shelf CMS or monolithic e-commerce platforms which necessitate heavy customization and
+                introduce severe latency through multiple third-party plugins, the Omkar Ceramics platform is a bespoke,
+                custom-engineered solution. By natively integrating the product browsing schema directly alongside the
+                consultation booking logic within a single Mongoose database architecture, the system eliminates plugin
+                bloat and data synchronization errors. This custom approach ensures a cohesive UI/UX language—enforced
+                via Radix UI primitives and Tailwind CSS—while allowing for specific optimizations like MongoDB text
+                indexing for rapid catalog searches that generic platforms cannot easily replicate without expensive
+                enterprise tiers.</p>
+
+            <h3 class="section-heading" id="proposed-system">14. Proposed System</h3>
+            <p>The proposed system is a cutting-edge Next.js 16 application that leverages the App Router to provide
+                hybrid Server-Side Rendering (SSR) and Client-Side Rendering (CSR). This architecture ensures rapid
+                First Contentful Paint (FCP) for SEO-critical public pages while maintaining highly interactive client
+                states for shopping carts and dashboard filtering. It ensures real-time inventory checks, seamless cart
+                hydration, and instantaneous data fetching for the admin dashboard. The entire data layer is powered by
+                a scalable MongoDB NoSQL database using the Mongoose ODM, enforcing strict schema validations natively
+                on the server-side to prevent corrupted data entry across both product and appointment mutations.</p>
+        </div>
+
+        <!-- 🟢 Chapter 3: System Analysis -->
+        <div class="chapter page-break" id="chapter-3">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 3</div>
+                <div class="chapter-title">System Analysis</div>
+            </div>
+
+            <h3 class="section-heading" id="system-overview">15. Overview</h3>
+            <p>System analysis involves defining the functional and non-functional requirements necessary to meet the
+                project's objectives based strictly on the actual implementation of the application.</p>
+
+            <h3 class="section-heading">Functional Requirements</h3>
+
+            <h4 class="subsection-heading" id="user-auth">16. User Authentication</h4>
+            <p>The system utilizes a custom, secure user authentication flow managing sessions through the database.
+                User profiles are deeply integrated to support personalized settings, including tracking of active
+                sessions, login times, and preferences for email/SMS notifications and UI themes (dark/light mode).
+                Users can securely manage their comprehensive profile data such as address, phone number, and a
+                personalized biography. Furthermore, the system includes native Role-Based Access Control (RBAC),
+                distinguishing standard consumers from administrative personnel using an internal `isAdmin` flag,
+                thereby protecting sensitive backend routes.</p>
+
+            <h4 class="subsection-heading" id="catalog-ecommerce">17. Product Catalog & E-Commerce</h4>
+            <p>The core e-commerce engine serves four distinct, hardcoded categories: Ceramic Tiles, Marble, Bathroom &
+                Sanitary Ware, and Accessories. The product listing architecture is highly dynamic, supporting dual
+                pricing schemas; standard items utilize 'fixed' pricing for direct add-to-cart functionality, whereas
+                premium/custom materials utilize an 'inquire' model. A robust search capability operates atop MongoDB
+                text indexes (`{ name: 'text' }`) alongside dynamic, custom metadata filters (e.g., surface finish,
+                size) defined via Schema.Types.Mixed properties. Users can also maintain a persistent, detailed Wishlist
+                alongside their Shopping Cart, which stores discrete product snapshots to guard against price
+                fluctuations.</p>
+
+            <h4 class="subsection-heading" id="order-mgmt">18. Order Management</h4>
+            <p>The order processing module tracks purchases through an extensive lifecycle schema featuring strict state
+                constraints: pending, confirmed, processing, shipped, delivered, and cancelled. It natively supports a
+                variety of Indian-centric payment methods including UPI, Net Banking, Credit, and Debit cards. The
+                backend captures comprehensive shipping information, notes, and tracking numbers, and explicitly
+                timestamps the transit journey (`shippedAt`, `deliveredAt`), providing both the client and the admin
+                with transparent fulfillment tracking.</p>
+
+            <h4 class="subsection-heading" id="gallery-mgmt">19. Gallery & Inspiration Board</h4>
+            <p>Going beyond a standard storefront, the application offers an Inspiration Gallery where users can explore
+                visually rich room setups spanning categories like Bathroom, Kitchen, Living Room, and Outdoor. To drive
+                engagement, the system implements a unique "Dreams" feature within the User model. This acts as a
+                personalized vision board where customers can compile their own "Dreams" by saving gallery images
+                alongside custom descriptions, titles, and material inspirations, thereby facilitating a heavily
+                customized interior design planning experience.</p>
+
+            <h4 class="subsection-heading" id="appointment-booking">20. Appointment Booking</h4>
+            <p>A dedicated consultation booking system supports dual modalities: 'online' video meetings and 'offline'
+                showroom visits. The schema rigorously captures spatial and temporal data, including detailed addresses
+                for on-site visits and meeting links for virtual sessions. It includes advanced administrative tracking
+                such as internal admin notes, reschedule reasons, and status tracking (pending, confirmed, rejected,
+                rescheduled, completed, cancelled). Notably, it is engineered to support an automated communication
+                layer, tracking flags like `whatsappSent` and `emailSent` to ensure customers are reliably notified of
+                consultation updates.</p>
+
+            <h4 class="subsection-heading" id="public-website">21. Public Website Content</h4>
+            <p>The public-facing portal is structured to provide rich informational context and seamless user
+                onboarding. It includes static content pages (About Us, Privacy Policy, Terms of Service) optimized for
+                SEO. A native "Contact Us" form securely captures and persists user inquiries directly into the database
+                as `ContactMessage` objects, allowing administrators to review and respond via the centralized portal.
+                Design calculators and interactive material estimators are additionally embedded to aid customers in
+                quantitative planning before purchasing.</p>
+
+            <h4 class="subsection-heading" id="admin-dashboard">22. Admin Dashboard</h4>
+            <p>The centralized administrative hub serves as a protected SPA (Single Page Application) fortified by a
+                password gateway. It is categorized into functional tabs (Dashboard, Ceramic, Marble, Sanitary,
+                Accessories, Gallery, Filters, Messages). The Dashboard employs `react-chartjs-2` to render statistical
+                overviews of platform health. Admins have comprehensive CRUD authority, including managing
+                `CustomFilter` configurations, updating product metadata with direct Cloudinary CDN integration for
+                image uploads, and reviewing inquiries. Data can also be natively exported to Excel via the platform's
+                `exportProductsToExcel` utility.</p>
+
+            <h3 class="section-heading">Non-Functional Requirements</h3>
+
+            <h4 class="subsection-heading" id="nfr-performance">23. Performance</h4>
+            <p>The platform guarantees rapid asset delivery by utilizing Next.js Server Components combined with
+                Cloudinary's global CDN infrastructure, which automatically optimizes, compresses, and delivers images
+                in next-gen formats (WEBP/AVIF). Furthermore, MongoDB database operations are heavily optimized through
+                specific compound and text indexes (`{ category: 1 }`, `{ createdAt: -1 }`, `{ name: 'text' }`) to
+                ensure latency-free search and catalog retrieval under load.</p>
+
+            <h4 class="subsection-heading" id="nfr-security">24. Security</h4>
+            <p>At the database layer, rigorous schema validations are enforced through Mongoose to prevent corrupted or
+                malicious data entry (e.g., regex matching for email formats and HH:MM time formats). Access to
+                sensitive routes and API endpoints is strictly protected by RBAC logic. Password structures implement
+                minimum length requirements and are excluded from default queries (`select: false`) to mitigate
+                accidental exposure across standard user data requests.</p>
+
+            <h4 class="subsection-heading" id="nfr-usability">25. Usability</h4>
+            <p>The frontend interface is engineered using Radix UI primitives, ensuring deep adherence to Web Content
+                Accessibility Guidelines (WCAG) regarding keyboard navigation and screen reader compatibility. A
+                responsive design philosophy is implemented via Tailwind CSS (v4.1), ensuring parity across mobile and
+                desktop. Smooth layout transitions are orchestrated by Framer Motion, and a sophisticated Dark/Light
+                theme configuration is supported globally to reduce eye strain based on user preference.</p>
+
+            <h4 class="subsection-heading" id="nfr-reliability">26. Reliability</h4>
+            <p>The Next.js framework provides inherent reliability through graceful error boundaries and structured
+                loading states. Persistent client states (like cart configuration and active filters) are managed
+                resiliently. For the database, Mongoose provides connection pooling and strict schema adherence,
+                ensuring that if a process fails mid-execution, the integrity of the Document tree is never silently
+                compromised.</p>
+
+            <h4 class="subsection-heading" id="nfr-availability">27. Availability</h4>
+            <p>The application leverages a stateless API architecture native to the Next.js App Router, enabling
+                seamless deployment to distributed edge networks (like Vercel). This infrastructure guarantees
+                exceptionally high uptime, localized global routing, and geographic redundancy, significantly mitigating
+                the risk of extended outages.</p>
+
+            <h4 class="subsection-heading" id="nfr-scalability">28. Scalability</h4>
+            <p>Coupling Next.js edge functions with a scalable MongoDB cluster ensures that both compute and data layers
+                can scale horizontally in tandem. This highly decoupled ecosystem allows the platform to seamlessly
+                absorb significant surges in concurrent user traffic during promotional events or high-demand product
+                launches without degraded performance.</p>
+        </div>
+
+        <!-- 🟢 Chapter 4: Technology Stack -->
+        <div class="chapter page-break" id="chapter-4">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 4</div>
+                <div class="chapter-title">Technology Stack</div>
+            </div>
+
+            <h3 class="section-heading" id="tech-overview">29. Overview</h3>
+            <p>
+                The project architecture is constructed upon a highly decoupled, modern JavaScript/TypeScript ecosystem.
+                By adopting a monolithic repository structure powered by the Next.js App Router, the application
+                successfully merges the frontend interface and the backend API logic into a singular, highly cohesive
+                execution environment. This structure ensures aggressive type safety from the database schema up to the
+                React DOM nodes, significantly accelerating development velocity while inherently reducing runtime
+                errors.
+            </p>
+
+            <h3 class="section-heading" id="tech-frontend">30. Frontend Technologies</h3>
+            <p>The client-facing architecture is built to maximize user interactivity and accessibility, relying on a
+                sophisticated blend of cutting-edge UI libraries:</p>
+            <ul>
+                <li><strong>Next.js 16.1.6 (App Router):</strong> Acts as the core React meta-framework, selectively
+                    utilizing React Server Components (RSC) to render heavy logic on the server while preserving
+                    interactive client boundaries only where necessary.</li>
+                <li><strong>React 19:</strong> Provides the fundamental component-driven UI library, extensively
+                    utilizing hooks (`useState`, `useEffect`, `useContext`) for complex client-side state hydration.
+                </li>
+                <li><strong>Tailwind CSS 4.1:</strong> A utility-first CSS framework that strictly enforces the
+                    platform's design system tokens, ensuring deterministic responsive layouts across varying viewport
+                    dimensions without writing custom media queries.</li>
+                <li><strong>Radix UI Primitives:</strong> Deployed for complex interactive nodes (e.g., Modals,
+                    Dropdowns, Accordions) to guarantee out-of-the-box keyboard navigation and Web Content Accessibility
+                    Guidelines (WCAG) compliance.</li>
+                <li><strong>Framer Motion:</strong> A declarative animation library utilized to orchestrate fluid
+                    micro-interactions, layout shifts, and route transitions, establishing a premium visual aesthetic.
+                </li>
+                <li><strong>Chart.js & react-chartjs-2:</strong> Integrated exclusively within the administrative portal
+                    to render dynamic, interactive statistical charts regarding platform health and sales velocity.</li>
+            </ul>
+
+            <h3 class="section-heading" id="tech-backend">31. Backend Technologies</h3>
+            <p>The server logic is encapsulated within Next.js Route Handlers (`/app/api`), forming a stateless RESTful
+                boundary secured by custom middleware:</p>
+            <ul>
+                <li><strong>Next.js API Routes:</strong> Serverless-compatible endpoints handling all data mutations,
+                    authenticated via JWT strategies before ever interacting with the database layer.</li>
+                <li><strong>Cloudinary SDK:</strong> Deeply integrated to intercept base64 image streams, executing
+                    automated compression algorithms before pushing assets to a global Content Delivery Network (CDN).
+                </li>
+                <li><strong>Nodemailer:</strong> Configured as the primary transactional email delivery system,
+                    facilitating automated consultation confirmations and order receipts via SMTP relays.</li>
+            </ul>
+
+            <h3 class="section-heading" id="tech-database">32. Database</h3>
+            <p>The persistence layer is engineered for rapid reads and resilient writes using NoSQL paradigms:</p>
+            <ul>
+                <li><strong>MongoDB Cluster:</strong> A highly scalable NoSQL document database, selected for its
+                    ability to seamlessly store dynamic, un-structured metadata schemas (such as varying product
+                    specifications).</li>
+                <li><strong>Mongoose 8.23 ODM:</strong> Operates as the strict modeling interface atop MongoDB,
+                    enforcing rigorous schema validations, mapping Virtual properties, and orchestrating complex
+                    compound index queries.</li>
+            </ul>
+
+            <h3 class="section-heading" id="tech-tools">33. Development Tools & Security</h3>
+            <p>The development lifecycle and data integrity are governed by strict tooling and cryptographic standards:
+            </p>
+            <ul>
+                <li><strong>TypeScript 5:</strong> Enforces static typing across both server and client domains,
+                    preventing undefined reference errors and ensuring that API responses strictly match expected
+                    interface contracts.</li>
+                <li><strong>Zod:</strong> A TypeScript-first schema declaration library utilized on the server-side to
+                    intercept and validate raw JSON payloads before they are passed into the Mongoose ODM layer.</li>
+                <li><strong>Bcryptjs:</strong> A computationally expensive cryptographic hashing function utilized to
+                    securely salt and hash user passwords, preventing rainbow-table attacks in the event of data
+                    exposure.</li>
+                <li><strong>ExcelJS / xlsx:</strong> Utilized in the administrative scope to generate complex,
+                    multi-sheet spreadsheet exports for offline sales reporting and inventory audits.</li>
+            </ul>
+
+            <h3 class="section-heading" id="tech-deployment">34. Deployment</h3>
+            <p>The production distribution relies on Edge network paradigms to guarantee minimal latency:</p>
+            <ul>
+                <li><strong>Vercel Platform:</strong> Operates as the Continuous Integration/Continuous Deployment
+                    (CI/CD) pipeline, automatically executing build scripts, caching static assets, and deploying API
+                    routes to serverless edge functions worldwide.</li>
+            </ul>
+        </div>
+
+        <!-- 🟢 Chapter 5: System Design -->
+        <div class="chapter page-break" id="chapter-5">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 5</div>
+                <div class="chapter-title">System Design</div>
+            </div>
+
+            <h3 class="section-heading" id="design-overview">35. Overview</h3>
+            <p>System design transforms the requirements into a complete architecture. It defines how the system
+                components interact to fulfill the functional specifications.</p>
+
+            <h3 class="section-heading" id="design-usecase">36. Use Case Diagram</h3>
+            <div class="diagram">
+                <div class="mermaid">
+                    flowchart LR
+                    Admin([Administrator])
+                    Customer([Authenticated User])
+                    Guest([Guest Visitor])
+
+                    subgraph User Workflows
+                    B(Browse Ceramic/Marble Catalog)
+                    F(Apply Custom Schema Filters)
+                    C(Manage Cart & Wishlist Dreams)
+                    PO(Checkout via UPI/Card)
+                    BA(Book Online/Offline Consultations)
+                    Track(Track Order & Appt Status)
+                    end
+
+                    subgraph Admin Workflows
+                    MP(CRUD Products via Cloudinary)
+                    MO(Process & Update Orders)
+                    MA(Approve/Reschedule Appts)
+                    MG(Curate Gallery Inspiration)
+                    MF(Manage Custom Filters)
+                    EX(Export Data to Excel)
+                    end
+
+                    Guest --> B
+                    Guest --> F
+
+                    Customer --> B
+                    Customer --> F
+                    Customer --> C
+                    Customer --> PO
+                    Customer --> BA
+                    Customer --> Track
+
+                    Admin --> MP
+                    Admin --> MO
+                    Admin --> MA
+                    Admin --> MG
+                    Admin --> MF
+                    Admin --> EX
+                </div>
+                <p><em>Figure 5.1: High-level Use Case Interactions</em></p>
+            </div>
+
+
+
+            <h3 class="section-heading" id="design-architecture">37. System Architecture Diagram</h3>
+            <div class="diagram">
+                <div class="mermaid">
+                    flowchart TD
+                    Client[Client Browser / Mobile]
+
+                    subgraph Frontend Edge [Vercel Edge Network]
+                    UI[React 19 Components / Radix UI]
+                    State[CartContext / LocalStorage]
+                    RSC[Next.js Server Components]
+                    Theme[Next-Themes Dark/Light]
+                    end
+
+                    subgraph Backend Logic [Next.js App Router]
+                    API[app/api/* Route Handlers]
+                    Auth[JWT Role-Based Middleware]
+                    Zod[Zod Schema Validators]
+                    end
+
+                    subgraph Persistence Layer
+                    DB[(MongoDB Cluster)]
+                    ODM[Mongoose Global Cached Instance]
+                    end
+
+                    subgraph External Services
+                    CDN[Cloudinary Image CDN]
+                    Mail[Nodemailer / SMTP Service]
+                    end
+
+                    Client <-->|HTTPS| UI
+                        UI <--> State
+                            UI <--> Theme
+                                UI <--> RSC
+
+                                    RSC -->|tRPC / Fetch| API
+                                    UI -->|Async Mutate| API
+
+                                    API --> Auth
+                                    Auth --> Zod
+                                    Zod --> ODM
+
+                                    ODM <-->|TCP / Connection Pool| DB
+
+                                        API -->|Base64 Streams| CDN
+                                        CDN -->|WEBP/AVIF optimized| Client
+
+                                        API -.->|Automated Alerts| Mail
+                </div>
+                <p><em>Figure 5.2: System Architecture</em></p>
+            </div>
+
+
+
+            <h3 class="section-heading" id="design-er">38. Database Design (ER Diagram)</h3>
+            <div class="diagram">
+                <div class="mermaid">
+                    erDiagram
+                    USER ||--o{ ORDER : places
+                    USER ||--o{ APPOINTMENT : books
+                    PRODUCT ||--o{ ORDER : contains
+
+                    USER {
+                    ObjectId id PK
+                    String email "unique regex match"
+                    String name "min 2 max 100 chars"
+                    String password "bcrypt hashed select false"
+                    Object profile "phone address preferences"
+                    Array cart "id name price quantity image"
+                    Array dreams "id title images description"
+                    Array wishlist "productId name image price"
+                    Boolean isAdmin "default false index 1"
+                    Object adminData "products gallery filters"
+                    Object session "isActive lastActivity"
+                    Date createdAt "index minus 1"
+                    }
+
+                    PRODUCT {
+                    ObjectId id PK
+                    String name "trim max 100 text index"
+                    Number price "min 0"
+                    String pricingType "enum fixed inquire"
+                    Number originalPrice "min 0"
+                    String category "enum Ceramic Marble index 1"
+                    Number rating "min 0 max 5 default 0"
+                    Boolean inStock "default true index 1"
+                    Array images "Cloudinary URLs"
+                    String image "default to first image"
+                    String description "trim max 1000"
+                    Mixed filters "Record string array"
+                    String sku "unique sparse"
+                    Array tags "array of strings"
+                    Date createdAt "index minus 1"
+                    }
+
+                    ORDER {
+                    ObjectId id PK
+                    String userId FK "index 1"
+                    String email "lowercase index 1"
+                    Array items "productId name price quantity"
+                    Object shippingAddress "firstName phone address"
+                    String paymentMethod "enum credit debit upi net"
+                    Number totalAmount "min 0 required"
+                    String status "enum pending confirmed shipped"
+                    String notes "string"
+                    String trackingNumber "string"
+                    Date shippedAt "date"
+                    Date deliveredAt "date"
+                    Date createdAt "index minus 1"
+                    }
+
+                    APPOINTMENT {
+                    ObjectId id PK
+                    String userId FK "index 1"
+                    String userEmail "index 1"
+                    String userName "string"
+                    String userPhone "string"
+                    String type "enum online offline"
+                    Date date "index 1"
+                    String time "regex match HHMM"
+                    String meetingLink "if online"
+                    String location "if offline"
+                    String address "string"
+                    String purpose "max 500 chars"
+                    String status "enum pending confirmed"
+                    String adminNotes "string"
+                    String rescheduleReason "string"
+                    Boolean whatsappSent "default false"
+                    Boolean emailSent "default false"
+                    }
+                </div>
+                <p><em>Figure 5.3: Entity Relationship Diagram</em></p>
+            </div>
+
+
+
+            <h3 class="section-heading" id="design-uiux">39. UI/UX Design</h3>
+            <p>
+                The User Interface (UI) and User Experience (UX) design language of the Omkar Ceramics platform is
+                meticulously crafted to exude a premium, modern aesthetic highly suited to the luxury interior design
+                sector. By operating on a "mobile-first" philosophy, the application guarantees that complex
+                interactions—such as browsing expansive product grids or configuring high-fidelity consultation
+                forms—remain perfectly responsive across all mobile, tablet, and desktop viewports.
+            </p>
+            <ul>
+                <li><strong>Responsive Grid Architectures:</strong> Tailwind CSS is utilized to enforce strict container
+                    bounds and fluid grid layouts, ensuring that product galleries intuitively reflow to prevent
+                    horizontal scrolling on mobile devices.</li>
+                <li><strong>Accessibility Compliance:</strong> Core interactive elements such as dropdown menus, modal
+                    dialogs, and dynamic filter accordions are engineered using Radix UI primitives. This guarantees
+                    native screen-reader support, strict ARIA labeling, and seamless keyboard navigation protocols.</li>
+                <li><strong>Visual Hierarchy & Theming:</strong> The platform supports a sophisticated Dark/Light mode
+                    ecosystem via `next-themes`. Color palettes are mathematically scaled to maintain strict contrast
+                    ratios, heavily utilizing glassmorphism effects and deep shadows to establish a clear Z-index
+                    hierarchy.</li>
+            </ul>
+
+
+        </div>
+
+        <!-- 🟢 Chapter 6: Testing -->
+        <div class="chapter page-break" id="chapter-6">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 6</div>
+                <div class="chapter-title">Testing</div>
+            </div>
+
+            <h3 class="section-heading" id="testing-overview">40. Overview</h3>
+            <p>
+                The testing methodology for the Omkar Ceramics platform encompasses a rigorous, multi-layered approach
+                designed to validate data integrity, enforce stringent security perimeters, and guarantee UI/UX
+                stability across varying device environments. The strategy specifically targets the decoupled nature of
+                the React frontend and the Next.js API backend to ensure seamless data hydration.
+            </p>
+
+            <h3 class="section-heading" id="testing-unit">41. Unit Testing</h3>
+            <p>Unit testing focuses on the atomic validation of isolated utility functions and schema configurations
+                before they are integrated into larger application workflows:</p>
+            <ul>
+                <li><strong>Schema Constraints:</strong> Validating that Mongoose strictly rejects improperly formatted
+                    emails and out-of-bounds numerical entries (e.g., negative prices or invalid cart quantities).</li>
+                <li><strong>Cryptographic Modules:</strong> Ensuring the `bcryptjs` utility accurately hashes incoming
+                    raw passwords and consistently rejects invalid comparison attempts during the login sequence.</li>
+                <li><strong>State Calculations:</strong> Verifying the local `CartContext` precisely calculates total
+                    monetary values, factoring in specific dynamic price updates without experiencing floating-point
+                    arithmetic errors.</li>
+            </ul>
+
+            <h3 class="section-heading" id="testing-integration">42. Integration Testing</h3>
+            <p>Integration testing monitors the boundary transactions between the core application layer and external
+                persistence/CDN systems:</p>
+            <ul>
+                <li><strong>Database Transactions:</strong> Confirming that `Next.js API Route Handlers` securely
+                    establish connection pools to the MongoDB cluster, successfully mapping Mongoose aggregate queries
+                    to JSON payloads without silent failures.</li>
+                <li><strong>Media Processing Pipelines:</strong> Validating the handshake between the Next.js backend
+                    and the Cloudinary SDK, specifically ensuring that base64 data strings are correctly transcoded,
+                    uploaded, and returned as secure, highly optimized `https://` URLs.</li>
+                <li><strong>Authentication Flow:</strong> Testing the JWT middleware interceptors to guarantee that
+                    unauthenticated POST requests to administrative routes are consistently blocked with explicit HTTP
+                    401/403 status codes.</li>
+            </ul>
+
+            <h3 class="section-heading" id="testing-system">43. System Testing</h3>
+            <p>System testing involves the complete end-to-end evaluation of critical user journeys in an environment
+                mirroring production server specifications:</p>
+            <ul>
+                <li><strong>Consumer E-Commerce Pipeline:</strong> Tracing the sequential flow of a user authenticating,
+                    applying complex schema filters to the Ceramic catalog, appending items to a persistent cart,
+                    navigating the multi-step checkout form, and ultimately triggering a pending Order creation.</li>
+                <li><strong>Consultation Pipeline:</strong> Evaluating the dual-mode appointment engine, confirming that
+                    both online and offline consultation geometries save properly and trigger their respective dashboard
+                    notification flags.</li>
+                <li><strong>Administrative Oversight:</strong> Ensuring that administrative mutations (e.g., updating a
+                    product's dynamic filters or advancing an Order's fulfillment status) instantaneously update the
+                    global database state and correctly reflect on the consumer-facing frontend.</li>
+            </ul>
+
+            <h3 class="section-heading" id="testing-cases">44. Test Cases & Results</h3>
+            <p>A sample matrix representing critical path test execution against the staging environment:</p>
+            <table>
+                <thead>
+                    <tr>
+                        <th>Test Case ID</th>
+                        <th>Module</th>
+                        <th>Description & Execution Steps</th>
+                        <th>Expected Result</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr>
+                        <td>TC-01</td>
+                        <td>Authentication</td>
+                        <td>Input valid administrative credentials into the login portal.</td>
+                        <td>System mints JWT, updates User Context, and securely routes to the protected `/admin`
+                            dashboard.</td>
+                        <td>Pass</td>
+                    </tr>
+                    <tr>
+                        <td>TC-02</td>
+                        <td>Catalog API</td>
+                        <td>Execute full-text search against the '{ name: "text" }' MongoDB index.</td>
+                        <td>API returns a strictly filtered array of product documents matching the exact linguistic
+                            query within &lt;200ms.</td>
+                        <td>Pass</td>
+                    </tr>
+                    <tr>
+                        <td>TC-03</td>
+                        <td>Cart State</td>
+                        <td>Add multiple disparate items to the cart and toggle theme states.</td>
+                        <td>`CartContext` successfully calculates subtotals; data perfectly persists in `localStorage`
+                            despite DOM repaints.</td>
+                        <td>Pass</td>
+                    </tr>
+                    <tr>
+                        <td>TC-04</td>
+                        <td>Consultation Logic</td>
+                        <td>Attempt to submit an appointment bypassing mandatory address fields for an 'offline' mode.
+                        </td>
+                        <td>Zod validation intercepts the payload, rejecting the request and rendering explicit UI error
+                            messages.</td>
+                        <td>Pass</td>
+                    </tr>
+                    <tr>
+                        <td>TC-05</td>
+                        <td>Admin Security</td>
+                        <td>Attempt to execute a CRUD mutation on a Product endpoint without the `isAdmin` flag.</td>
+                        <td>Middleware halts execution, returning HTTP 403 Forbidden, protecting database integrity.
+                        </td>
+                        <td>Pass</td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <h3 class="section-heading" id="testing-summary">45. Summary</h3>
+            <p>
+                The execution of these comprehensive testing phases yielded highly successful outcomes. The underlying
+                state management mechanisms operating on the React frontend demonstrated exceptional resilience against
+                hydration mismatches and DOM reflow errors. Concurrently, the Next.js API layer exhibited flawless
+                adherence to structural integrity protocols, conclusively validating that unauthorized data mutation is
+                structurally impossible within the current production envelope.
+            </p>
+        </div>
+
+        <!-- 🟢 Chapter 6A: Implementation -->
+        <div class="chapter page-break" id="chapter-6a">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 6A</div>
+                <div class="chapter-title">Implementation</div>
+            </div>
+
+            <h3 class="section-heading" id="impl-overview">46. Overview</h3>
+            <p>
+                This phase thoroughly chronicles the translation of theoretical architectural blueprints into a secure,
+                production-ready codebase. It details the precise instantiation of the Next.js edge-compatible
+                environment, the rigid construction of the Mongoose database layer, the orchestration of dynamic React
+                19 frontend states, and the seamless integration of third-party APIs designated for secure communication
+                and high-volume media asset management.
+            </p>
+
+            <h3 class="section-heading" id="impl-setup">47. Environment Setup</h3>
+            <p>The structural foundation of the Omkar Ceramics platform was built upon highly scalable, serverless
+                paradigms to ensure minimal operational friction:</p>
+            <ul>
+                <li><strong>Framework Bootstrapping:</strong> The application was initialized via the Next.js 16 App
+                    Router, purposefully selected to leverage its native React Server Components (RSC) and strict
+                    Type-Checking matrices.</li>
+                <li><strong>Database Connection Pooling:</strong> The MongoDB connection pipeline was engineered by
+                    configuring a globally cached `mongoose.connect` instance. This specific architectural decision
+                    strictly prevents connection pool exhaustion during rapid hot-reloads within the development
+                    environment.</li>
+                <li><strong>Secret Management:</strong> Environment configurations (`.env`) were strictly isolated to
+                    encapsulate critical variables—including the MongoDB URI, Cloudinary API access keys, and the JWT
+                    cryptographic signing algorithms.</li>
+            </ul>
+
+            <h3 class="section-heading" id="impl-backend">48. Backend Implementation</h3>
+            <p>The backend architecture was engineered to serve as a stateless, highly resilient, RESTful transaction
+                layer:</p>
+            <ul>
+                <li><strong>Route Handlers:</strong> All backend logic is encapsulated entirely within Next.js native
+                    API Route Handlers (`app/api/*`), ensuring execution is strictly confined to the server side.</li>
+                <li><strong>Mongoose Schema Engineering:</strong> Six highly complex Mongoose schemas were declared
+                    (User, Product, Order, Appointment, GalleryItem, ContactMessage). These schemas enforce deep native
+                    validation rules, such as executing complex RegEx matrices to validate mobile numbers and email
+                    addresses before write operations occur.</li>
+                <li><strong>Index Optimization:</strong> To combat latency across massive product queries, the backend
+                    implements optimized compound indexes (`{ status: 1, date: 1 }`) and full-text keyword indexing
+                    across the product names and descriptions.</li>
+                <li><strong>Middleware Fortification:</strong> Sensitive mutation routes strictly deploy custom
+                    interception logic. The middleware actively decodes incoming request headers, verifies JWT
+                    structural integrity, and definitively enforces Role-Based Access Control (RBAC) by ensuring the
+                    authenticated user profile possesses an active `isAdmin: true` flag.</li>
+            </ul>
+
+            <h3 class="section-heading" id="impl-frontend">49. Frontend Implementation</h3>
+            <p>The consumer-facing interface was programmed to prioritize fluidity, accessibility, and robust
+                client-side state preservation:</p>
+            <ul>
+                <li><strong>Component Engineering:</strong> The UI structure was developed using a hybrid of React 19
+                    syntax and Tailwind CSS 4.1 for deterministic, utility-first responsive styling across all physical
+                    device dimensions.</li>
+                <li><strong>Accessibility Directives:</strong> Radix UI primitives were embedded directly into complex
+                    DOM nodes to enforce rigorous, out-of-the-box keyboard navigation protocols and Web Content
+                    Accessibility Guidelines (WCAG) compliance.</li>
+                <li><strong>State Hydration Strategy:</strong> The application utilizes dedicated React Context APIs
+                    (`CartContext`, `AdminContext`) synchronized with the browser's `localStorage`. This creates a
+                    persistent global state that preserves user cart configurations and administrative filters
+                    completely independent of page navigation or browser reflows.</li>
+                <li><strong>Animation Architecture:</strong> Framer Motion was deeply integrated within the component
+                    tree to orchestrate sophisticated layout transitions—specifically dictating the smooth expansion of
+                    product attribute filters and the animated insertion/removal behaviors of shopping cart items.</li>
+            </ul>
+
+            <h3 class="section-heading" id="impl-deployment">50. Deployment Implementation</h3>
+            <p>The deployment pipeline was fully automated to adhere to modern Continuous Integration and Delivery
+                (CI/CD) standards:</p>
+            <ul>
+                <li><strong>Edge Deployment Strategy:</strong> The finalized codebase is inherently optimized for
+                    deployment across Vercel’s global Edge Network, massively benefiting from Next.js’s native static
+                    site generation (SSG) caching and dynamic route rendering protocols.</li>
+                <li><strong>Build Pipeline Security:</strong> Critical database connection strings and third-party
+                    Cloudinary tokens are strictly intercepted and injected into the build pipeline solely via secure,
+                    encrypted environment variable managers—meaning keys are never structurally exposed to the client
+                    bundle payload or the public source control repositories.</li>
+            </ul>
+        </div>
+
+        <!-- 🟢 Chapter 7: Results -->
+        <div class="chapter page-break" id="chapter-7">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 7</div>
+                <div class="chapter-title">Results</div>
+            </div>
+
+            <h3 class="section-heading" id="results-modules">51. Modules Overview</h3>
+            <p>The completed application successfully operates as a highly unified e-commerce platform and consultation
+                booking portal. The system accurately processes complex data flows—from rendering a categorized,
+                high-resolution product catalog to managing persistent multi-item shopping carts and finalizing secure
+                checkout sessions. The administrative boundary securely insulates the management dashboard, allowing
+                owners to oversee database mutations in real-time without compromising the public-facing performance.
+            </p>
+
+            <h3 class="section-heading" id="results-features">52. Features Developed</h3>
+            <ul>
+                <li><strong>Dynamic Product Catalog:</strong> Fully operational catalog with real-time text indexing,
+                    category filtering (Ceramic Tiles, Marble, Sanitary, Accessories), and dual 'fixed/inquire' pricing
+                    models.</li>
+                <li><strong>Transactional Workflows:</strong> Robust shopping cart logic featuring persistent state
+                    hydration and a multi-step checkout pipeline supporting various Indian payment formats.</li>
+                <li><strong>Consultation Engine:</strong> Dual-mode appointment scheduling capable of capturing online
+                    meeting links or offline physical addresses alongside automated communication tracking.</li>
+                <li><strong>Inspiration Gallery:</strong> Implemented visual discovery board allowing users to save
+                    categorized interior design setups into customized personal "Dreams" collections.</li>
+                <li><strong>Administrative Control Panel:</strong> Comprehensive, chart-integrated (Chart.js) dashboard
+                    supporting Cloudinary media uploads, Excel data exports, and holistic database CRUD capabilities.
+                </li>
+            </ul>
+
+            <h3 class="section-heading" id="results-screenshots">53. Screenshots</h3>
+            <p>The following screenshots demonstrate the core functionalities of the Omkar Ceramics platform:</p>
+            <div class="image-placeholder-container" id="placeholder-home">
+                <div class="image-placeholder-title">Figure 7.1 - Public Portal Homepage</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Public Portal Homepage"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-catalog">
+                <div class="image-placeholder-title">Figure 7.2 - Product Catalog & Filtering</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Product Catalog & Filtering"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-checkout">
+                <div class="image-placeholder-title">Figure 7.3 - Shopping Cart & Checkout</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Shopping Cart & Checkout"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-booking">
+                <div class="image-placeholder-title">Figure 7.4 - Appointment Booking Flow</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Appointment Booking Flow"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-admin">
+                <div class="image-placeholder-title">Figure 7.5 - Admin Dashboard</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Admin Dashboard"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-contact">
+                <div class="image-placeholder-title">Figure 7.6 - Contact Us Page</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Contact Us Page"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+
+            <div class="image-placeholder-container" id="placeholder-gallery">
+                <div class="image-placeholder-title">Figure 7.7 - Gallery Page</div>
+                <div class="image-uploader no-print" onclick="this.querySelector('input').click()">
+                    <span>+ Insert Screenshot Here</span>
+                    <small>Click to browse and upload image</small>
+                    <input type="file" accept="image/*" style="display: none;"
+                        onchange="handleImageUpload(event, this.parentElement.parentElement)">
+                </div>
+                <img class="uploaded-image" src="" alt="Gallery Page"
+                    onclick="this.previousElementSibling.querySelector('input').click()" title="Click to replace image">
+            </div>
+            <h3 class="section-heading" id="results-functionality">54. Functionality Explanation</h3>
+            <p>Functionally, the platform acts as an uncompromised bridge between inspiration and logistics.
+                Administrators possess total CRUD authority over products, dynamic filters, and appointments via the
+                secure portal. Simultaneously, customers experience a frictionless, state-preserved journey—allowing
+                them to browse filtered catalogs, append items to their cart, construct "Dreams" vision boards, and
+                schedule design consultations without losing localized data during page navigation.</p>
+
+            <h3 class="section-heading" id="results-benchmarks">55. Performance Benchmarks</h3>
+            <p>By heavily leaning on Next.js Server Components, the application drastically reduces the initial
+                JavaScript payload shipped to the client browser. Critical visual assets are aggressively optimized via
+                Cloudinary's dynamic CDN transformations (automatically serving WEBP/AVIF formats), ensuring that
+                high-resolution interior design galleries and heavy product grids maintain excellent Core Web Vitals
+                scores and near-instantaneous First Contentful Paint times.</p>
+
+            <h3 class="section-heading" id="results-summary">56. Summary</h3>
+            <p>The resulting software is an enterprise-grade, highly scalable platform that decisively solves the
+                digital integration challenges faced by interior design vendors. It elevates the standard e-commerce
+                experience by embedding high-touch service booking directly into the retail journey, supported by a
+                cryptographically secure, resilient backend infrastructure.</p>
+        </div>
+
+        <!-- 🟢 Chapter 8: Challenges -->
+        <div class="chapter page-break" id="chapter-8">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 8</div>
+                <div class="chapter-title">Challenges</div>
+            </div>
+
+            <h3 class="section-heading" id="challenges-faced">57. Challenges Faced</h3>
+            <ul>
+                <li><strong>Complex Distributed State Management:</strong> Synchronizing the user's shopping cart,
+                    wishlist, and dynamic filter preferences across a myriad of disconnected React components proved
+                    exceedingly difficult, especially ensuring that cart quantities accurately reflected backend
+                    inventory limits without stuttering.</li>
+                <li><strong>Media Asset Optimization:</strong> Rendering vast galleries of extremely high-resolution
+                    interior design images and product textures natively caused immense latency, bandwidth bloat, and
+                    severe layout shifting during client-side hydration.</li>
+                <li><strong>Compound Query Performance:</strong> Executing complex, multi-variable searches (e.g.,
+                    filtering Ceramic Tiles by custom size schemas, surface finishes, and full-text keyword matching
+                    simultaneously) led to bottlenecked database response times during early testing phases.</li>
+                <li><strong>Component Hydration Mismatches:</strong> Utilizing rich interactivity via Framer Motion
+                    alongside Next.js Server-Side Rendering occasionally led to React hydration errors where the server
+                    HTML did not perfectly match the initial client render tree.</li>
+            </ul>
+
+            <h3 class="section-heading" id="challenges-solutions">58. Solutions / Workarounds</h3>
+            <ul>
+                <li><strong>State Consolidation:</strong> We engineered dedicated, globally scoped React Context
+                    Providers (`CartContext`, `AdminContext`) intertwined with `localStorage` to create a resilient,
+                    unified state that hydrates flawlessly across navigation events without redundant database polling.
+                </li>
+                <li><strong>CDN Offloading:</strong> By integrating the Cloudinary platform, we successfully decoupled
+                    image hosting from the main application server. Cloudinary automatically compresses assets into
+                    next-generation formats and serves them globally via edge nodes, eliminating layout shift and
+                    bandwidth throttling.</li>
+                <li><strong>Advanced MongoDB Indexing:</strong> We fundamentally restructured the database schemas to
+                    support highly optimized compound indexes (`{ category: 1 }`) and dedicated text indexes (`{ name:
+                    'text' }`). This allowed Mongoose to execute heavily filtered aggregation pipelines instantaneously,
+                    bypassing standard full-collection scans.</li>
+                <li><strong>Dynamic Import Isolation:</strong> To resolve hydration mismatches caused by heavy visual
+                    libraries like Chart.js and complex animations, we utilized Next.js `dynamic` imports with `ssr:
+                    false` explicitly for non-critical, highly interactive UI nodes, ensuring the core server layout
+                    remained pristine.</li>
+            </ul>
+        </div>
+
+        <!-- 🟢 Chapter 9: Conclusion & Future Scope -->
+        <div class="chapter page-break" id="chapter-9">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">Chapter 9</div>
+                <div class="chapter-title">Conclusion & Future Scope</div>
+            </div>
+
+            <h3 class="section-heading" id="conclusion">59. Conclusion</h3>
+            <p>
+                The culmination of the Omkar Ceramics project successfully demonstrates the immense capability of a
+                unified, highly modern web architecture (Next.js, React, MongoDB) to completely revolutionize
+                traditional logistics within the interior design and building materials sector. By strategically
+                abandoning highly fragmented, multi-platform approaches in favor of a bespoke, monolithic application,
+                the project delivers unparalleled cohesion.
+            </p>
+            <p>
+                The software definitively achieves all initial baseline objectives. It seamlessly intertwines
+                high-volume e-commerce workflows (featuring intricate schema-driven product filtering, dual-pricing
+                algorithms, and persistent cart tracking) alongside a highly structured service infrastructure (managing
+                offline/online consultation geometries). Furthermore, the application successfully abstracts all complex
+                administrative duties—such as Cloudinary asset uploads, Excel data parsing, and contact message
+                oversight—into a singular, cryptographically secure dashboard. Ultimately, the Omkar Ceramics platform
+                establishes a robust, highly performant, and deeply visually appealing digital ecosystem that
+                drastically elevates the end-to-end purchasing and consultation experience for modern customers.
+            </p>
+
+            <h3 class="section-heading" id="future-scope">60. Future Scope</h3>
+            <p>While the existing software architecture resolves the core operational bottlenecks of the enterprise, it
+                was structurally engineered with scalability in mind to support future technological integrations.
+                Highly anticipated future developments include:</p>
+            <ul>
+                <li><strong>AI-Powered Room Match Engine:</strong> The total operationalization of a
+                    neural-network-backed recommendation tool. This module will allow consumers to upload physical
+                    images of their current living spaces, prompting the system to algorithmically suggest perfectly
+                    matched ceramic or marble geometries based on color palettes and architectural dimensions.</li>
+                <li><strong>Live Payment Gateway Pipelines:</strong> The migration from manual financial tracking
+                    methodologies towards the native integration of third-party transactional gateways (e.g., Stripe,
+                    Razorpay) to automatically process and authenticate live multi-currency credit/debit operations
+                    securely within the checkout sequence.</li>
+                <li><strong>Predictive Sales Analytics:</strong> Enhancing the existing `Chart.js` statistical dashboard
+                    by layering predictive analytical modeling. This feature would automatically synthesize historic
+                    sales data, product wishlisting frequency, and specific keyword search density to probabilistically
+                    forecast quarterly inventory depletion rates.</li>
+                <li><strong>Automated Logistics Webhooks:</strong> Expanding the order management schema to intercept
+                    and broadcast third-party courier APIs, allowing consumers to natively view pinpoint GPS-based
+                    transit updates within their personal user dashboards.</li>
+            </ul>
+        </div>
+
+        <!-- 🟢 End Matter -->
+        <div class="chapter page-break" id="end-matter">
+            <div class="chapter-header">
+                <div class="chapter-eyebrow">End Matter</div>
+                <div class="chapter-title">Appendices</div>
+            </div>
+
+            <h3 class="section-heading" id="appendices">61. Appendices</h3>
+            <p><strong>Appendix A: Source Code Repository</strong></p>
+            <p>The complete source code is available in the project's Git repository.</p>
+
+            <p><strong>Appendix B: Mongoose Schema References</strong></p>
+            <p>Detailed data types, enums, and validation constraints are documented within the `lib/models` directory
+                of the application source code.</p>
+
+            <p><strong>Appendix C: Dependency List</strong></p>
+            <p>A complete manifest of the technology stack versions, including Next.js 16, React 19, Mongoose 8.23, and
+                Radix UI primitives, is preserved in the project's `package.json` file.</p>
+        </div>
+
+    </div>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", () => {
+            // Initialize placeholders on load
+            document.querySelectorAll('.image-placeholder-container').forEach(container => {
+                const id = container.id;
+                const savedBase64 = localStorage.getItem('srs-image-' + id);
+                const img = container.querySelector('.uploaded-image');
+                const uploader = container.querySelector('.image-uploader');
+
+                // Check if the HTML already has the base64 permanently embedded via the 'src' attribute
+                const currentSrc = img.getAttribute('src');
+                if (currentSrc && currentSrc.startsWith('data:image')) {
+                    img.style.display = 'block';
+                    uploader.style.display = 'none';
+                }
+                // Otherwise, restore from local browser storage to prevent loss on simple refresh
+                else if (savedBase64) {
+                    img.src = savedBase64;
+                    img.setAttribute('src', savedBase64);
+                    img.style.display = 'block';
+                    uploader.style.display = 'none';
+                }
+            });
+        });
+
+        function handleImageUpload(event, container) {
+            const file = event.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    const base64Str = e.target.result;
+                    const img = container.querySelector('.uploaded-image');
+                    const uploader = container.querySelector('.image-uploader');
+
+                    // Set image source and crucially set the attribute so it serializes during outerHTML
+                    img.src = base64Str;
+                    img.setAttribute('src', base64Str);
+                    img.style.display = 'block';
+                    uploader.style.display = 'none';
+
+                    // Save to localStorage to protect against accidental refreshes before 'Save HTML' is clicked
+                    localStorage.setItem('srs-image-' + container.id, base64Str);
+
+                    // Reset input so the same file can be uploaded again if needed
+                    event.target.value = '';
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        function saveHTML() {
+            // Serialize the current DOM (including base64 strings in the src attributes)
+            const htmlContent = document.documentElement.outerHTML;
+            const blob = new Blob(['<!DOCTYPE html>\n' + htmlContent], { type: 'text/html' });
+
+            // Create a temporary link to download the permanently embedded HTML file
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'newsrs_completed.html';
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert('Document saved successfully! The downloaded HTML file contains all your permanently embedded images. You can now safely print to PDF or share the file.');
+        }
+    </script>
+</body>
+
+</html>

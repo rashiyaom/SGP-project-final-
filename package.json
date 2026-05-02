@@ -5,6 +5,8 @@
   "scripts": {
     "build": "next build",
     "dev": "next dev",
+    "seed:demo": "node scripts/seed-demo-products.js",
+    "seed:gallery": "node scripts/seed-gallery.js",
     "lint": "eslint .",
     "start": "next start"
   },

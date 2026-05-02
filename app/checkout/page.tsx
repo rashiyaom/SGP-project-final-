@@ -7,7 +7,6 @@ import Link from 'next/link'
 import { Check, CreditCard, Truck } from 'lucide-react'
 import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
-import { useAuth } from '@/contexts/auth-context'
 import { useCart } from '@/contexts/cart-context'
 
 interface ShippingData {
@@ -31,7 +30,7 @@ interface PaymentData {
 
 export default function CheckoutPage() {
   const router = useRouter()
-  const { isAuthenticated, user } = useAuth()
+  const [userEmail, setUserEmail] = useState('')
   const { items: cartItems, getTotalPrice, clearCart } = useCart()
   const [step, setStep] = useState<'shipping' | 'payment' | 'confirmation'>('shipping')
   const [isLoading, setIsLoading] = useState(false)
@@ -40,7 +39,7 @@ export default function CheckoutPage() {
   const [shippingData, setShippingData] = useState<ShippingData>({
     firstName: '',
     lastName: '',
-    email: user?.email || '',
+    email: '',
     phone: '',
     address: '',
     city: '',
@@ -56,13 +55,14 @@ export default function CheckoutPage() {
     cvv: ''
   })
 
-  // Protect checkout page - require authentication
   useEffect(() => {
-    if (!isAuthenticated) {
-      sessionStorage.setItem('redirectAfterLogin', '/checkout')
-      router.push('/admin/login')
-    }
-  }, [isAuthenticated, router])
+    const email = sessionStorage.getItem('userEmail') || ''
+    setUserEmail(email)
+    setShippingData(prev => ({
+      ...prev,
+      email: email || prev.email,
+    }))
+  }, [])
 
   const handleShippingChange = (field: keyof ShippingData, value: string) => {
     setShippingData(prev => ({
@@ -91,8 +91,8 @@ export default function CheckoutPage() {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: user?.email || shippingData.email,
-          userId: user?._id || 'guest',
+          email: userEmail || shippingData.email,
+          userId: userEmail || 'guest',
           items: cartItems,
           shippingAddress: shippingData,
           paymentMethod: paymentData.method,
