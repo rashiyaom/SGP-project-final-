@@ -39,6 +39,13 @@ export default function AdminProductListView({
   const [sortBy, setSortBy] = useState<'name' | 'price' | 'rating' | 'stock'>('name')
   const [showOutOfStock, setShowOutOfStock] = useState(true)
 
+  const fallbackImage = (product: Product) => {
+    const label = encodeURIComponent(product.name)
+    return `data:image/svg+xml;charset=UTF-8,${encodeURIComponent(
+      `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 400"><rect width="600" height="400" rx="32" fill="#111827"/><text x="50%" y="44%" dominant-baseline="middle" text-anchor="middle" fill="#ffffff" font-family="Arial, Helvetica, sans-serif" font-size="28" font-weight="700">${decodeURIComponent(label)}</text><text x="50%" y="56%" dominant-baseline="middle" text-anchor="middle" fill="#d1d5db" font-family="Arial, Helvetica, sans-serif" font-size="16">Omkar Ceramics</text></svg>`
+    )}`
+  }
+
   // Filter products
   const filteredProducts = products.filter(p => {
     if (!showOutOfStock && !p.inStock) return false
@@ -123,7 +130,7 @@ export default function AdminProductListView({
                       {/* Product Image */}
                       <div className="relative w-16 h-16 rounded-lg overflow-hidden bg-muted/30 flex-shrink-0">
                         <img
-                          src={product.image}
+                          src={product.image || product.images?.[0] || fallbackImage(product)}
                           alt={product.name}
                           className="w-full h-full object-cover"
                         />
@@ -289,7 +296,7 @@ export default function AdminProductListView({
                                     className="relative aspect-square rounded-lg overflow-hidden bg-muted/30 border border-border"
                                   >
                                     <img
-                                      src={img}
+                                      src={img || fallbackImage(product)}
                                       alt={`${product.name} ${idx + 1}`}
                                       className="w-full h-full object-cover"
                                     />
