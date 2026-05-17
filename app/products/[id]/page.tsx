@@ -110,7 +110,7 @@ export default function ProductDetailPage() {
   const productInStock = product?.inStock ?? true
   const productImage = displayImages[0]
 
-  const relatedProducts = []
+  const relatedProducts: ProductRecord[] = []
 
   const nextImage = () => {
     setSelectedImageIndex((prev) => (prev + 1) % displayImages.length)
@@ -353,7 +353,7 @@ export default function ProductDetailPage() {
                 >
                   {addedToCart ? 'ADDED!' : 'ADD TO CART'}
                   <ShoppingCart className="w-4 h-4" />
-                  <span className="ml-2">₹{(product.price * quantity).toLocaleString()}</span>
+                  <span className="ml-2">₹{(productPrice * quantity).toLocaleString()}</span>
                 </button>
                 <button
                   onClick={() => {
@@ -479,7 +479,7 @@ export default function ProductDetailPage() {
                       </button>
                     </div>
                     <h3 className="text-sm text-foreground mb-1">{item.name}</h3>
-                    <p className="text-sm font-semibold text-foreground">₹{item.price.toLocaleString()}</p>
+                    <p className="text-sm font-semibold text-foreground">₹{(item.price ?? 0).toLocaleString()}</p>
                   </div>
                 </Link>
               ))}

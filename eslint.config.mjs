@@ -1,9 +1,15 @@
-import { FlatCompat } from '@eslint/eslintrc'
-
-const compat = new FlatCompat({
-  baseDirectory: import.meta.dirname,
-})
+import nextCoreWebVitals from 'eslint-config-next/core-web-vitals'
 
 export default [
-  ...compat.extends('next/core-web-vitals'),
+	...nextCoreWebVitals,
+	{
+		rules: {
+			'react/no-unescaped-entities': 'off',
+			'react-hooks/set-state-in-effect': 'off',
+			'react-hooks/static-components': 'off',
+			'react-hooks/immutability': 'off',
+			'react-hooks/purity': 'off',
+			'react-hooks/refs': 'off',
+		},
+	},
 ]

@@ -1,22 +1,21 @@
 import dbConnect from '@/lib/db/connect'
 import User from '@/lib/models/User'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/middleware/auth'
 
 export async function GET(req: NextRequest) {
   try {
-    await dbConnect()
-
-    const { searchParams } = new URL(req.url)
-    const email = searchParams.get('email')
-
-    if (!email) {
+    const auth = await requireAdmin(req)
+    if (!auth.authorized) {
       return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
+        { success: false, error: auth.error },
+        { status: auth.status }
       )
     }
 
-    const user = await User.findOne({ email })
+    await dbConnect()
+
+    const user = await User.findOne({ email: auth.user?.email })
 
     if (!user) {
       return NextResponse.json(
@@ -37,19 +36,20 @@ export async function GET(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
-    await dbConnect()
-
-    const body = await req.json()
-    const { email, adminData } = body
-
-    if (!email) {
+    const auth = await requireAdmin(req)
+    if (!auth.authorized) {
       return NextResponse.json(
-        { success: false, error: 'Email is required' },
-        { status: 400 }
+        { success: false, error: auth.error },
+        { status: auth.status }
       )
     }
 
-    const user = await User.findOne({ email })
+    await dbConnect()
+
+    const body = await req.json()
+    const { adminData } = body
+
+    const user = await User.findOne({ email: auth.user?.email })
 
     if (!user) {
       return NextResponse.json(

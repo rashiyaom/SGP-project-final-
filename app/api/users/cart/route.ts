@@ -53,7 +53,7 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({ success: true, data: user.cart || [] }, { status: 200 })
   } catch (error: any) {
     logger.error('Failed to fetch cart', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      undefined)
     let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -110,7 +110,7 @@ export async function PUT(req: NextRequest) {
     return NextResponse.json({ success: true, data: user.cart }, { status: 200 })
   } catch (error: any) {
     logger.error('Failed to update cart', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      undefined)
     let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }
@@ -167,7 +167,7 @@ export async function DELETE(req: NextRequest) {
     return NextResponse.json({ success: true, data: [] }, { status: 200 })
   } catch (error: any) {
     logger.error('Failed to clear cart', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      undefined)
     let response = NextResponse.json(
       { success: false, error: 'Internal server error' },
       { status: 500 }

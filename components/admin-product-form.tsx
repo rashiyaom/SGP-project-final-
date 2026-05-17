@@ -70,8 +70,8 @@ export default function FullscreenProductForm({
   const [uploadingIdx, setUploadingIdx] = useState<number | null>(null)
 
   const handleFileUpload = async (idx: number, file: File) => {
-    if (!file || !file.type.startsWith('image/')) {
-      alert('Please select a valid image file')
+    if (!file || (!file.type.startsWith('image/') && !file.type.startsWith('video/'))) {
+      alert('Please select a valid image or video file')
       return
     }
     try {
@@ -381,7 +381,7 @@ export default function FullscreenProductForm({
                           <div className="flex items-center gap-2">
                             <input
                               type="file"
-                              accept="image/*"
+                              accept="image/*,video/*"
                               className="hidden"
                               ref={el => { fileInputRefs.current[idx] = el }}
                               onChange={e => {

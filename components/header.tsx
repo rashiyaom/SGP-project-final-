@@ -11,6 +11,7 @@ import { useAuth } from '@/contexts/auth-context'
 
 export function Header() {
   const [mounted, setMounted] = useState(false)
+  const [isScrolled, setIsScrolled] = useState(false)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const userMenuRef = useRef<HTMLDivElement>(null)
   const pathname = usePathname()
@@ -23,6 +24,17 @@ export function Header() {
 
   useEffect(() => {
     setMounted(true)
+  }, [])
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setIsScrolled(window.scrollY > 12)
+    }
+
+    handleScroll()
+    window.addEventListener('scroll', handleScroll, { passive: true })
+
+    return () => window.removeEventListener('scroll', handleScroll)
   }, [])
 
   // Close dropdown on click outside
@@ -56,9 +68,13 @@ export function Header() {
     return pathname.startsWith(href)
   }
 
+  const headerShellClass = isScrolled
+    ? 'top-2 left-2 right-2 rounded-[28px] border border-white/10 bg-background/72 shadow-[0_18px_50px_-24px_rgba(0,0,0,0.55)] backdrop-blur-2xl translate-y-0 scale-[0.985] dark:bg-black/55 dark:border-white/10 sm:top-0 sm:left-0 sm:right-0 sm:rounded-none sm:border-transparent sm:bg-transparent sm:shadow-none sm:backdrop-blur-0 sm:scale-100'
+    : 'top-0 left-0 right-0 rounded-none border border-transparent bg-transparent shadow-none backdrop-blur-0 translate-y-0 scale-100'
+
   return (
     <>
-      <header className="fixed top-0 left-0 right-0 z-50 px-3 sm:px-6 lg:px-12 py-3 sm:py-4">
+      <header className={`fixed z-50 px-3 sm:px-6 lg:px-12 py-3 sm:py-4 transition-all duration-300 ease-out motion-reduce:transition-none ${headerShellClass}`}>
         <div className="max-w-7xl mx-auto flex justify-between items-center gap-2 sm:gap-4">
           {/* Left - Logo */}
           <Link href="/" className="flex items-center gap-1.5 sm:gap-2 bg-background/80 backdrop-blur-sm rounded-full px-2 sm:px-3 py-1.5 sm:py-2 border border-border flex-shrink-0">
@@ -83,8 +99,10 @@ export function Header() {
                 {item.label}
               </Link>
             ))}
-          </nav>          {/* Right - CTA */}
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">            {/* Dreams Button */}
+          </nav>
+          {/* Right - CTA */}
+          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
+            {/* Dreams Button */}
             <Link
               href="/dreams"
               className="relative p-2 sm:p-2.5 bg-background/80 backdrop-blur-sm border border-border hover:bg-muted rounded-full transition-all duration-200 flex-shrink-0"
@@ -190,7 +208,7 @@ export function Header() {
         </div>
       </header>
       {/* Spacer to prevent content from going under fixed header */}
-      <div className="h-14 sm:h-20" />
+      <div className={`h-14 sm:h-20 transition-all duration-300 ease-out motion-reduce:transition-none ${isScrolled ? 'h-20 sm:h-20' : ''}`} />
     </>
   )
 }

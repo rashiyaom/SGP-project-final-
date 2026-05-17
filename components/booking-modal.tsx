@@ -152,10 +152,7 @@ export default function BookingModal({
 
       const response = await fetch('/api/appointments', {
         method: 'POST',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-email': userEmail || formData.email // ✅ SECURITY: Send user email for auth
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload)
       })
 

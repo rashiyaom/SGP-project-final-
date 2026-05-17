@@ -1,12 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db/connect'
 import ContactMessage from '@/lib/models/ContactMessage'
+import { requireAdmin } from '@/lib/middleware/auth'
 
 export async function GET(
   request: NextRequest,
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin(request)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const { id } = await params
     await dbConnect()
 
@@ -31,6 +37,11 @@ export async function PUT(
   { params }: { params: Promise<{ id: string }> }
 ) {
   try {
+    const auth = await requireAdmin(request)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const { id } = await params
     await dbConnect()
 

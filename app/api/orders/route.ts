@@ -3,6 +3,9 @@ import Order from '@/lib/models/Order'
 import { NextRequest, NextResponse } from 'next/server'
 import { sendOrderConfirmationEmail } from '@/lib/email'
 import { z } from 'zod'
+import { requireAdmin, requireAuth } from '@/lib/middleware/auth'
+
+const MAX_PAGE_SIZE = 100
 
 // Zod schema for creating an order
 const orderSchema = z.object({
@@ -36,30 +39,48 @@ const updateOrderSchema = z.object({
 
 export async function GET(req: NextRequest) {
   try {
+    const auth = await requireAuth(req)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     await dbConnect()
 
     const { searchParams } = new URL(req.url)
     const email = searchParams.get('email')
     const userId = searchParams.get('userId')
     const status = searchParams.get('status')
+    const skip = parseInt(searchParams.get('skip') || '0')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), MAX_PAGE_SIZE)
 
     let query: any = {}
 
-    if (email) {
-      query.email = email
-    }
-
-    if (userId) {
-      query.userId = userId
+    if (auth.user?.role !== 'admin') {
+      query.email = auth.user?.email
+      query.userId = auth.user?._id?.toString()
+    } else {
+      if (email) {
+        query.email = email
+      }
+      if (userId) {
+        query.userId = userId
+      }
     }
 
     if (status) {
       query.status = status
     }
 
-    const orders = await Order.find(query).sort({ createdAt: -1 })
+    const orders = await Order.find(query).sort({ createdAt: -1 }).skip(skip).limit(limit)
+    const total = await Order.countDocuments(query)
 
-    return NextResponse.json({ success: true, data: orders }, { status: 200 })
+    return NextResponse.json({
+      success: true,
+      data: orders,
+      total,
+      page: Math.floor(skip / limit) + 1,
+      pages: Math.ceil(total / limit),
+    }, { status: 200 })
   } catch (error) {
     console.error('Get orders error:', error)
     return NextResponse.json(
@@ -111,6 +132,11 @@ export async function POST(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     await dbConnect()
     const body = await req.json()
 

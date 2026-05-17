@@ -95,7 +95,6 @@ interface AdminContextType {
   refreshGallery: () => Promise<void>
 }
 
-const ADMIN_PASSWORD = 'admin123'
 const FILTERS_STORAGE_KEY = 'admin_custom_filters'
 
 const AdminContext = createContext<AdminContextType | undefined>(undefined)
@@ -128,24 +127,29 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // ─── On mount: restore session + load data ───────────────────────────────
   useEffect(() => {
-    const adminLoggedIn = sessionStorage.getItem('isAdminLogged') === 'true'
-    if (adminLoggedIn) {
-      setIsAdmin(true)
+    const checkAdminSession = async () => {
+      try {
+        const res = await fetch('/api/admin/session')
+        if (res.ok) {
+          setIsAdmin(true)
+          await loadMessages()
+        } else {
+          setIsAdmin(false)
+        }
+      } catch {
+        setIsAdmin(false)
+      }
     }
 
     // Always load products & gallery for the public-facing site
     loadProducts()
     loadGallery()
+    checkAdminSession()
 
     // Load filters from sessionStorage (lightweight, non-critical)
     const stored = sessionStorage.getItem(FILTERS_STORAGE_KEY)
     if (stored) {
       try { setCustomFilters(JSON.parse(stored)) } catch {}
-    }
-
-    // Load messages only if admin
-    if (adminLoggedIn) {
-      loadMessages()
     }
   }, [])
 
@@ -342,7 +346,7 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
           const res = await fetch('/api/upload', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ base64, folder }),
+            body: JSON.stringify({ base64, folder, mimeType: file.type || 'image/jpeg' }),
           })
           if (!res.ok) {
             const err = await res.json()
@@ -361,19 +365,32 @@ export function AdminProvider({ children }: { children: React.ReactNode }) {
 
   // ─── ADMIN AUTH ───────────────────────────────────────────────────────────
   const adminLogin = async (password: string): Promise<boolean> => {
-    if (password === ADMIN_PASSWORD) {
+    try {
+      const res = await fetch('/api/admin/session', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ password }),
+      })
+
+      if (!res.ok) {
+        return false
+      }
+
       setIsAdmin(true)
-      sessionStorage.setItem('isAdminLogged', 'true')
       // Load admin-only data
       await loadMessages()
       return true
+    } catch {
+      return false
     }
-    return false
   }
 
   const adminLogout = async () => {
+    try {
+      await fetch('/api/admin/session', { method: 'DELETE' })
+    } catch {}
+
     setIsAdmin(false)
-    sessionStorage.removeItem('isAdminLogged')
     setContactMessages([])
   }
 

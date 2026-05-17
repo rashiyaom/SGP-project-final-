@@ -57,11 +57,7 @@ export default function AdminAppointmentsPage() {
   const fetchAppointments = async () => {
     try {
       setLoading(true)
-      const response = await fetch('/api/appointments', {
-        headers: {
-          'x-user-email': user?.email || '' // ✅ SECURITY: Send user email for auth
-        }
-      })
+      const response = await fetch('/api/appointments')
       const data = await response.json()
       if (data.success) {
         setAppointments(data.data)
@@ -81,10 +77,7 @@ export default function AdminAppointmentsPage() {
       
       const response = await fetch(`/api/appointments?id=${selectedAppointment._id}`, {
         method: 'PATCH',
-        headers: { 
-          'Content-Type': 'application/json',
-          'x-user-email': user?.email || '' // ✅ SECURITY: Send user email for auth
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           status: newStatus,
           adminNotes: adminNotes,
@@ -108,10 +101,7 @@ export default function AdminAppointmentsPage() {
 
     try {
       const response = await fetch(`/api/appointments?id=${appointmentId}`, {
-        method: 'DELETE',
-        headers: {
-          'x-user-email': user?.email || '' // ✅ SECURITY: Send user email for auth
-        }
+        method: 'DELETE'
       })
 
       if (response.ok) {

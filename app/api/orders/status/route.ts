@@ -2,6 +2,7 @@
 import dbConnect from '@/lib/db/connect'
 import Order from '@/lib/models/Order'
 import { NextRequest, NextResponse } from 'next/server'
+import { requireAdmin } from '@/lib/middleware/auth'
 
 // This endpoint is for an admin to update an order's status.
 // In a real application, you would protect this endpoint
@@ -9,6 +10,11 @@ import { NextRequest, NextResponse } from 'next/server'
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAdmin(req)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     await dbConnect()
 
     const body = await req.json()

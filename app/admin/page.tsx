@@ -72,7 +72,7 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<boolea
             <Lock className="w-8 h-8 text-background" />
           </div>
           <h1 className="font-serif text-3xl text-foreground mb-2">Admin Panel</h1>
-          <p className="text-muted-foreground text-sm">Enter your password to continue</p>
+          <p className="text-muted-foreground text-sm">Enter your admin password to continue</p>
         </div>
 
         <motion.form
@@ -107,10 +107,6 @@ function AdminLogin({ onLogin }: { onLogin: (password: string) => Promise<boolea
             Access Dashboard
           </button>
         </motion.form>
-
-        <p className="text-center text-xs text-muted-foreground mt-6">
-          Default password: <code className="bg-muted px-1.5 py-0.5 rounded text-foreground">admin123</code>
-        </p>
 
         <Link href="/" className="flex items-center justify-center gap-2 text-sm text-muted-foreground hover:text-foreground mt-4 transition-colors">
           <ArrowLeft className="w-4 h-4" />

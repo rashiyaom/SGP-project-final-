@@ -22,7 +22,7 @@ export interface CorsOptions {
 
 const DEFAULT_CORS_OPTIONS: CorsOptions = {
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'x-user-email', 'Authorization'],
+  allowedHeaders: ['Content-Type', 'Authorization'],
   credentials: true,
   maxAge: 86400, // 24 hours
 }
@@ -60,7 +60,7 @@ export function addCorsHeaders<T>(
   )
   response.headers.set(
     'Access-Control-Allow-Headers',
-    corsOptions.allowedHeaders?.join(', ') || 'Content-Type, x-user-email, Authorization'
+    corsOptions.allowedHeaders?.join(', ') || 'Content-Type, Authorization'
   )
   response.headers.set('Access-Control-Max-Age', String(corsOptions.maxAge || 86400))
 

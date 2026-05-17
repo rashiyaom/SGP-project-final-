@@ -255,7 +255,8 @@ function ProfilePageInner() {
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             base64,
-            folder: 'omkar-ceramics/avatars'
+            folder: 'omkar-ceramics/avatars',
+            mimeType: file.type || 'image/jpeg'
           })
         })
 

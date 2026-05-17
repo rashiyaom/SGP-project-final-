@@ -1,9 +1,11 @@
 import dbConnect from '@/lib/db/connect'
 import Appointment from '@/lib/models/Appointment'
-import { requireAuth } from '@/lib/middleware/auth'
+import { requireAdmin, requireAuth } from '@/lib/middleware/auth'
 import { addCorsHeaders, handleCorsOptions } from '@/lib/middleware/cors'
 import { logger } from '@/lib/logger'
 import { NextRequest, NextResponse } from 'next/server'
+
+const MAX_PAGE_SIZE = 100
 
 // Handle CORS preflight requests
 export async function OPTIONS(req: NextRequest) {
@@ -11,6 +13,7 @@ export async function OPTIONS(req: NextRequest) {
 }
 
 export async function GET(req: NextRequest) {
+  let actorEmail: string | undefined
   try {
     // ✅ SECURITY: Require authentication
     const auth = await requireAuth(req)
@@ -27,12 +30,15 @@ export async function GET(req: NextRequest) {
     const userId = searchParams.get('userId')
     const status = searchParams.get('status')
     const email = searchParams.get('email')
+    const skip = parseInt(searchParams.get('skip') || '0')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), MAX_PAGE_SIZE)
 
     // ✅ SECURITY: Users can only see their own appointments (unless admin)
     let query: any = {}
     if (auth.user?.role !== 'admin') {
       query.userId = auth.user?._id
     } else {
+      actorEmail = auth.user?.email
       // Admins can filter by any field
       if (userId) query.userId = userId
       if (email) query.userEmail = email
@@ -40,18 +46,22 @@ export async function GET(req: NextRequest) {
     
     if (status) query.status = status
 
-    const appointments = await Appointment.find(query).sort({ date: -1 })
+    const appointments = await Appointment.find(query).sort({ date: -1 }).skip(skip).limit(limit)
+    const total = await Appointment.countDocuments(query)
 
     let response = NextResponse.json({
       success: true,
       data: appointments,
-      count: appointments.length
+      total,
+      count: appointments.length,
+      page: Math.floor(skip / limit) + 1,
+      pages: Math.ceil(total / limit),
     })
     response = addCorsHeaders(response)
     return response
   } catch (error: any) {
     logger.error('Failed to fetch appointments', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      actorEmail)
     let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
@@ -62,6 +72,7 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  let actorEmail: string | undefined
   try {
     // ✅ SECURITY: Require authentication
     const auth = await requireAuth(req)
@@ -97,6 +108,15 @@ export async function POST(req: NextRequest) {
       )
     }
 
+    if (auth.user?.role !== 'admin' && (auth.user?._id?.toString() !== body.userId || auth.user?.email !== body.userEmail)) {
+      return NextResponse.json(
+        { success: false, message: 'Forbidden: Can only book your own appointment' },
+        { status: 403 }
+      )
+    }
+
+    actorEmail = auth.user?.email
+
     // Check for existing appointment on same date/time (within 30 min buffer)
     const dateObj = new Date(body.date)
     const existingAppointment = await Appointment.findOne({
@@ -130,7 +150,7 @@ export async function POST(req: NextRequest) {
     return response
   } catch (error: any) {
     logger.error('Failed to create appointment', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      actorEmail)
     let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
@@ -141,9 +161,10 @@ export async function POST(req: NextRequest) {
 }
 
 export async function PATCH(req: NextRequest) {
+  let actorEmail: string | undefined
   try {
     // ✅ SECURITY: Require admin authentication
-    const auth = await requireAuth(req)
+    const auth = await requireAdmin(req)
     if (!auth.authorized) {
       return NextResponse.json(
         { success: false, message: auth.error },
@@ -151,12 +172,7 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    if (auth.user?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, message: 'Forbidden: Admin access required' },
-        { status: 403 }
-      )
-    }
+    actorEmail = auth.user?.email
 
     await dbConnect()
     const { searchParams } = new URL(req.url)
@@ -190,7 +206,7 @@ export async function PATCH(req: NextRequest) {
     })
   } catch (error: any) {
     logger.error('Failed to update appointment', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      actorEmail)
     let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }
@@ -201,9 +217,10 @@ export async function PATCH(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
+  let actorEmail: string | undefined
   try {
     // ✅ SECURITY: Require admin authentication
-    const auth = await requireAuth(req)
+    const auth = await requireAdmin(req)
     if (!auth.authorized) {
       return NextResponse.json(
         { success: false, message: auth.error },
@@ -211,12 +228,7 @@ export async function DELETE(req: NextRequest) {
       )
     }
 
-    if (auth.user?.role !== 'admin') {
-      return NextResponse.json(
-        { success: false, message: 'Forbidden: Admin access required' },
-        { status: 403 }
-      )
-    }
+    actorEmail = auth.user?.email
 
     await dbConnect()
     const { searchParams } = new URL(req.url)
@@ -239,7 +251,7 @@ export async function DELETE(req: NextRequest) {
     return response
   } catch (error: any) {
     logger.error('Failed to delete appointment', { error: error.message }, error as Error, 
-      req.headers.get('x-user-email') || undefined)
+      actorEmail)
     let response = NextResponse.json(
       { success: false, message: error.message },
       { status: 500 }

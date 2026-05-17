@@ -17,7 +17,11 @@ export async function POST(request: NextRequest) {
     if (body.url) {
       result = await uploadImageFromUrl(body.url, body.folder || 'omkar-ceramics')
     } else {
-      result = await uploadImageFromBase64(body.base64, body.folder || 'omkar-ceramics')
+      result = await uploadImageFromBase64(
+        body.base64,
+        body.folder || 'omkar-ceramics',
+        body.mimeType || 'image/jpeg'
+      )
     }
 
     return NextResponse.json({ success: true, data: result })

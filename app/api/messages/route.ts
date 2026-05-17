@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db/connect'
 import ContactMessage from '@/lib/models/ContactMessage'
 
+const MAX_PAGE_SIZE = 100
+
 export async function GET(request: NextRequest) {
   try {
     await dbConnect()
@@ -9,7 +11,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const read = searchParams.get('read')
     const skip = parseInt(searchParams.get('skip') || '0')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), MAX_PAGE_SIZE)
 
     let query: any = {}
     if (read === 'true') query.read = true

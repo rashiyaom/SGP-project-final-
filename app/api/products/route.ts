@@ -3,8 +3,10 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises'
 import path from 'node:path'
 import dbConnect from '@/lib/db/connect'
 import Product from '@/lib/models/Product'
+import { requireAdmin } from '@/lib/middleware/auth'
 
 const LOCAL_PRODUCTS_FILE = path.join(process.cwd(), 'data', 'products.seed.json')
+const MAX_PAGE_SIZE = 100
 
 async function readLocalProducts() {
   try {
@@ -35,7 +37,7 @@ export async function GET(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const category = searchParams.get('category')
     const skip = parseInt(searchParams.get('skip') || '0')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), MAX_PAGE_SIZE)
 
     try {
       await dbConnect()
@@ -88,6 +90,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin(request)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     const body = await request.json()
 
     // Validate required fields

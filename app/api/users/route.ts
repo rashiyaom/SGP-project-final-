@@ -4,8 +4,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { addCorsHeaders, handleCorsOptions } from '@/lib/middleware/cors'
 import { logger } from '@/lib/logger'
+import { clearSessionCookie, setSessionCookie } from '@/lib/auth/session'
+import { requireAuth } from '@/lib/middleware/auth'
 
-// Handle CORS preflight requests
 export async function OPTIONS(req: NextRequest) {
   return handleCorsOptions(req)
 }
@@ -25,16 +26,7 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // Always select password field when it might be needed for login verification
-    let query = User.findOne({ email })
-    if (password) {
-      // Login attempt - need password for verification
-      query = query.select('+password')
-    } else {
-      // Non-login request - hide password
-      query = query.select('-password')
-    }
-
+    const query = User.findOne({ email }).select(password ? '+password' : '-password')
     const user = await query
 
     if (!user) {
@@ -44,19 +36,11 @@ export async function GET(req: NextRequest) {
       )
     }
 
-    // If password provided, verify it
     if (password) {
-      let isPasswordValid = false
-      
-      // Check if password is a bcrypt hash (starts with $2a$, $2b$, or $2y$)
-      if (user.password && user.password.startsWith('$2')) {
-        // Password is hashed, use bcrypt comparison
-        isPasswordValid = await bcrypt.compare(password, user.password)
-      } else if (user.password) {
-        // Fallback for plain text passwords (legacy support)
-        isPasswordValid = password === user.password
-      }
-      
+      const isPasswordValid = user.password && user.password.startsWith('$2')
+        ? await bcrypt.compare(password, user.password)
+        : Boolean(user.password && password === user.password)
+
       if (!isPasswordValid) {
         logger.error('Invalid password attempt', { email }, undefined, email)
         let response = NextResponse.json(
@@ -66,15 +50,52 @@ export async function GET(req: NextRequest) {
         response = addCorsHeaders(response)
         return response
       }
-      // Return user without password
+
+      await User.findOneAndUpdate(
+        { email },
+        {
+          session: {
+            isActive: true,
+            lastActivity: new Date(),
+            loginTime: new Date(),
+            redirectAfterLogin: null,
+          },
+        },
+        { new: true, runValidators: true }
+      )
+
       const userObj = user.toObject()
       delete userObj.password
-      let response = NextResponse.json({ success: true, data: userObj }, { status: 200 })
+
+      let response: NextResponse = NextResponse.json({ success: true, data: userObj }, { status: 200 })
+      response = setSessionCookie(response, {
+        email: userObj.email,
+        role: userObj.isAdmin ? 'admin' : 'user',
+        issuedAt: Date.now(),
+      })
       response = addCorsHeaders(response)
       return response
     }
 
-    let response = NextResponse.json({ success: true, data: user }, { status: 200 })
+    const auth = await requireAuth(req)
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error },
+        { status: auth.status }
+      )
+    }
+
+    if (auth.user?.role !== 'admin' && auth.user?.email !== email) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Can only access your own account' },
+        { status: 403 }
+      )
+    }
+
+    const userObj = user.toObject()
+    delete userObj.password
+
+    let response = NextResponse.json({ success: true, data: userObj }, { status: 200 })
     response = addCorsHeaders(response)
     return response
   } catch (error: any) {
@@ -104,7 +125,6 @@ export async function POST(req: NextRequest) {
       return response
     }
 
-    // Check if user already exists
     const existingUser = await User.findOne({ email })
     if (existingUser) {
       logger.warn('User already exists', { email })
@@ -116,10 +136,8 @@ export async function POST(req: NextRequest) {
       return response
     }
 
-    // Hash password before storing
     const hashedPassword = await bcrypt.hash(password, 10)
 
-    // Create new user
     const user = await User.create({
       email,
       name,
@@ -132,31 +150,31 @@ export async function POST(req: NextRequest) {
         products: [],
         gallery: [],
         filters: [],
-        contactMessages: []
+        contactMessages: [],
       },
       isAdmin: false,
       session: {
         isActive: true,
         lastActivity: new Date(),
         loginTime: new Date(),
-        redirectAfterLogin: null
-      }
+        redirectAfterLogin: null,
+      },
     })
 
     const userWithoutPassword = user.toObject()
     delete userWithoutPassword.password
 
-    logger.info('User created successfully', { email })
-    let response = NextResponse.json({ success: true, data: userWithoutPassword }, { status: 201 })
+    let response: NextResponse = NextResponse.json({ success: true, data: userWithoutPassword }, { status: 201 })
+    response = setSessionCookie(response, { email: userWithoutPassword.email, role: 'user', issuedAt: Date.now() })
     response = addCorsHeaders(response)
+    logger.info('User created successfully', { email })
     return response
   } catch (error: any) {
     logger.error('Failed to create user', { error: error.message }, error as Error)
-    // Log detailed error info for debugging
     logger.debug('Error details:', {
       message: error?.message,
       code: error?.code,
-      name: error?.name
+      name: error?.name,
     })
     let response = NextResponse.json(
       { success: false, error: error?.message || 'Internal server error' },
@@ -169,6 +187,14 @@ export async function POST(req: NextRequest) {
 
 export async function PUT(req: NextRequest) {
   try {
+    const auth = await requireAuth(req)
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error },
+        { status: auth.status }
+      )
+    }
+
     await dbConnect()
 
     const body = await req.json()
@@ -178,6 +204,13 @@ export async function PUT(req: NextRequest) {
       return NextResponse.json(
         { success: false, error: 'Email is required' },
         { status: 400 }
+      )
+    }
+
+    if (auth.user?.role !== 'admin' && auth.user?.email !== email) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Can only update your own account' },
+        { status: 403 }
       )
     }
 
@@ -206,6 +239,14 @@ export async function PUT(req: NextRequest) {
 
 export async function PATCH(req: NextRequest) {
   try {
+    const auth = await requireAuth(req)
+    if (!auth.authorized) {
+      return NextResponse.json(
+        { success: false, error: auth.error },
+        { status: auth.status }
+      )
+    }
+
     await dbConnect()
 
     const body = await req.json()
@@ -218,18 +259,17 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    // Build update object
-    const updateData: any = {}
-    
-    if (session !== undefined) {
-      updateData.session = session
-    }
-    
-    if (profile !== undefined) {
-      updateData.profile = profile
+    if (auth.user?.role !== 'admin' && auth.user?.email !== email) {
+      return NextResponse.json(
+        { success: false, error: 'Forbidden: Can only update your own session' },
+        { status: 403 }
+      )
     }
 
-    // Update user
+    const updateData: any = {}
+    if (session !== undefined) updateData.session = session
+    if (profile !== undefined) updateData.profile = profile
+
     const user = await User.findOneAndUpdate(
       { email },
       updateData,
@@ -243,7 +283,11 @@ export async function PATCH(req: NextRequest) {
       )
     }
 
-    return NextResponse.json({ success: true, data: user }, { status: 200 })
+    let response: NextResponse = NextResponse.json({ success: true, data: user }, { status: 200 })
+    if (session?.isActive === false) {
+      response = clearSessionCookie(response)
+    }
+    return response
   } catch (error) {
     console.error('Update session error:', error)
     return NextResponse.json(

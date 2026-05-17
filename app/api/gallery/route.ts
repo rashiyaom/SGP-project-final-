@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import dbConnect from '@/lib/db/connect'
 import GalleryItem from '@/lib/models/GalleryItem'
+import { requireAdmin } from '@/lib/middleware/auth'
+
+const MAX_PAGE_SIZE = 100
 
 export async function GET(request: NextRequest) {
   try {
@@ -10,7 +13,7 @@ export async function GET(request: NextRequest) {
     const category = searchParams.get('category')
     const featured = searchParams.get('featured')
     const skip = parseInt(searchParams.get('skip') || '0')
-    const limit = parseInt(searchParams.get('limit') || '20')
+    const limit = Math.min(Math.max(parseInt(searchParams.get('limit') || '20'), 1), MAX_PAGE_SIZE)
 
     let query: any = {}
     if (category) query.category = category
@@ -38,6 +41,11 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
+    const auth = await requireAdmin(request)
+    if (!auth.authorized) {
+      return NextResponse.json({ success: false, error: auth.error }, { status: auth.status })
+    }
+
     await dbConnect()
 
     const body = await request.json()

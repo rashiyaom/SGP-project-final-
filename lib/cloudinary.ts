@@ -14,6 +14,8 @@ export interface UploadResult {
   format?: string
 }
 
+const DEFAULT_DATA_URI_PREFIX = 'data:image/jpeg;base64,'
+
 /**
  * Upload an image to Cloudinary from a URL
  */
@@ -40,11 +42,17 @@ export async function uploadImageFromUrl(imageUrl: string, folder = 'omkar-ceram
 }
 
 /**
- * Upload an image to Cloudinary from a file (Base64)
+ * Upload media to Cloudinary from base64 data.
+ * The mime type is preserved so videos and non-JPEG images can upload correctly.
  */
-export async function uploadImageFromBase64(base64Data: string, folder = 'omkar-ceramics'): Promise<UploadResult> {
+export async function uploadImageFromBase64(
+  base64Data: string,
+  folder = 'omkar-ceramics',
+  mimeType = 'image/jpeg'
+): Promise<UploadResult> {
   try {
-    const result = await cloudinary.uploader.upload(`data:image/jpeg;base64,${base64Data}`, {
+    const prefix = mimeType ? `data:${mimeType};base64,` : DEFAULT_DATA_URI_PREFIX
+    const result = await cloudinary.uploader.upload(`${prefix}${base64Data}`, {
       folder,
       resource_type: 'auto',
       quality: 'auto',
@@ -59,7 +67,7 @@ export async function uploadImageFromBase64(base64Data: string, folder = 'omkar-
       format: result.format,
     }
   } catch (error) {
-    console.error('Error uploading image to Cloudinary:', error)
+    console.error('Error uploading media to Cloudinary:', error)
     throw error
   }
 }
